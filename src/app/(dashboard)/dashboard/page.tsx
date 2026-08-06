@@ -18,6 +18,7 @@ import { InsightCard } from '@/components/analytics/InsightCard';
 import { CloseCashModal } from '@/components/analytics/CloseCashModal';
 import { Lightbulb } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
+import { PilotOnboardingGuide } from '@/components/dashboard/PilotOnboardingGuide';
 
 export default async function DashboardPage({
   searchParams,
@@ -77,14 +78,16 @@ export default async function DashboardPage({
     inventoryMetrics,
     teamMetrics,
     incomeTrend,
-    insights
+    insights,
+    { count: locationsCount }
   ] = await Promise.all([
     getRecentTransactions(activeStore.id, 5),
     getFinancialMetrics(activeStore.id, sessionId),
     getInventoryMetrics(activeStore.id),
     getTeamMetrics(activeStore.id),
     getIncomeTrend(activeStore.id),
-    generateInsights(activeStore.id)
+    generateInsights(activeStore.id),
+    supabase.from('inventory_locations').select('*', { count: 'exact', head: true }).eq('store_id', activeStore.id)
   ]);
 
   const initialAmount = activeSession ? Number(activeSession.amount) : 0;
@@ -107,6 +110,8 @@ export default async function DashboardPage({
     label: new Date(t.date).toLocaleDateString('es-ES', { weekday: 'short' }),
     value: t.amount
   }));
+
+  const hasStoreInfo = !!(activeStore.contact_phone || activeStore.contact_email);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -144,6 +149,17 @@ export default async function DashboardPage({
           </Button>
         </Link>
       </div>
+
+      {/* Onboarding Guide Widget para Negocios Nuevos */}
+      {(userRole === 'owner' || userRole === 'admin') && (
+        <PilotOnboardingGuide 
+          hasStoreInfo={hasStoreInfo}
+          locationsCount={locationsCount || 0}
+          teamCount={teamMetrics.totalMembers}
+          productsCount={inventoryMetrics.totalProducts}
+          isCashOpen={!!activeSession}
+        />
+      )}
 
       {/* TARJETA DINÁMICA DE ESTADO DE CAJA (OPEN / CLOSED) */}
       <div className="space-y-4 animate-in fade-in duration-700">

@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/Badge';
 import { CreateLocationModal } from '@/components/inventory/CreateLocationModal';
 import { TransferStockModal } from '@/components/inventory/TransferStockModal';
 import { DeleteProductModal } from '@/components/inventory/DeleteProductModal';
+import { InventoryList } from '@/components/inventory/InventoryList';
 
 export default async function InventoryPage({
   searchParams,
@@ -226,99 +227,12 @@ export default async function InventoryPage({
           )}
         </div>
       </div>
-
-      {/* Lista de Productos */}
-      <Card noPadding className="overflow-hidden">
-        {products.length === 0 ? (
-          <div className="p-12 text-center flex flex-col items-center justify-center">
-            <div className="w-16 h-16 bg-zinc-800/50 text-zinc-500 rounded-full flex items-center justify-center mb-4">
-              <PackageSearch className="w-8 h-8" />
-            </div>
-            <h4 className="text-lg font-semibold text-zinc-100 mb-2">No se encontraron productos</h4>
-            <p className="text-sm text-zinc-400 max-w-sm">
-              {currentFilter === 'deleted' ? 'No hay productos retirados en el historial de auditoría.' : 'Comienza a construir el inventario agregando productos.'}
-            </p>
-          </div>
-        ) : (
-          <div className="divide-y divide-zinc-800">
-            <div className="bg-zinc-900/50 p-4 grid grid-cols-12 gap-4 text-xs font-bold text-zinc-400 uppercase tracking-wider">
-              <div className="col-span-6 sm:col-span-5">Producto / SKU</div>
-              <div className="col-span-3 sm:col-span-2 text-right">Existencia Global</div>
-              <div className="hidden sm:block sm:col-span-2 text-right">Precio Venta</div>
-              <div className="col-span-3 sm:col-span-3 text-right">Acciones</div>
-            </div>
-            
-            {products.map((product) => (
-              <div key={product.id} className="p-4 grid grid-cols-12 gap-4 items-center hover:bg-zinc-800/30 transition-colors">
-                
-                <div className="col-span-12 sm:col-span-5 flex flex-col">
-                  <span className="font-bold text-zinc-100 truncate">{product.name}</span>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="neutral" className="px-1.5 py-0 text-[10px] bg-zinc-800/80">{product.category}</Badge>
-                    {product.sku && <span className="text-xs font-mono font-bold text-indigo-400 flex items-center gap-1"><Hash className="w-3 h-3" /> {product.sku}</span>}
-                  </div>
-                  <div className="mt-2 sm:hidden">
-                    {getStatusBadge(product.status)}
-                  </div>
-                </div>
-                
-                <div className="col-span-3 sm:col-span-2 flex flex-col items-end justify-center">
-                  <span className="font-bold text-zinc-100">{product.quantity}</span>
-                  <span className="text-xs font-medium text-zinc-500">{product.unit}</span>
-                </div>
-                
-                <div className="hidden sm:flex sm:col-span-2 flex-col items-end justify-center">
-                  <span className="font-bold text-zinc-100">{formatCurrency(product.variants?.[0]?.sale_price || 0)}</span>
-                  <div className="mt-1">
-                    {getStatusBadge(product.status)}
-                  </div>
-                </div>
-                
-                <div className="col-span-3 sm:col-span-3 flex justify-end items-center gap-2 pt-1">
-                  <Link href={`/inventory/${product.id}/movement`}>
-                    <Button variant="secondary" className="px-3 py-1.5 h-auto text-xs">
-                      <ArrowRightLeft className="w-4 h-4 sm:mr-1.5" />
-                      <span className="hidden sm:inline">Movimiento</span>
-                    </Button>
-                  </Link>
-
-                  {/* Modal de Eliminación Segura (Soft Delete) - Solo Propietario */}
-                  {currentUserRole === 'owner' && !product.deleted_at && (
-                    <DeleteProductModal product={product} userRole={currentUserRole} />
-                  )}
-                </div>
-
-                {/* Variantes y SKU Obligatorio - Fila Secundaria */}
-                {product.variants && product.variants.length > 0 && (
-                  <div className="col-span-12 mt-2 pt-3 border-t border-zinc-800/30">
-                    <div className="flex items-center gap-1.5 mb-2 pl-1">
-                      <Layers className="w-3.5 h-3.5 text-zinc-500" />
-                      <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-500">Variantes & SKU Obligatorio</span>
-                    </div>
-                    <div className="flex flex-col gap-1.5 pl-3 border-l-2 border-indigo-500/20 ml-2">
-                      {product.variants.map((variant) => (
-                        <div key={variant.id} className="flex items-center justify-between text-xs bg-zinc-900/40 px-3 py-2 rounded-xl border border-zinc-800/60">
-                          <div className="flex flex-col">
-                            <span className="text-zinc-200 font-bold">{variant.name}</span>
-                            <span className="text-indigo-400 font-mono text-[10px] font-bold">SKU: {variant.sku || 'SKU-PENDIENTE'}</span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="flex flex-col items-end">
-                              <span className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Saldo Global</span>
-                              <span className={`font-bold font-mono ${variant.quantity > 0 ? 'text-zinc-200' : 'text-rose-400'}`}>{variant.quantity} unidades</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
+      {/* Lista de Productos con Búsqueda Integrada */}
+      <InventoryList 
+        initialProducts={products} 
+        currentFilter={currentFilter} 
+        currentUserRole={currentUserRole} 
+      />
       
     </div>
   );
