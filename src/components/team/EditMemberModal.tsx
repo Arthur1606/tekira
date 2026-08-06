@@ -33,35 +33,29 @@ export function EditMemberModal({ member, currentUserRole }: EditMemberModalProp
     setMounted(true);
   }, []);
 
-  // REGLAS DE VISIBILIDAD ABSOLUTA PARA ACCIONES:
-  // 1. Los empleados no ven botones de edición.
   if (currentUserRole === 'employee') return null;
-
-  // 2. El Propietario (owner) principal no es editable en la gestión de equipo.
   if (member.role === 'owner') return null;
-
-  // 3. Un Administrador NO puede editar a otros Administradores.
   if (currentUserRole === 'admin' && member.role === 'admin') return null;
 
   const modalContent = isOpen ? (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden p-6 sm:p-8 space-y-6 animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-lg bg-[#141A16] border border-[#232C26] rounded-3xl shadow-2xl overflow-hidden p-6 sm:p-8 space-y-6 animate-in zoom-in-95 duration-200">
         
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+        <div className="flex items-center justify-between border-b border-[#232C26] pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex items-center justify-center text-indigo-400">
-              <UserCheck className="w-5 h-5 text-indigo-400" />
+            <div className="w-10 h-10 bg-[#556B2F]/20 border border-[#7C9A42]/30 rounded-2xl flex items-center justify-center text-[#8EA653]">
+              <UserCheck className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg sm:text-xl font-bold text-zinc-100">Editar Integrante</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-[#F5F5F0]">Editar Integrante</h3>
               <p className="text-xs text-zinc-400 mt-0.5">Modifica nombre, rol o estado operativo de {member.name}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            className="p-2 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg transition-colors"
+            className="p-2 text-zinc-400 hover:text-[#F5F5F0] hover:bg-[#19201C] rounded-xl transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -80,7 +74,6 @@ export function EditMemberModal({ member, currentUserRole }: EditMemberModalProp
             required
           />
 
-          {/* Email No Editable */}
           <div className="w-full">
             <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
               Correo Electrónico (No Modificable)
@@ -90,7 +83,7 @@ export function EditMemberModal({ member, currentUserRole }: EditMemberModalProp
                 type="email"
                 value={member.email || 'Sin correo asociado'}
                 disabled
-                className="block w-full rounded-xl border border-zinc-800/80 bg-zinc-900/60 px-4 py-3 pl-10 text-sm text-zinc-400 cursor-not-allowed"
+                className="block w-full rounded-xl border border-[#232C26] bg-[#0E1310] px-4 py-3 pl-10 text-sm text-zinc-400 cursor-not-allowed"
               />
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-600">
                 <Lock className="w-4 h-4" />
@@ -98,7 +91,6 @@ export function EditMemberModal({ member, currentUserRole }: EditMemberModalProp
             </div>
           </div>
 
-          {/* Selección de Rol */}
           <div className="w-full">
             <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5" htmlFor="role">
               Rol en el Comercio
@@ -109,20 +101,19 @@ export function EditMemberModal({ member, currentUserRole }: EditMemberModalProp
                 name="role"
                 value={role}
                 onChange={(e) => setRole(e.target.value as any)}
-                className="block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 pl-10 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none"
+                className="block w-full rounded-xl border border-[#232C26] bg-[#0B0F0D] px-4 py-3 pl-10 text-sm text-[#F5F5F0] focus:border-[#7C9A42] focus:outline-none focus:ring-2 focus:ring-[#7C9A42]/30 transition-all appearance-none"
               >
                 <option value="employee">Empleado (Acceso Operativo)</option>
                 <option value="admin" disabled={currentUserRole !== 'owner'}>
                   Administrador {currentUserRole !== 'owner' ? '(Requiere Propietario)' : ''}
                 </option>
               </select>
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
-                <Shield className="w-4 h-4 text-indigo-400" />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#7C9A42]">
+                <Shield className="w-4 h-4" />
               </div>
             </div>
           </div>
 
-          {/* Estado Operativo */}
           <div className="w-full">
             <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5" htmlFor="status">
               Estado
@@ -132,7 +123,7 @@ export function EditMemberModal({ member, currentUserRole }: EditMemberModalProp
               name="status"
               value={status}
               onChange={(e) => setStatus(e.target.value as any)}
-              className="block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none"
+              className="block w-full rounded-xl border border-[#232C26] bg-[#0B0F0D] px-4 py-3 text-sm text-[#F5F5F0] focus:border-[#7C9A42] focus:outline-none focus:ring-2 focus:ring-[#7C9A42]/30 transition-all appearance-none"
             >
               <option value="active">Activo (Puede operar)</option>
               <option value="inactive">Inactivo / Bloqueado (Acceso denegado)</option>
@@ -146,17 +137,16 @@ export function EditMemberModal({ member, currentUserRole }: EditMemberModalProp
             </div>
           )}
 
-          {/* Botones */}
-          <div className="pt-4 border-t border-zinc-800 flex justify-end gap-3">
+          <div className="pt-4 border-t border-[#232C26] flex justify-end gap-3">
             <Button
               type="button"
-              variant="secondary"
+              variant="ghost"
               onClick={() => setIsOpen(false)}
-              className="px-5 py-2.5 text-xs font-semibold"
+              className="px-5 py-2.5 text-xs font-bold"
             >
               Cancelar
             </Button>
-            <SubmitButton className="px-6 py-2.5 text-xs font-bold shadow-lg">
+            <SubmitButton className="px-6 py-2.5 text-xs font-bold bg-[#556B2F] hover:bg-[#7C9A42] text-[#F5F5F0] shadow-lg">
               Guardar Cambios
             </SubmitButton>
           </div>
@@ -171,7 +161,7 @@ export function EditMemberModal({ member, currentUserRole }: EditMemberModalProp
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="p-2 rounded-lg bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-zinc-100 transition-colors"
+        className="p-2 rounded-xl bg-[#141A16] hover:bg-[#19201C] border border-[#232C26] text-zinc-300 hover:text-[#F5F5F0] transition-colors"
         title="Editar integrante"
       >
         <Edit2 className="w-4 h-4" />

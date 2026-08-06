@@ -69,29 +69,28 @@ export function CurrencyInput({
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-medium text-zinc-300 mb-1.5" htmlFor={id}>
-          {label} {required && <span className="text-red-500">*</span>}
+        <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5" htmlFor={id}>
+          {label} {required && <span className="text-red-400">*</span>}
         </label>
       )}
       <div className="relative">
         {IconComponent && (
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
-            <IconComponent className="w-5 h-5" />
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7C9A42]">
+            <IconComponent className="w-4 h-4" />
           </div>
         )}
         
-        {/* Input visible para el usuario (Formateado) */}
         <input
           type="text"
           value={displayValue}
           onChange={handleChange}
           className={`
-            block w-full rounded-lg border bg-zinc-950/50 px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500
-            focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm
+            block w-full rounded-xl border bg-[#0B0F0D]/90 px-4 py-3 text-sm text-[#F5F5F0] placeholder-zinc-500
+            focus:border-[#7C9A42] focus:outline-none focus:ring-2 focus:ring-[#7C9A42]/30 transition-all shadow-inner
             ${IconComponent ? 'pl-10' : ''}
             ${error 
               ? 'border-red-500/50' 
-              : 'border-zinc-800'
+              : 'border-[#232C26]'
             }
             ${className}
           `}
@@ -100,7 +99,6 @@ export function CurrencyInput({
           {...props}
         />
         
-        {/* Input oculto real que se envía en el FormData */}
         <input 
           type="hidden" 
           id={id} 
@@ -116,7 +114,7 @@ export function CurrencyInput({
           </div>
         )}
       </div>
-      {error && <p className="mt-1.5 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-1.5 text-xs text-red-400">{error}</p>}
     </div>
   );
 }

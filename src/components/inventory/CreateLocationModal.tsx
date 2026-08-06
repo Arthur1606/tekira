@@ -18,22 +18,22 @@ export function CreateLocationModal() {
 
   const modalContent = isOpen ? (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
-      <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-6 animate-in zoom-in-95 duration-200 relative text-left my-auto">
+      <div className="bg-[#141A16] border border-[#232C26] rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-6 animate-in zoom-in-95 duration-200 relative text-left my-auto">
         
-        <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+        <div className="flex items-center justify-between border-b border-[#232C26] pb-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-indigo-500/10 rounded-xl flex items-center justify-center border border-indigo-500/20 text-indigo-400 shrink-0">
+            <div className="w-9 h-9 bg-[#556B2F]/20 rounded-xl flex items-center justify-center border border-[#7C9A42]/30 text-[#8EA653] shrink-0">
               <Warehouse className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-zinc-100">Crear Ubicación Física</h3>
+              <h3 className="text-lg font-bold text-[#F5F5F0]">Crear Ubicación Física</h3>
               <p className="text-xs text-zinc-400">Registra una tienda, bodega o almacén secundario</p>
             </div>
           </div>
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            className="p-1.5 text-zinc-400 hover:text-zinc-100 transition-colors rounded-xl hover:bg-zinc-800"
+            className="p-1.5 text-zinc-400 hover:text-zinc-100 transition-colors rounded-xl hover:bg-[#19201C]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -57,7 +57,7 @@ export function CreateLocationModal() {
             <select
               name="type"
               defaultValue="warehouse"
-              className="block w-full rounded-xl border border-zinc-800 bg-zinc-900/70 px-4 py-3 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none"
+              className="block w-full rounded-xl border border-[#232C26] bg-[#0B0F0D] px-4 py-3 text-sm text-[#F5F5F0] focus:border-[#7C9A42] focus:outline-none"
             >
               <option value="store">📍 Tienda / Punto de Venta</option>
               <option value="warehouse">📦 Bodega / Almacén Principal</option>
@@ -74,7 +74,7 @@ export function CreateLocationModal() {
             >
               Cancelar
             </Button>
-            <SubmitButton fullWidth className="w-1/2 py-3 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg">
+            <SubmitButton fullWidth className="w-1/2 py-3 text-xs font-bold bg-[#556B2F] hover:bg-[#7C9A42] text-[#F5F5F0] shadow-lg">
               Guardar Ubicación
             </SubmitButton>
           </div>
@@ -90,9 +90,9 @@ export function CreateLocationModal() {
         type="button"
         variant="secondary"
         onClick={() => setIsOpen(true)}
-        className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold py-2 px-3 h-auto"
+        className="bg-[#141A16] hover:bg-[#19201C] text-zinc-200 border border-[#232C26] text-xs font-bold py-2 px-3 h-auto"
       >
-        <Plus className="w-4 h-4 mr-1.5 text-indigo-400" /> Nueva Bodega / Ubicación
+        <Plus className="w-4 h-4 mr-1.5 text-[#7C9A42]" /> Nueva Bodega / Ubicación
       </Button>
 
       {mounted && isOpen && createPortal(modalContent, document.body)}

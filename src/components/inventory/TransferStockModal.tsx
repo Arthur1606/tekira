@@ -32,22 +32,22 @@ export function TransferStockModal({ locations, products }: TransferStockModalPr
 
   const modalContent = isOpen ? (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
-      <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-6 animate-in zoom-in-95 duration-200 relative text-left my-auto">
+      <div className="bg-[#141A16] border border-[#232C26] rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-6 animate-in zoom-in-95 duration-200 relative text-left my-auto">
         
-        <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+        <div className="flex items-center justify-between border-b border-[#232C26] pb-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-indigo-500/10 rounded-xl flex items-center justify-center border border-indigo-500/20 text-indigo-400 shrink-0">
+            <div className="w-9 h-9 bg-[#556B2F]/20 rounded-xl flex items-center justify-center border border-[#7C9A42]/30 text-[#8EA653] shrink-0">
               <ArrowRightLeft className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-zinc-100">Transferencia de Mercancía</h3>
+              <h3 className="text-lg font-bold text-[#F5F5F0]">Transferencia de Mercancía</h3>
               <p className="text-xs text-zinc-400">Mueve existencias entre Bodega y Tienda Principal</p>
             </div>
           </div>
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            className="p-1.5 text-zinc-400 hover:text-zinc-100 transition-colors rounded-xl hover:bg-zinc-800"
+            className="p-1.5 text-zinc-400 hover:text-zinc-100 transition-colors rounded-xl hover:bg-[#19201C]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -55,13 +55,13 @@ export function TransferStockModal({ locations, products }: TransferStockModalPr
 
         <form action={transferStockAction} className="space-y-4">
           
-          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center bg-zinc-900/60 p-4 rounded-2xl border border-zinc-800/80">
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center bg-[#0E1310] p-4 rounded-2xl border border-[#232C26]">
             <div className="sm:col-span-5 space-y-1">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">Ubicación Origen *</label>
+              <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400 block">Ubicación Origen *</label>
               <select
                 name="from_location_id"
                 required
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 text-xs text-zinc-100 focus:outline-none"
+                className="w-full bg-[#141A16] border border-[#232C26] rounded-xl p-2.5 text-xs text-[#F5F5F0] focus:outline-none"
               >
                 {locations.map(loc => (
                   <option key={loc.id} value={loc.id}>
@@ -71,16 +71,16 @@ export function TransferStockModal({ locations, products }: TransferStockModalPr
               </select>
             </div>
 
-            <div className="sm:col-span-2 flex justify-center text-indigo-400 pt-3 sm:pt-0">
+            <div className="sm:col-span-2 flex justify-center text-[#7C9A42] pt-3 sm:pt-0">
               <ArrowRight className="w-5 h-5 rotate-90 sm:rotate-0" />
             </div>
 
             <div className="sm:col-span-5 space-y-1">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">Ubicación Destino *</label>
+              <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400 block">Ubicación Destino *</label>
               <select
                 name="to_location_id"
                 required
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 text-xs text-zinc-100 focus:outline-none"
+                className="w-full bg-[#141A16] border border-[#232C26] rounded-xl p-2.5 text-xs text-[#F5F5F0] focus:outline-none"
               >
                 {locations.map(loc => (
                   <option key={loc.id} value={loc.id}>
@@ -98,7 +98,7 @@ export function TransferStockModal({ locations, products }: TransferStockModalPr
             <select
               name="variant_id"
               required
-              className="block w-full rounded-xl border border-zinc-800 bg-zinc-900/70 px-4 py-3 text-xs font-mono text-zinc-100 focus:border-indigo-500 focus:outline-none"
+              className="block w-full rounded-xl border border-[#232C26] bg-[#0B0F0D] px-4 py-3 text-xs font-mono text-[#F5F5F0] focus:border-[#7C9A42] focus:outline-none"
             >
               <option value="">-- Seleccionar variante --</option>
               {allVariants.map(v => (
@@ -136,7 +136,7 @@ export function TransferStockModal({ locations, products }: TransferStockModalPr
             >
               Cancelar
             </Button>
-            <SubmitButton fullWidth className="w-1/2 py-3 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg">
+            <SubmitButton fullWidth className="w-1/2 py-3 text-xs font-bold bg-[#556B2F] hover:bg-[#7C9A42] text-[#F5F5F0] shadow-lg">
               Confirmar Transferencia
             </SubmitButton>
           </div>
@@ -152,9 +152,9 @@ export function TransferStockModal({ locations, products }: TransferStockModalPr
         type="button"
         variant="secondary"
         onClick={() => setIsOpen(true)}
-        className="bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-bold py-2 px-3 h-auto"
+        className="bg-[#556B2F]/20 hover:bg-[#556B2F]/30 text-[#8EA653] border border-[#7C9A42]/30 text-xs font-bold py-2 px-3 h-auto"
       >
-        <ArrowRightLeft className="w-4 h-4 mr-1.5 text-indigo-400" /> Transferir Mercancía
+        <ArrowRightLeft className="w-4 h-4 mr-1.5 text-[#7C9A42]" /> Transferir Mercancía
       </Button>
 
       {mounted && isOpen && createPortal(modalContent, document.body)}
