@@ -59,7 +59,7 @@ export default async function SettingsPage({
 
   // Determinar rol del usuario actual en el comercio activo
   let currentUserRole: 'owner' | 'admin' | 'employee' = 'employee';
-  let currentEmployeeCode: string = 'EMP-0001';
+  let currentEmployeeCode: string = 'TKR-EMP-000001';
 
   const { data: member } = await supabase
     .from('team_members')
@@ -652,7 +652,7 @@ export default async function SettingsPage({
                       </td>
 
                       <td className="py-4 px-3 font-mono font-bold text-indigo-400 whitespace-nowrap">
-                        {member.employee_code || 'EMP-0001'}
+                        {member.employee_code || 'TKR-EMP-000001'}
                       </td>
 
                       <td className="py-4 px-3 text-zinc-400 font-mono">
@@ -697,7 +697,7 @@ export default async function SettingsPage({
                       </div>
                       <div>
                         <span className="font-bold text-sm text-zinc-100 block">{member.name}</span>
-                        <span className="text-xs font-mono font-bold text-indigo-400">{member.employee_code || 'EMP-0001'}</span>
+                        <span className="text-xs font-mono font-bold text-indigo-400">{member.employee_code || 'TKR-EMP-000001'}</span>
                       </div>
                     </div>
                     
