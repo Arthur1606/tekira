@@ -6,6 +6,7 @@ import { getUserStores } from '@/modules/stores/services';
 import { DesktopNav } from '@/components/ui/DesktopNav';
 import { MobileNav } from '@/components/ui/MobileNav';
 import { UserDropdownMenu } from '@/components/ui/UserDropdownMenu';
+import { HelpCenterWidget } from '@/components/help/HelpCenterWidget';
 
 export default async function DashboardLayout({
   children,
@@ -121,6 +122,9 @@ export default async function DashboardLayout({
           </div>
         </main>
       </div>
+
+      {/* Centro de Ayuda No Intrusivo Flotante */}
+      <HelpCenterWidget />
     </div>
   );
 }

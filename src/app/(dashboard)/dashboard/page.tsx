@@ -18,8 +18,6 @@ import { InsightCard } from '@/components/analytics/InsightCard';
 import { CloseCashModal } from '@/components/analytics/CloseCashModal';
 import { Lightbulb } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
-import { PilotOnboardingGuide } from '@/components/dashboard/PilotOnboardingGuide';
-import { InteractiveTour } from '@/components/dashboard/InteractiveTour';
 
 export default async function DashboardPage({
   searchParams,
@@ -150,17 +148,6 @@ export default async function DashboardPage({
           </Button>
         </Link>
       </div>
-
-      {/* Onboarding Guide Widget para Negocios Nuevos */}
-      {(userRole === 'owner' || userRole === 'admin') && (
-        <PilotOnboardingGuide 
-          hasStoreInfo={hasStoreInfo}
-          locationsCount={locationsCount || 0}
-          teamCount={teamMetrics.totalMembers}
-          productsCount={inventoryMetrics.totalProducts}
-          isCashOpen={!!activeSession}
-        />
-      )}
 
       {/* TARJETA DINÁMICA DE ESTADO DE CAJA (OPEN / CLOSED) */}
       <div className="space-y-4 animate-in fade-in duration-700">
@@ -405,9 +392,6 @@ export default async function DashboardPage({
           )}
         </Card>
       </div>
-
-      {/* Interactive Tour for new business users */}
-      <InteractiveTour />
 
     </div>
   );
