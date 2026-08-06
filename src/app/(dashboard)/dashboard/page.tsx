@@ -19,6 +19,7 @@ import { CloseCashModal } from '@/components/analytics/CloseCashModal';
 import { Lightbulb } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { PilotOnboardingGuide } from '@/components/dashboard/PilotOnboardingGuide';
+import { InteractiveTour } from '@/components/dashboard/InteractiveTour';
 
 export default async function DashboardPage({
   searchParams,
@@ -404,6 +405,9 @@ export default async function DashboardPage({
           )}
         </Card>
       </div>
+
+      {/* Interactive Tour for new business users */}
+      <InteractiveTour />
 
     </div>
   );

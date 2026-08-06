@@ -6,9 +6,10 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Product } from '@/modules/inventory/types';
-import { PackageSearch, ArrowRightLeft, Layers, Hash, Plus } from 'lucide-react';
+import { PackageSearch, ArrowRightLeft, Layers, Hash, Plus, Package } from 'lucide-react';
 import { InventorySearchFilter } from './InventorySearchFilter';
 import { DeleteProductModal } from './DeleteProductModal';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 interface InventoryListProps {
   initialProducts: Product[];
@@ -42,12 +43,9 @@ export function InventoryList({ initialProducts, currentFilter, currentUserRole 
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
     
-    // Buscar en nombre de producto
     if (product.name.toLowerCase().includes(term)) return true;
-    // Buscar en SKU principal
     if (product.sku?.toLowerCase().includes(term)) return true;
     
-    // Buscar en variantes
     if (product.variants) {
       return product.variants.some(v => 
         v.name.toLowerCase().includes(term) || 
@@ -70,33 +68,28 @@ export function InventoryList({ initialProducts, currentFilter, currentUserRole 
       )}
 
       {/* Lista de Productos */}
-      <Card noPadding className="overflow-hidden">
-        {initialProducts.length === 0 ? (
-          <div className="p-12 text-center flex flex-col items-center justify-center">
-            <div className="w-16 h-16 bg-zinc-800/50 text-zinc-500 rounded-full flex items-center justify-center mb-4">
-              <PackageSearch className="w-8 h-8" />
-            </div>
-            <h4 className="text-lg font-semibold text-[#F5F5F0] mb-2">No tienes productos registrados</h4>
-            <p className="text-sm text-zinc-400 max-w-sm leading-relaxed mb-6">
-              {currentFilter === 'deleted' 
-                ? 'No hay productos retirados en el historial de auditoría.' 
-                : 'Comienza a construir la memoria física de tu negocio agregando tu primer producto al catálogo.'}
-            </p>
-            {currentFilter !== 'deleted' && (
-              <Link href="/inventory/new">
-                <Button variant="primary" className="font-bold">
-                  <Plus className="w-4 h-4 mr-1.5" /> Crear primer producto
-                </Button>
-              </Link>
-            )}
-          </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="p-10 text-center text-zinc-500 text-sm font-medium">
-            No se encontraron resultados para la búsqueda "{searchTerm}".
-          </div>
-        ) : (
-          <div className="divide-y divide-zinc-800">
-            <div className="bg-zinc-900/50 p-4 grid grid-cols-12 gap-4 text-xs font-bold text-zinc-400 uppercase tracking-wider hidden sm:grid">
+      {initialProducts.length === 0 ? (
+        <EmptyState
+          icon={Package}
+          title="No tienes productos en tu catálogo"
+          description={
+            currentFilter === 'deleted' 
+              ? 'No hay productos retirados en el historial de auditoría.' 
+              : 'Comienza a registrar la memoria de productos de tu negocio asignando SKUs automáticos e inmutables.'
+          }
+          actionLabel={currentFilter !== 'deleted' ? 'Crear Primer Producto' : undefined}
+          actionHref={currentFilter !== 'deleted' ? '/inventory/new' : undefined}
+        />
+      ) : filteredProducts.length === 0 ? (
+        <EmptyState
+          icon={PackageSearch}
+          title="Sin resultados de búsqueda"
+          description={`No se encontraron productos o SKUs coincidentes con "${searchTerm}".`}
+        />
+      ) : (
+        <Card noPadding className="overflow-hidden">
+          <div className="divide-y divide-[#232C26]">
+            <div className="bg-[#0E1310] p-4 grid grid-cols-12 gap-4 text-xs font-bold text-zinc-400 uppercase tracking-wider hidden sm:grid">
               <div className="col-span-12 sm:col-span-5">Producto / SKU</div>
               <div className="col-span-3 sm:col-span-2 text-right">Existencia Global</div>
               <div className="hidden sm:block sm:col-span-2 text-right">Precio Venta</div>
@@ -109,7 +102,7 @@ export function InventoryList({ initialProducts, currentFilter, currentUserRole 
                 <div className="col-span-12 sm:col-span-5 flex flex-col">
                   <span className="font-bold text-[#F5F5F0]">{product.name}</span>
                   <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="neutral" className="px-1.5 py-0 text-[10px] bg-zinc-800/80">{product.category}</Badge>
+                    <Badge variant="neutral" className="px-1.5 py-0 text-[10px] bg-[#141A16]">{product.category}</Badge>
                     {product.sku && <span className="text-[11px] font-mono font-bold text-[#8EA653] flex items-center gap-1"><Hash className="w-3 h-3" /> {product.sku}</span>}
                   </div>
                   <div className="mt-2 sm:hidden">
@@ -137,15 +130,13 @@ export function InventoryList({ initialProducts, currentFilter, currentUserRole 
                     </Button>
                   </Link>
 
-                  {/* Modal de Eliminación Segura (Soft Delete) - Solo Propietario */}
                   {currentUserRole === 'owner' && !product.deleted_at && (
                     <DeleteProductModal product={product} userRole={currentUserRole} />
                   )}
                 </div>
 
-                {/* Variantes y SKU Obligatorio - Fila Secundaria */}
                 {product.variants && product.variants.length > 0 && (
-                  <div className="col-span-12 mt-2 pt-3 border-t border-zinc-800/30">
+                  <div className="col-span-12 mt-2 pt-3 border-t border-[#232C26]">
                     <div className="flex items-center gap-1.5 mb-2 pl-1">
                       <Layers className="w-3.5 h-3.5 text-zinc-500" />
                       <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-500">Variantes & SKU Obligatorio</span>
@@ -172,8 +163,8 @@ export function InventoryList({ initialProducts, currentFilter, currentUserRole 
               </div>
             ))}
           </div>
-        )}
-      </Card>
+        </Card>
+      )}
     </div>
   );
 }

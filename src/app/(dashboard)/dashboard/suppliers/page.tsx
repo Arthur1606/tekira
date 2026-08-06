@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { getUserStores } from '@/modules/stores/services';
 import { getSuppliers } from '@/modules/purchases/services';
 import { redirect } from 'next/navigation';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 export default async function SuppliersPage({
   searchParams,
@@ -46,7 +47,7 @@ export default async function SuppliersPage({
             <Users className="w-8 h-8 text-[#7C9A42]" /> Proveedores
           </h1>
           <p className="text-sm font-medium text-zinc-400 mt-1">
-            Gestiona tu red de abastecimiento
+            Gestiona tu red de abastecimiento comercial
           </p>
         </div>
         <Link href="/dashboard/suppliers/new">
@@ -56,26 +57,17 @@ export default async function SuppliersPage({
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {suppliers.length === 0 ? (
-          <div className="col-span-full">
-            <Card className="flex flex-col items-center justify-center p-12 text-center">
-              <div className="w-16 h-16 bg-zinc-900/50 rounded-full flex items-center justify-center mb-4">
-                <Users className="w-8 h-8 text-zinc-600" />
-              </div>
-              <h3 className="text-lg font-bold text-[#F5F5F0]">No hay proveedores</h3>
-              <p className="text-sm text-zinc-400 mt-2 max-w-sm mb-6">
-                Comienza a registrar a tus proveedores para llevar un control detallado de tus compras y abastecimiento.
-              </p>
-              <Link href="/dashboard/suppliers/new">
-                <Button variant="primary">
-                  Crear el primer proveedor
-                </Button>
-              </Link>
-            </Card>
-          </div>
-        ) : (
-          suppliers.map((supplier) => (
+      {suppliers.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title="No tienes proveedores registrados"
+          description="Construye el directorio de contactos comerciales de tu negocio para asociar facturas de entrada e historial de abastecimiento."
+          actionLabel="Crear Primer Proveedor"
+          actionHref="/dashboard/suppliers/new"
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {suppliers.map((supplier) => (
             <Card key={supplier.id} className="group hover:border-[#7C9A42]/30 transition-all duration-300">
               <div className="flex justify-between items-start mb-4">
                 <h3 className="text-xl font-bold text-[#F5F5F0] group-hover:text-[#8EA653] transition-colors">{supplier.name}</h3>
@@ -108,9 +100,9 @@ export default async function SuppliersPage({
                 )}
               </div>
             </Card>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -11,9 +11,10 @@ import { ArrowLeft, Package, Tag, Layers, AlertCircle, Plus, Hash } from 'lucide
 import Link from 'next/link';
 
 const CATEGORIES = [
-  'General', 'Bebidas', 'Alimentos', 'Abarrotes', 'Limpieza', 
-  'Cuidado Personal', 'Lácteos', 'Panadería', 'Carnes', 'Frutas y Verduras', 
-  'Snacks', 'Dulcería', 'Licores', 'Cigarrillos', 'Hogar', 'Mascotas', 'Otro'
+  'General', 'Ropa / Calzado', 'Tecnología', 'Papelería', 'Ferretería', 'Miscelánea',
+  'Bebidas', 'Alimentos', 'Abarrotes', 'Limpieza', 'Cuidado Personal', 'Lácteos', 
+  'Panadería', 'Carnes', 'Frutas y Verduras', 'Snacks', 'Dulcería', 'Licores', 
+  'Cigarrillos', 'Hogar', 'Mascotas', 'Otro'
 ];
 
 const UNITS = [

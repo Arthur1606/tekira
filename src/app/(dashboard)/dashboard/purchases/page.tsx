@@ -8,6 +8,7 @@ import { getUserStores } from '@/modules/stores/services';
 import { getPurchases, getPurchasesMetrics, getSuppliers } from '@/modules/purchases/services';
 import { redirect } from 'next/navigation';
 import { MetricCard } from '@/components/analytics/MetricCard';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 export default async function PurchasesPage({
   searchParams,
@@ -111,22 +112,18 @@ export default async function PurchasesPage({
         <h3 className="text-lg font-bold text-[#F5F5F0] mb-4 flex items-center gap-2">
           <Clock className="w-5 h-5 text-[#7C9A42]" /> Últimas Compras Registradas
         </h3>
-        <Card className="p-0 sm:p-0 bg-[#141A16] border-[#232C26] overflow-hidden">
-          {purchases.length === 0 ? (
-            <div className="py-16 flex flex-col items-center justify-center text-center">
-              <div className="w-16 h-16 bg-zinc-800/50 text-zinc-500 rounded-full flex items-center justify-center mb-4">
-                <ShoppingCart className="w-6 h-6" />
-              </div>
-              <h4 className="text-lg font-semibold text-[#F5F5F0] mb-2">No hay compras registradas</h4>
-              <p className="text-sm text-zinc-400 max-w-sm">
-                Registra tu primera compra para abastecer el inventario y mantener tus costos actualizados.
-              </p>
-              <Link href="/dashboard/purchases/new" className="mt-6">
-                <Button variant="primary">Registrar Compra</Button>
-              </Link>
-            </div>
-          ) : (
-            <div className="divide-y divide-zinc-800/50">
+        
+        {purchases.length === 0 ? (
+          <EmptyState
+            icon={ShoppingCart}
+            title="No tienes compras ni facturas de entrada registradas"
+            description="Registra tu primera compra para abastecer existencias en bodega y actualizar el costo promedio de tu inventario."
+            actionLabel="Registrar Primera Compra"
+            actionHref="/dashboard/purchases/new"
+          />
+        ) : (
+          <Card className="p-0 sm:p-0 bg-[#141A16] border-[#232C26] overflow-hidden">
+            <div className="divide-y divide-[#232C26]">
               {purchases.map((purchase) => (
                 <div key={purchase.id} className="flex items-center justify-between p-4 sm:p-5 hover:bg-[#19201C] transition-colors group">
                   <div className="flex items-center gap-4">
@@ -140,7 +137,7 @@ export default async function PurchasesPage({
                         <Badge variant={purchase.status === 'completed' ? 'success' : 'neutral'} className="text-[10px]">
                           {purchase.status}
                         </Badge>
-                        <span className="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300">
+                        <span className="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-[#19201C] text-zinc-300 border border-[#232C26]">
                           {purchase.payment_method}
                         </span>
                       </div>
@@ -152,8 +149,8 @@ export default async function PurchasesPage({
                 </div>
               ))}
             </div>
-          )}
-        </Card>
+          </Card>
+        )}
       </div>
 
     </div>
