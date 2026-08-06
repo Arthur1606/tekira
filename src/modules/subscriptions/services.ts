@@ -34,6 +34,9 @@ export interface SuperAdminMetrics {
   enterprisePlanStores: number;
 }
 
+// Configuración global del Modo Piloto Universal
+export const PILOT_MODE = true;
+
 /**
  * Obtener la suscripción activa de un comercio
  */
@@ -47,16 +50,15 @@ export async function getStoreSubscription(storeId: string): Promise<Subscriptio
     .maybeSingle();
 
   if (error || !data) {
-    // Si no existe registro aún, retornar fallback por defecto del plan Básico (Trial)
     return {
       store_id: storeId,
-      plan_tier: 'basic',
+      plan_tier: 'enterprise',
       status: 'trial',
-      trial_ends_at: new Date(Date.now() + 14 * 86400000).toISOString(),
-      current_period_end: new Date(Date.now() + 14 * 86400000).toISOString(),
-      max_users: 3,
-      max_locations: 1,
-      max_products: 50,
+      trial_ends_at: new Date(Date.now() + 90 * 86400000).toISOString(),
+      current_period_end: new Date(Date.now() + 90 * 86400000).toISOString(),
+      max_users: 9999,
+      max_locations: 9999,
+      max_products: 9999,
     };
   }
 
@@ -64,7 +66,8 @@ export async function getStoreSubscription(storeId: string): Promise<Subscriptio
 }
 
 /**
- * Verificar uso en tiempo real y validar límites del plan
+ * Verificar uso en tiempo real y validar límites del plan.
+ * En Modo Piloto (PILOT_MODE = true) o Plan Enterprise, NINGÚN límite es restrictivo.
  */
 export async function checkStoreLimits(storeId: string): Promise<StoreLimitsCheck> {
   const supabase = await createClient();
@@ -81,15 +84,15 @@ export async function checkStoreLimits(storeId: string): Promise<StoreLimitsChec
   const currentLocations = locationsRes.count || 0;
   const currentProducts = productsRes.count || 0;
 
-  const isEnterprise = subscription.plan_tier === 'enterprise';
+  const isUnlimited = PILOT_MODE || subscription.plan_tier === 'enterprise';
 
-  const maxUsers = isEnterprise ? 9999 : subscription.max_users;
-  const maxLocations = isEnterprise ? 9999 : subscription.max_locations;
-  const maxProducts = isEnterprise ? 9999 : subscription.max_products;
+  const maxUsers = isUnlimited ? 9999 : subscription.max_users;
+  const maxLocations = isUnlimited ? 9999 : subscription.max_locations;
+  const maxProducts = isUnlimited ? 9999 : subscription.max_products;
 
-  const usersReached = !isEnterprise && currentUsers >= maxUsers;
-  const locationsReached = !isEnterprise && currentLocations >= maxLocations;
-  const productsReached = !isEnterprise && currentProducts >= maxProducts;
+  const usersReached = !isUnlimited && currentUsers >= maxUsers;
+  const locationsReached = !isUnlimited && currentLocations >= maxLocations;
+  const productsReached = !isUnlimited && currentProducts >= maxProducts;
 
   return {
     subscription,
@@ -98,9 +101,9 @@ export async function checkStoreLimits(storeId: string): Promise<StoreLimitsChec
       locations: { current: currentLocations, max: maxLocations, isReached: locationsReached },
       products: { current: currentProducts, max: maxProducts, isReached: productsReached },
     },
-    canAddUser: !usersReached,
-    canAddLocation: !locationsReached,
-    canAddProduct: !productsReached,
+    canAddUser: true,      // En prueba piloto universal, siempre permitido
+    canAddLocation: true,  // En prueba piloto universal, siempre permitido
+    canAddProduct: true,   // En prueba piloto universal, siempre permitido
   };
 }
 
@@ -113,7 +116,6 @@ export async function getSuperAdminMetrics(): Promise<SuperAdminMetrics> {
   const { data, error } = await supabase.rpc('get_saas_super_admin_metrics');
 
   if (error || !data || data.length === 0) {
-    // Fallback manual seguro mediante conteos de alto nivel
     const [storesCount, activeStoresCount, usersCount] = await Promise.all([
       supabase.from('stores').select('id', { count: 'exact', head: true }),
       supabase.from('stores').select('id', { count: 'exact', head: true }).eq('status', 'active'),
@@ -125,9 +127,9 @@ export async function getSuperAdminMetrics(): Promise<SuperAdminMetrics> {
       activeStores: activeStoresCount.count || 0,
       trialStores: activeStoresCount.count || 0,
       totalUsers: usersCount.count || 0,
-      basicPlanStores: storesCount.count || 0,
+      basicPlanStores: 0,
       professionalPlanStores: 0,
-      enterprisePlanStores: 0,
+      enterprisePlanStores: storesCount.count || 0,
     };
   }
 

@@ -504,29 +504,37 @@ export default async function SettingsPage({
         </Card>
       )}
 
-      {/* TAB 3: MI PLAN SAAS Y LÍMITES */}
+      {/* TAB 3: MI PLAN SAAS (MODO PILOTO) */}
       {activeTab === 'plan' && (
         <div className="space-y-8 max-w-4xl mx-auto">
           
           <Card noPadding className="p-6 sm:p-8 space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#232C26] pb-6">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-[#232C26] pb-6">
               <div>
                 <h2 className="text-xl font-bold text-[#F5F5F0] flex items-center gap-2">
                   <CreditCard className="w-6 h-6 text-[#7C9A42]" /> Mi Plan TEKIRA SaaS
                 </h2>
                 <p className="text-xs text-zinc-400 mt-1">
-                  Suscripción activa y consumo de recursos de tu comercio
+                  Suscripción comercial activa y consumo de recursos de tu comercio
                 </p>
               </div>
 
-              <div>
-                <Badge variant="primary" className="bg-[#556B2F]/20 text-[#8EA653] border-[#7C9A42]/40 gap-1.5 py-1 px-3 text-xs uppercase font-mono">
-                  <Sparkles className="w-3.5 h-3.5 text-[#7C9A42]" /> Plan {planLimits.subscription.plan_tier.toUpperCase()} ({planLimits.subscription.status.toUpperCase()})
+              <div className="flex flex-col items-end gap-2">
+                <Badge variant="success" className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 gap-1.5 py-1 px-3 text-xs uppercase font-mono shadow-[0_0_15px_rgba(52,211,153,0.15)]">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" /> Prueba Piloto Enterprise Activa
                 </Badge>
+                {(() => {
+                  const daysLeft = Math.ceil((new Date(planLimits.subscription.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                  return (
+                    <span className="text-[10px] font-mono text-zinc-400">
+                      Vence en <strong className="text-[#8EA653]">{Math.max(0, daysLeft)} días</strong>
+                    </span>
+                  );
+                })()}
               </div>
             </div>
 
-            {/* Tarjetas de Uso y Límites en Tiempo Real */}
+            {/* Tarjetas de Uso en Tiempo Real */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               
               {/* Uso Usuarios */}
@@ -537,13 +545,7 @@ export default async function SettingsPage({
                 </div>
                 <div className="flex items-baseline justify-between">
                   <span className="text-2xl font-black text-[#F5F5F0]">{planLimits.usage.users.current}</span>
-                  <span className="text-xs font-mono text-zinc-500">de {planLimits.usage.users.max} max</span>
-                </div>
-                <div className="w-full bg-[#141A16] h-2 rounded-full overflow-hidden border border-[#232C26]">
-                  <div 
-                    className={`h-full transition-all duration-500 ${planLimits.usage.users.isReached ? 'bg-rose-500' : 'bg-[#7C9A42]'}`}
-                    style={{ width: `${Math.min(100, Math.round((planLimits.usage.users.current / planLimits.usage.users.max) * 100))}%` }}
-                  />
+                  <span className="text-[10px] font-mono font-bold text-[#8EA653] uppercase bg-[#556B2F]/20 px-2 py-0.5 rounded-md border border-[#7C9A42]/30">Ilimitado</span>
                 </div>
               </div>
 
@@ -555,13 +557,7 @@ export default async function SettingsPage({
                 </div>
                 <div className="flex items-baseline justify-between">
                   <span className="text-2xl font-black text-[#F5F5F0]">{planLimits.usage.locations.current}</span>
-                  <span className="text-xs font-mono text-zinc-500">de {planLimits.usage.locations.max} max</span>
-                </div>
-                <div className="w-full bg-[#141A16] h-2 rounded-full overflow-hidden border border-[#232C26]">
-                  <div 
-                    className={`h-full transition-all duration-500 ${planLimits.usage.locations.isReached ? 'bg-rose-500' : 'bg-[#7C9A42]'}`}
-                    style={{ width: `${Math.min(100, Math.round((planLimits.usage.locations.current / planLimits.usage.locations.max) * 100))}%` }}
-                  />
+                  <span className="text-[10px] font-mono font-bold text-[#8EA653] uppercase bg-[#556B2F]/20 px-2 py-0.5 rounded-md border border-[#7C9A42]/30">Ilimitado</span>
                 </div>
               </div>
 
@@ -573,86 +569,78 @@ export default async function SettingsPage({
                 </div>
                 <div className="flex items-baseline justify-between">
                   <span className="text-2xl font-black text-[#F5F5F0]">{planLimits.usage.products.current}</span>
-                  <span className="text-xs font-mono text-zinc-500">de {planLimits.usage.products.max} max</span>
-                </div>
-                <div className="w-full bg-[#141A16] h-2 rounded-full overflow-hidden border border-[#232C26]">
-                  <div 
-                    className={`h-full transition-all duration-500 ${planLimits.usage.products.isReached ? 'bg-rose-500' : 'bg-[#7C9A42]'}`}
-                    style={{ width: `${Math.min(100, Math.round((planLimits.usage.products.current / planLimits.usage.products.max) * 100))}%` }}
-                  />
+                  <span className="text-[10px] font-mono font-bold text-[#8EA653] uppercase bg-[#556B2F]/20 px-2 py-0.5 rounded-md border border-[#7C9A42]/30">Ilimitado</span>
                 </div>
               </div>
-
             </div>
 
-            {/* Aviso informativo de pasarela */}
-            <div className="p-4 bg-[#556B2F]/15 border border-[#7C9A42]/30 rounded-2xl text-xs text-[#8EA653] leading-relaxed">
-              <p className="font-bold text-[#F5F5F0] mb-1">Arquitectura SaaS Lista (Fase Piloto):</p>
-              <p>
-                Tu empresa cuenta con una prueba activa de 14 días en el Plan {planLimits.subscription.plan_tier.toUpperCase()}. Las pasarelas de pago automatizadas se encuentran en preparación. Durante la fase piloto puedes solicitar un upgrade comunicándote con nuestro soporte comercial.
-              </p>
-            </div>
+            {/* Canje de Cupón Promocional */}
+            {canManageStore && (
+              <div className="pt-4 border-t border-[#232C26]">
+                <h4 className="text-sm font-bold text-[#F5F5F0] mb-2 flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-[#7C9A42]" /> Código Promocional Piloto
+                </h4>
+                <p className="text-xs text-zinc-400 mb-4">Si tienes un código de acceso a la fase piloto comercial, ingrésalo aquí para extender tu periodo de gracia con beneficios Enterprise.</p>
+                
+                <form action={async (formData) => {
+                  'use server';
+                  const { redeemPromoCodeAction } = await import('@/modules/subscriptions/actions');
+                  await redeemPromoCodeAction(formData);
+                }} className="flex flex-col sm:flex-row items-center gap-3">
+                  <input
+                    type="text"
+                    name="promo_code"
+                    placeholder="Ej. TEKIRA-PILOTO-90"
+                    required
+                    className="w-full sm:flex-1 bg-[#0E1310] border border-[#232C26] rounded-xl px-4 py-2.5 text-sm text-[#F5F5F0] font-mono uppercase tracking-widest focus:outline-none focus:border-[#7C9A42]"
+                  />
+                  <SubmitButton className="w-full sm:w-auto px-6 py-2.5 bg-[#556B2F] hover:bg-[#7C9A42] text-[#F5F5F0] font-bold text-sm shadow-md">
+                    Canjear Cupón
+                  </SubmitButton>
+                </form>
+              </div>
+            )}
           </Card>
 
-          {/* Comparativa de Planes TEKIRA SaaS */}
+          {/* Planes Comerciales Próximamente */}
           <div className="space-y-4">
             <h3 className="text-base font-extrabold text-[#F5F5F0] uppercase font-mono tracking-wider">
               Planes Comerciales Disponibles
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              
-              {/* Plan Básico */}
-              <Card className="p-6 space-y-4 border-[#232C26] bg-[#141A16]">
-                <div className="space-y-1">
-                  <span className="text-xs font-mono font-bold text-zinc-400 uppercase">Plan Básico</span>
-                  <h4 className="text-2xl font-black text-[#F5F5F0]">$0 <span className="text-xs font-normal text-zinc-500">/ mes piloto</span></h4>
-                  <p className="text-xs text-zinc-400">Ideal para pequeños comercios o tiendas de barrio.</p>
+            <div className="grid grid-cols-1 gap-6">
+              <Card className="p-8 border-[#7C9A42]/50 bg-gradient-to-br from-[#141A16] to-[#0E1310] relative overflow-hidden shadow-2xl">
+                <div className="absolute top-0 right-0 bg-[#556B2F] text-white text-[10px] font-mono font-bold px-4 py-1.5 rounded-bl-xl border-l border-b border-[#7C9A42]/40 shadow-lg shadow-[#556B2F]/30">
+                  FASE DE LANZAMIENTO
                 </div>
-                <ul className="space-y-2 text-xs text-zinc-300 pt-2 border-t border-[#232C26]">
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> Hasta 3 Usuarios</li>
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> 1 Ubicación / Tienda</li>
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> 50 Productos SKU</li>
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> 2FA TOTP Incluido</li>
-                </ul>
-              </Card>
+                
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                  <div className="space-y-2 max-w-lg">
+                    <span className="text-xs font-mono font-bold text-[#8EA653] uppercase tracking-widest">Plan Piloto Enterprise</span>
+                    <h4 className="text-3xl font-black text-[#F5F5F0]">$0 <span className="text-sm font-normal text-zinc-400">durante todo el periodo de prueba</span></h4>
+                    <p className="text-sm text-zinc-300 leading-relaxed pt-2">
+                      Estás utilizando TEKIRA sin ningún tipo de restricciones. Experimenta el potencial total de nuestro ecosistema SaaS mientras validas la operatividad comercial de tu negocio.
+                    </p>
+                  </div>
 
-              {/* Plan Profesional */}
-              <Card className="p-6 space-y-4 border-[#7C9A42]/50 bg-[#141A16] relative overflow-hidden shadow-2xl">
-                <div className="absolute top-0 right-0 bg-[#556B2F] text-white text-[9px] font-mono font-bold px-3 py-1 rounded-bl-xl border-l border-b border-[#7C9A42]/40">
-                  RECOMENDADO
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-xs text-zinc-300 shrink-0 border-l border-[#232C26] pl-0 sm:pl-6 pt-4 sm:pt-0 border-t sm:border-t-0">
+                    <div className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> Usuarios Ilimitados</div>
+                    <div className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> Productos Ilimitados</div>
+                    <div className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> Bodegas Múltiples</div>
+                    <div className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> Ventas en Tiempo Real</div>
+                    <div className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> Abastecimiento (Compras)</div>
+                    <div className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> Seguridad 2FA TOTP</div>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <span className="text-xs font-mono font-bold text-[#8EA653] uppercase">Plan Profesional</span>
-                  <h4 className="text-2xl font-black text-[#F5F5F0]">$49 USD <span className="text-xs font-normal text-zinc-500">/ mes</span></h4>
-                  <p className="text-xs text-zinc-400">Para negocios en expansión con bodegas y equipo.</p>
-                </div>
-                <ul className="space-y-2 text-xs text-zinc-300 pt-2 border-t border-[#232C26]">
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> Hasta 10 Usuarios</li>
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> 3 Bodegas / Ubicaciones</li>
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> 500 Productos SKU</li>
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> Transferencias de Mercancía</li>
-                </ul>
-              </Card>
 
-              {/* Plan Empresarial */}
-              <Card className="p-6 space-y-4 border-[#232C26] bg-[#141A16]">
-                <div className="space-y-1">
-                  <span className="text-xs font-mono font-bold text-zinc-400 uppercase">Plan Empresarial</span>
-                  <h4 className="text-2xl font-black text-[#F5F5F0]">$99 USD <span className="text-xs font-normal text-zinc-500">/ mes</span></h4>
-                  <p className="text-xs text-zinc-400">Para cadenas comerciales con demanda sin límites.</p>
+                <div className="mt-8 pt-4 border-t border-[#232C26] text-center">
+                  <span className="text-xs font-mono text-zinc-500 uppercase tracking-widest">
+                    Planes Comerciales (Básico, Pro y Enterprise) próximamente
+                  </span>
                 </div>
-                <ul className="space-y-2 text-xs text-zinc-300 pt-2 border-t border-[#232C26]">
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> Usuarios Ilimitados</li>
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> Bodegas Ilimitadas</li>
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> Catálogo Ilimitado</li>
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> Soporte Prioritario 24/7</li>
-                </ul>
               </Card>
-
             </div>
           </div>
-
         </div>
       )}
 
