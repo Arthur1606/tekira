@@ -32,7 +32,7 @@ export function MobileNav() {
           
           <div className="relative w-72 max-w-[80vw] bg-[#18181B] border-r border-zinc-800 h-full shadow-2xl flex flex-col animate-in slide-in-from-left duration-300">
             <div className="p-6 flex items-center justify-between">
-              <Link href="/dashboard" className="flex items-center gap-2" onClick={() => setIsOpen(false)}>
+              <Link href="/dashboard" prefetch={true} className="flex items-center gap-2" onClick={() => setIsOpen(false)}>
                 <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
                   <span className="text-white font-black text-xl leading-none tracking-tighter">T</span>
                 </div>
@@ -52,6 +52,7 @@ export function MobileNav() {
                   <Link
                     key={link.href}
                     href={link.href}
+                    prefetch={true}
                     onClick={() => setIsOpen(false)}
                     className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200
                       ${isActive 
@@ -69,7 +70,8 @@ export function MobileNav() {
 
             <div className="p-4 border-t border-zinc-800">
               <Link 
-                href="/settings" 
+                href="/settings"
+                prefetch={true} 
                 onClick={() => setIsOpen(false)}
                 className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
                   isSettingsActive
