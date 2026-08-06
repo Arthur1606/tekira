@@ -1,4 +1,3 @@
-import { addMovement } from '@/modules/inventory/actions';
 import { getProduct, getMovementHistory } from '@/modules/inventory/services';
 import { getUserStores } from '@/modules/stores/services';
 import { Card } from '@/components/ui/Card';
@@ -26,8 +25,6 @@ export default async function NewMovementPage({
   if (!product) redirect('/inventory');
 
   const history = await getMovementHistory(product.id, activeStore.id);
-
-  const addMovementWithId = addMovement.bind(null, product.id);
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -117,7 +114,6 @@ export default async function NewMovementPage({
               productId={product.id} 
               productUnit={product.unit} 
               variants={formattedVariants}
-              actionFn={addMovementWithId} 
             />
           </Card>
         </div>

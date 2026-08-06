@@ -197,7 +197,7 @@ export default async function DashboardPage({
                   <div className="p-3 bg-zinc-900/60 rounded-xl border border-zinc-800/80 text-xs space-y-1">
                     <div className="flex items-center justify-between text-zinc-400">
                       <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-zinc-500" /> Último Cierre:</span>
-                      <span className="font-mono text-zinc-300">{formatDate(lastClosedSession.created_at)}</span>
+                      <span className="font-mono text-zinc-300">{formatDate(lastClosedSession.closed_at || lastClosedSession.opening?.created_at)}</span>
                     </div>
                     <div className="flex items-center justify-between font-semibold pt-1 border-t border-zinc-800/60">
                       <span className="text-zinc-400">Efectivo Contado:</span>

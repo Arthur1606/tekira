@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { SubmitButton } from '@/components/ui/SubmitButton';
 import { Input } from '@/components/ui/Input';
 import { getQuantityStep } from '@/modules/inventory/types';
+import { addMovement } from '@/modules/inventory/actions';
 import { ArrowUpRight, ArrowDownRight, Package, Edit3, Sliders, Layers, AlertCircle } from 'lucide-react';
 
 interface VariantOption {
@@ -17,10 +18,9 @@ interface MovementFormProps {
   productId: string;
   productUnit: string;
   variants: VariantOption[];
-  actionFn: (formData: FormData) => void;
 }
 
-export function MovementForm({ productId, productUnit, variants, actionFn }: MovementFormProps) {
+export function MovementForm({ productId, productUnit, variants }: MovementFormProps) {
   const [mode, setMode] = useState<'manual' | 'adjustment'>('manual');
   const [selectedVariantId, setSelectedVariantId] = useState<string>(variants[0]?.id || '');
   const [type, setType] = useState<'entry' | 'damage' | 'loss' | 'discontinued'>('entry');
@@ -46,7 +46,8 @@ export function MovementForm({ productId, productUnit, variants, actionFn }: Mov
   const reasons = getReasonOptions();
 
   return (
-    <form action={actionFn} className="space-y-6 w-full">
+    <form action={addMovement} className="space-y-6 w-full">
+      <input type="hidden" name="product_id" value={productId} />
       <input type="hidden" name="mode" value={mode} />
       
       {/* Selector de Modo */}

@@ -63,7 +63,7 @@ export async function getLastClosedCashSession(storeId: string) {
     .from('cash_closings')
     .select('*, opening:cash_openings!inner(store_id, amount, created_at, status)')
     .eq('opening.store_id', storeId)
-    .order('created_at', { ascending: false })
+    .order('closed_at', { ascending: false })
     .limit(1)
     .maybeSingle();
 

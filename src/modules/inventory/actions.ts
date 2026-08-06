@@ -117,7 +117,7 @@ export async function createProduct(formData: FormData) {
   redirect(`/inventory?success=${encodeURIComponent('Producto creado correctamente.')}`);
 }
 
-export async function addMovement(productId: string, formData: FormData) {
+export async function addMovement(formData: FormData) {
   const supabase = await createClient();
 
   // 1. Obtener comercio activo
@@ -125,12 +125,14 @@ export async function addMovement(productId: string, formData: FormData) {
   if (stores.length === 0) redirect('/onboarding');
   const activeStore = stores[0];
 
+  const productId = (formData.get('product_id') as string || '').trim();
+
   // 2. Verificar rol (Owner, Admin y Employee autorizados para movimientos operativos)
   let securityCtx;
   try {
     securityCtx = await verifyPermission(activeStore.id, ['owner', 'admin', 'employee'], 'ADD_INVENTORY_MOVEMENT');
   } catch (err: any) {
-    redirect(`/inventory/${productId}/movement?error=${encodeURIComponent(err.message || 'Sin permisos para registrar movimientos.')}`);
+    redirect(`/inventory/${productId || ''}/movement?error=${encodeURIComponent(err.message || 'Sin permisos para registrar movimientos.')}`);
   }
 
   // 3. Extraer modo de operación (manual vs adjustment)
@@ -175,21 +177,21 @@ export async function addMovement(productId: string, formData: FormData) {
         entity: 'inventory_movements',
         metadata: { reason: 'Empleado intentó realizar ajuste de inventario físico' }
       });
-      redirect(`/inventory/${productId}/movement?error=${encodeURIComponent('Los empleados no pueden realizar ajustes de inventario físico.')}`);
+      redirect(`/inventory/${targetProductId}/movement?error=${encodeURIComponent('Los empleados no pueden realizar ajustes de inventario físico.')}`);
     }
 
     const physicalCountRaw = formData.get('physical_count') as string;
     const physicalCount = parseFloat(physicalCountRaw);
 
     if (isNaN(physicalCount) || physicalCount < 0) {
-      redirect(`/inventory/${productId}/movement?error=${encodeURIComponent('El conteo físico real debe ser un número válido >= 0.')}`);
+      redirect(`/inventory/${targetProductId}/movement?error=${encodeURIComponent('El conteo físico real debe ser un número válido >= 0.')}`);
     }
 
     const currentQty = Number(variant.quantity) || 0;
     const diff = physicalCount - currentQty;
 
     if (diff === 0) {
-      redirect(`/inventory/${productId}/movement?success=${encodeURIComponent('El conteo físico coincide con el sistema. No se generaron cambios.')}`);
+      redirect(`/inventory/${targetProductId}/movement?success=${encodeURIComponent('El conteo físico coincide con el sistema. No se generaron cambios.')}`);
     } else if (diff > 0) {
       finalType = 'entry';
       finalQuantity = diff;
@@ -205,18 +207,17 @@ export async function addMovement(productId: string, formData: FormData) {
     const quantity = parseFloat(formData.get('quantity') as string);
     const reason = (formData.get('reason') as string || 'Movimiento manual').trim();
 
-    // Requerimiento 2: NO permitir venta manual desde este módulo
     if (type === 'sale') {
-      redirect(`/inventory/${productId}/movement?error=${encodeURIComponent('Las ventas no están permitidas desde el módulo de inventario. Regístralas desde Caja/Transacciones.')}`);
+      redirect(`/inventory/${targetProductId}/movement?error=${encodeURIComponent('Las ventas no están permitidas desde el módulo de inventario. Regístralas desde Caja/Transacciones.')}`);
     }
 
     const validTypes = ['entry', 'exit', 'damage', 'loss', 'discontinued'];
     if (!validTypes.includes(type)) {
-      redirect(`/inventory/${productId}/movement?error=${encodeURIComponent('Tipo de movimiento no válido.')}`);
+      redirect(`/inventory/${targetProductId}/movement?error=${encodeURIComponent('Tipo de movimiento no válido.')}`);
     }
 
     if (isNaN(quantity) || quantity <= 0) {
-      redirect(`/inventory/${productId}/movement?error=${encodeURIComponent('La cantidad debe ser un número positivo mayor a 0.')}`);
+      redirect(`/inventory/${targetProductId}/movement?error=${encodeURIComponent('La cantidad debe ser un número positivo mayor a 0.')}`);
     }
 
     finalType = type;
@@ -239,7 +240,7 @@ export async function addMovement(productId: string, formData: FormData) {
 
   if (error) {
     console.error('[INVENTORY MOVEMENT ERROR]:', error);
-    redirect(`/inventory/${productId}/movement?error=${encodeURIComponent(error.message)}`);
+    redirect(`/inventory/${targetProductId}/movement?error=${encodeURIComponent(error.message)}`);
   }
 
   // 6. Registro de Auditoría de Seguridad
@@ -260,6 +261,6 @@ export async function addMovement(productId: string, formData: FormData) {
   });
 
   revalidatePath('/inventory');
-  revalidatePath(`/inventory/${productId}/movement`);
-  redirect(`/inventory/${productId}/movement?success=${encodeURIComponent('Movimiento registrado correctamente.')}`);
+  revalidatePath(`/inventory/${targetProductId}/movement`);
+  redirect(`/inventory/${targetProductId}/movement?success=${encodeURIComponent('Movimiento registrado correctamente.')}`);
 }
