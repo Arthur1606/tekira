@@ -22,7 +22,7 @@ export async function getRecentTransactions(storeId: string, limit = 5): Promise
 export async function getActiveCashSession(storeId: string) {
   const supabase = await createClient();
   
-  const { data, error } = await supabase
+  const { data: openSession, error } = await supabase
     .from('cash_openings')
     .select('*')
     .eq('store_id', storeId)
@@ -31,9 +31,29 @@ export async function getActiveCashSession(storeId: string) {
 
   if (error) {
     console.error('Error fetching active cash session:', error);
+    return null;
   }
 
-  return data;
+  if (!openSession) return null;
+
+  // Auto-curación de integridad: si la apertura tiene un registro en cash_closings, corregir status = 'closed'
+  const { data: closingCheck } = await supabase
+    .from('cash_closings')
+    .select('id')
+    .eq('opening_id', openSession.id)
+    .maybeSingle();
+
+  if (closingCheck) {
+    await supabase
+      .from('cash_openings')
+      .update({ status: 'closed' })
+      .eq('id', openSession.id);
+
+    console.log(`[SELF-HEAL CASH]: Sesión de caja ${openSession.id} corregida a status closed.`);
+    return null;
+  }
+
+  return openSession;
 }
 
 export async function getLastClosedCashSession(storeId: string) {

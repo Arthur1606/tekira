@@ -257,7 +257,27 @@ export async function closeCashRegister(formData: FormData) {
     redirect(`/dashboard?error=${encodeURIComponent('El monto contado en caja debe ser un número válido >= 0.')}`);
   }
 
-  // 4. Validar Backend: La caja debe existir y estar en status = 'open'
+  // 4. Pre-validar si ya existe un registro de cierre en cash_closings para este opening_id
+  const { data: existingClosing } = await supabase
+    .from('cash_closings')
+    .select('id')
+    .eq('opening_id', openingId)
+    .maybeSingle();
+
+  if (existingClosing) {
+    // Si ya existe el registro de cierre, asegurar que status en cash_openings esté actualizado a 'closed'
+    await supabase
+      .from('cash_openings')
+      .update({ status: 'closed' })
+      .eq('id', openingId)
+      .eq('store_id', activeStore.id);
+
+    revalidatePath('/', 'layout');
+    revalidatePath('/dashboard');
+    redirect(`/dashboard?error=${encodeURIComponent('La caja ya fue cerrada anteriormente.')}`);
+  }
+
+  // 5. Validar estado de la apertura
   const { data: sessionCheck } = await supabase
     .from('cash_openings')
     .select('id, status')
@@ -266,12 +286,12 @@ export async function closeCashRegister(formData: FormData) {
     .maybeSingle();
 
   if (!sessionCheck || sessionCheck.status !== 'open') {
-    redirect(`/dashboard?error=${encodeURIComponent('Caja ya cerrada o sesión no válida.')}`);
+    redirect(`/dashboard?error=${encodeURIComponent('La caja ya fue cerrada anteriormente.')}`);
   }
 
   const difference = countedAmount - expectedAmount;
 
-  // 5. Registrar el cierre en cash_closings
+  // 6. Registrar el cierre en cash_closings capturando errores de Unique Constraint (23505)
   const { data: closing, error: closingError } = await supabase
     .from('cash_closings')
     .insert({
@@ -286,10 +306,21 @@ export async function closeCashRegister(formData: FormData) {
 
   if (closingError) {
     console.error('[CLOSE CASH ERROR]:', closingError);
-    redirect(`/dashboard?error=${encodeURIComponent(closingError.message || 'Error al guardar el cierre de caja')}`);
+    if (closingError.code === '23505') {
+      await supabase
+        .from('cash_openings')
+        .update({ status: 'closed' })
+        .eq('id', openingId)
+        .eq('store_id', activeStore.id);
+
+      revalidatePath('/', 'layout');
+      revalidatePath('/dashboard');
+      redirect(`/dashboard?error=${encodeURIComponent('La caja ya fue cerrada anteriormente.')}`);
+    }
+    redirect(`/dashboard?error=${encodeURIComponent('Error al guardar el cierre de caja. Inténtalo de nuevo.')}`);
   }
 
-  // 6. Cambiar estado de la caja activa: open -> closed
+  // 7. Cambiar estado de la caja activa: open -> closed
   const { error: updateError } = await supabase
     .from('cash_openings')
     .update({ status: 'closed' })
@@ -300,7 +331,7 @@ export async function closeCashRegister(formData: FormData) {
     console.error('[UPDATE CASH SESSION ERROR]:', updateError);
   }
 
-  // 7. Registro de Auditoría de Seguridad
+  // 8. Registro de Auditoría de Seguridad
   await logSecurityEvent({
     storeId: activeStore.id,
     userId: securityCtx.user.id,
