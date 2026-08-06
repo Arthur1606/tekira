@@ -3,10 +3,10 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { SubmitButton } from '@/components/ui/SubmitButton';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
-import { Plus, DollarSign, AlertTriangle, Wallet, ArrowUpRight, ArrowDownRight, Package, Users, BellRing, Activity, TrendingUp } from 'lucide-react';
+import { Plus, DollarSign, AlertTriangle, Wallet, ArrowUpRight, ArrowDownRight, Package, Users, BellRing, Activity, TrendingUp, Lock, CheckCircle2, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { getUserStores } from '@/modules/stores/services';
-import { getActiveCashSession, getRecentTransactions } from '@/modules/transactions/services';
+import { getActiveCashSession, getLastClosedCashSession, getRecentTransactions } from '@/modules/transactions/services';
 import { getFinancialMetrics, getInventoryMetrics, getTeamMetrics, getIncomeTrend } from '@/modules/analytics/queries';
 import { generateInsights } from '@/modules/insights/rules';
 import { openCashRegister } from '@/modules/transactions/actions';
@@ -61,9 +61,14 @@ export default async function DashboardPage({
     }
   }
 
-  const canCloseCash = userRole === 'owner' || userRole === 'admin';
+  const canManageCash = userRole === 'owner' || userRole === 'admin';
 
-  const activeSession = await getActiveCashSession(activeStore.id);
+  // Obtener estado de sesión activa y último cierre de caja
+  const [activeSession, lastClosedSession] = await Promise.all([
+    getActiveCashSession(activeStore.id),
+    getLastClosedCashSession(activeStore.id)
+  ]);
+
   const sessionId = activeSession?.id;
 
   const [
@@ -108,12 +113,12 @@ export default async function DashboardPage({
       
       {/* Mensajes de feedback */}
       {resolvedSearchParams.error && (
-        <div className="p-4 bg-red-50 text-red-700 border border-red-200 rounded-xl flex items-start gap-3 text-sm font-medium">
+        <div className="p-4 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl flex items-start gap-3 text-sm font-medium">
           <p>{resolvedSearchParams.error}</p>
         </div>
       )}
       {resolvedSearchParams.success && (
-        <div className="p-4 bg-green-50 text-green-700 border border-green-200 rounded-xl flex items-start gap-3 text-sm font-medium">
+        <div className="p-4 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl flex items-start gap-3 text-sm font-medium">
           <p>{resolvedSearchParams.success}</p>
         </div>
       )}
@@ -140,77 +145,102 @@ export default async function DashboardPage({
         </Link>
       </div>
 
-      {/* Control de Caja Real */}
-      {!activeSession && (
-        <div className="mb-6 p-4 bg-zinc-900/60 border border-zinc-800/80 rounded-xl flex items-start gap-3 text-sm font-medium animate-in fade-in slide-in-from-top-2">
-          <div className="w-8 h-8 bg-zinc-800 rounded-lg flex items-center justify-center shrink-0">
-            <AlertTriangle className="w-5 h-5 text-zinc-400" />
-          </div>
-          <div className="flex flex-col justify-center py-1.5">
-            <p className="text-zinc-200 text-base font-semibold">Apertura de caja pendiente</p>
-            <p className="text-zinc-500 font-normal">Abre la caja para registrar transacciones y calcular tu balance operativo.</p>
+      {/* TARJETA DINÁMICA DE ESTADO DE CAJA (OPEN / CLOSED) */}
+      <div className="space-y-4 animate-in fade-in duration-700">
+        <div className="flex items-center justify-between flex-wrap gap-3 border-b border-zinc-800/80 pb-3">
+          <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+            <Wallet className="w-4 h-4 text-indigo-400" /> Control de Caja Operativa
+          </h3>
+
+          {/* BADGE Y BOTÓN DE ACCIÓN SEGÚN ESTADO */}
+          <div className="flex items-center gap-3 flex-wrap">
+            {activeSession ? (
+              <>
+                <Badge variant="success" className="animate-pulse bg-emerald-500/20 text-emerald-400 border-emerald-500/30 gap-1.5">
+                  🟢 Caja Abierta ({formatDate(activeSession.created_at)})
+                </Badge>
+                {canManageCash && (
+                  <CloseCashModal
+                    openingId={activeSession.id}
+                    initialAmount={initialAmount}
+                    incomeAmount={financialMetrics.totalIncome}
+                    expenseAmount={financialMetrics.totalExpenses}
+                    expectedAmount={expectedCash}
+                  />
+                )}
+              </>
+            ) : (
+              <Badge variant="neutral" className="bg-zinc-800 text-zinc-400 border-zinc-700 gap-1.5">
+                ⚪ Caja Cerrada
+              </Badge>
+            )}
           </div>
         </div>
-      )}
 
-      {!activeSession && (
-        <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <Card className="p-6 sm:p-8 bg-indigo-950/20 border-indigo-500/20">
-            <div className="max-w-md">
-              <h2 className="text-xl font-bold text-zinc-100 mb-2">Iniciar Jornada</h2>
-              <p className="text-sm text-zinc-400 mb-6">Ingresa el saldo inicial con el que inicias operaciones.</p>
+        {/* ESTADO 1: CAJA CERRADA -> FORMULARIO DE APERTURA */}
+        {!activeSession && (
+          <Card className="p-6 sm:p-8 bg-zinc-950 border-zinc-800 space-y-6">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
               
-              <form action={openCashRegister} className="flex flex-col sm:flex-row gap-4 items-end">
-                <div className="flex-1 w-full">
-                  <CurrencyInput
-                    id="amount"
-                    name="amount"
-                    label="Saldo Inicial"
-                    placeholder="0"
-                    icon={DollarSign}
-                    required
-                    className="text-lg font-bold"
-                  />
+              <div className="space-y-3 max-w-lg">
+                <div className="flex items-center gap-2">
+                  <div className="w-9 h-9 bg-zinc-900 rounded-xl flex items-center justify-center border border-zinc-800 text-zinc-400">
+                    <Lock className="w-5 h-5 text-amber-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-zinc-100">Abrir Nueva Caja</h2>
+                    <p className="text-xs text-zinc-400">Inicia la jornada ingresando el saldo de apertura</p>
+                  </div>
                 </div>
-                <SubmitButton className="w-full sm:w-auto py-3 bg-indigo-600 hover:bg-indigo-500 text-white">
-                  Abrir Caja
-                </SubmitButton>
-              </form>
+
+                {lastClosedSession && (
+                  <div className="p-3 bg-zinc-900/60 rounded-xl border border-zinc-800/80 text-xs space-y-1">
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-zinc-500" /> Último Cierre:</span>
+                      <span className="font-mono text-zinc-300">{formatDate(lastClosedSession.created_at)}</span>
+                    </div>
+                    <div className="flex items-center justify-between font-semibold pt-1 border-t border-zinc-800/60">
+                      <span className="text-zinc-400">Efectivo Contado:</span>
+                      <span className="text-zinc-100 font-mono font-bold">{formatCurrency(Number(lastClosedSession.counted_amount))}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {canManageCash ? (
+                <form action={openCashRegister} className="flex flex-col sm:flex-row gap-4 items-end w-full lg:w-auto">
+                  <div className="w-full sm:w-64">
+                    <CurrencyInput
+                      id="amount"
+                      name="amount"
+                      label="Monto Inicial en Caja"
+                      placeholder="0"
+                      icon={DollarSign}
+                      required
+                      className="text-lg font-bold"
+                    />
+                  </div>
+                  <SubmitButton className="w-full sm:w-auto py-3 px-6 bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg">
+                    🔓 Abrir Nueva Caja
+                  </SubmitButton>
+                </form>
+              ) : (
+                <div className="p-4 bg-zinc-900/80 border border-zinc-800 rounded-xl text-xs text-zinc-400">
+                  La caja se encuentra cerrada. Solicita al Administrador o Propietario realizar la apertura.
+                </div>
+              )}
+
             </div>
           </Card>
-        </div>
-      )}
+        )}
 
-      {/* SECCIÓN 1: Resumen Financiero */}
-      <div className="space-y-4 animate-in fade-in duration-700">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-            <Wallet className="w-4 h-4 text-zinc-500" /> Resumen Financiero
-          </h3>
-          {activeSession && (
-            <div className="flex items-center gap-3">
-              <Badge variant="success" className="animate-pulse">
-                Caja Abierta: {formatDate(activeSession.created_at)}
-              </Badge>
-              {canCloseCash && (
-                <CloseCashModal
-                  openingId={activeSession.id}
-                  initialAmount={initialAmount}
-                  incomeAmount={financialMetrics.totalIncome}
-                  expenseAmount={financialMetrics.totalExpenses}
-                  expectedAmount={expectedCash}
-                />
-              )}
-            </div>
-          )}
-        </div>
-        
+        {/* METRICAS DE BALANCE DE LA JORNADA */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-12">
             <MetricCard
-              title="Balance Neto"
+              title="Balance Neto de Jornada"
               value={formatCurrency(financialMetrics.netBalance)}
-              subtitle={`Caja Operativa: ${formatCurrency(expectedCash)}`}
+              subtitle={activeSession ? `Caja Operativa Esperada: ${formatCurrency(expectedCash)}` : 'Caja actualmente cerrada'}
               icon={DollarSign}
               variant="primary"
               isMain={true}
@@ -225,14 +255,14 @@ export default async function DashboardPage({
               variant="default"
             />
             <MetricCard
-              title="Ingresos"
+              title="Ingresos (+)"
               value={`+${formatCurrency(financialMetrics.totalIncome)}`}
               subtitle={`${financialMetrics.transactionCount} transacciones`}
               icon={ArrowUpRight}
               variant="success"
             />
             <MetricCard
-              title="Egresos"
+              title="Egresos (-)"
               value={`-${formatCurrency(financialMetrics.totalExpenses)}`}
               icon={ArrowDownRight}
               variant="danger"
@@ -308,7 +338,7 @@ export default async function DashboardPage({
 
       </div>
 
-      {/* Movimientos Recientes (Mantenemos como referencia operativa) */}
+      {/* Movimientos Recientes */}
       <div className="pt-4">
         <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">
           <Activity className="w-4 h-4 text-zinc-500" /> Movimientos Recientes

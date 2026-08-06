@@ -16,7 +16,7 @@ export async function createTransaction(formData: FormData) {
   }
   const activeStore = stores[0];
 
-  // 2. Control de Acceso y Roles (Owner, Admin y Employee autorizados para registrar ventas/gastos)
+  // 2. Control de Acceso y Roles
   let securityCtx;
   try {
     securityCtx = await verifyPermission(activeStore.id, ['owner', 'admin', 'employee'], 'CREATE_TRANSACTION');
@@ -63,16 +63,16 @@ export async function createTransaction(formData: FormData) {
     redirect(`/dashboard/transactions/new?error=${encodeURIComponent('Los empleados únicamente pueden registrar ventas/ingresos.')}`);
   }
 
-  // 5. Validar sesión activa de caja
+  // 5. Validar sesión activa de caja (debe estar status = 'open')
   const { data: activeSession } = await supabase
     .from('cash_openings')
     .select('id')
     .eq('store_id', activeStore.id)
     .eq('status', 'open')
-    .single();
+    .maybeSingle();
 
   if (!activeSession) {
-    redirect(`/dashboard/transactions/new?error=${encodeURIComponent('No existe una caja abierta. Solicita apertura al administrador.')}`);
+    redirect(`/dashboard/transactions/new?error=${encodeURIComponent('No existe una caja abierta actualmente. Solicita apertura al administrador.')}`);
   }
 
   // 6. Vinculación opcional a producto (variante)
@@ -84,7 +84,6 @@ export async function createTransaction(formData: FormData) {
   let targetProductId: string | null = null;
 
   if (variantId) {
-    // Validar pertenencia de la variante al comercio y extraer su product_id
     const { data: variantCheck } = await supabase
       .from('product_variants')
       .select('id, product_id, product:products!inner(store_id)')
@@ -160,6 +159,7 @@ export async function createTransaction(formData: FormData) {
   });
 
   revalidatePath('/', 'layout');
+  revalidatePath('/dashboard');
   redirect(`/dashboard?success=${encodeURIComponent('Movimiento guardado correctamente.')}`);
 }
 
@@ -179,7 +179,19 @@ export async function openCashRegister(formData: FormData) {
     redirect(`/dashboard?error=${encodeURIComponent('No tienes permisos suficientes para abrir la caja.')}`);
   }
 
-  // 3. Sanitizar monto de apertura
+  // 3. Validar Backend: NO permitir abrir caja si ya existe una caja en status = 'open'
+  const { data: existingOpen } = await supabase
+    .from('cash_openings')
+    .select('id')
+    .eq('store_id', activeStore.id)
+    .eq('status', 'open')
+    .maybeSingle();
+
+  if (existingOpen) {
+    redirect(`/dashboard?error=${encodeURIComponent('Existe una caja abierta actualmente. Debes cerrarla antes de abrir una nueva.')}`);
+  }
+
+  // 4. Sanitizar monto de apertura
   const amountStr = formData.get('amount') as string;
   const amount = amountStr ? parseFloat(amountStr.replace(/[^0-9.-]+/g, '')) : 0;
 
@@ -187,7 +199,7 @@ export async function openCashRegister(formData: FormData) {
     redirect(`/dashboard?error=${encodeURIComponent('El monto de apertura debe ser mayor o igual a 0.')}`);
   }
 
-  // 4. Insertar apertura de caja
+  // 5. Insertar apertura de caja
   const { data: newSession, error } = await supabase.from('cash_openings').insert({
     store_id: activeStore.id,
     amount,
@@ -196,13 +208,10 @@ export async function openCashRegister(formData: FormData) {
   }).select().single();
 
   if (error) {
-    if (error.code === '23505') { // unique constraint / idx en status open
-      redirect(`/dashboard?error=${encodeURIComponent('Ya existe una caja abierta.')}`);
-    }
     redirect(`/dashboard?error=${encodeURIComponent(error.message)}`);
   }
 
-  // 5. Registro de Auditoría de Seguridad
+  // 6. Registro de Auditoría de Seguridad
   await logSecurityEvent({
     storeId: activeStore.id,
     userId: securityCtx.user.id,
@@ -216,6 +225,7 @@ export async function openCashRegister(formData: FormData) {
   });
 
   revalidatePath('/', 'layout');
+  revalidatePath('/dashboard');
   redirect(`/dashboard?success=${encodeURIComponent('Caja abierta correctamente.')}`);
 }
 
@@ -247,9 +257,21 @@ export async function closeCashRegister(formData: FormData) {
     redirect(`/dashboard?error=${encodeURIComponent('El monto contado en caja debe ser un número válido >= 0.')}`);
   }
 
+  // 4. Validar Backend: La caja debe existir y estar en status = 'open'
+  const { data: sessionCheck } = await supabase
+    .from('cash_openings')
+    .select('id, status')
+    .eq('id', openingId)
+    .eq('store_id', activeStore.id)
+    .maybeSingle();
+
+  if (!sessionCheck || sessionCheck.status !== 'open') {
+    redirect(`/dashboard?error=${encodeURIComponent('Caja ya cerrada o sesión no válida.')}`);
+  }
+
   const difference = countedAmount - expectedAmount;
 
-  // 4. Registrar el cierre en cash_closings
+  // 5. Registrar el cierre en cash_closings
   const { data: closing, error: closingError } = await supabase
     .from('cash_closings')
     .insert({
@@ -267,7 +289,7 @@ export async function closeCashRegister(formData: FormData) {
     redirect(`/dashboard?error=${encodeURIComponent(closingError.message || 'Error al guardar el cierre de caja')}`);
   }
 
-  // 5. Cambiar estado de la caja activa: open -> closed
+  // 6. Cambiar estado de la caja activa: open -> closed
   const { error: updateError } = await supabase
     .from('cash_openings')
     .update({ status: 'closed' })
@@ -278,7 +300,7 @@ export async function closeCashRegister(formData: FormData) {
     console.error('[UPDATE CASH SESSION ERROR]:', updateError);
   }
 
-  // 6. Registro de Auditoría de Seguridad
+  // 7. Registro de Auditoría de Seguridad
   await logSecurityEvent({
     storeId: activeStore.id,
     userId: securityCtx.user.id,
@@ -299,5 +321,6 @@ export async function closeCashRegister(formData: FormData) {
     : (difference > 0 ? `Sobrante: +$${difference.toLocaleString('es-CO')}` : `Faltante: -$${Math.abs(difference).toLocaleString('es-CO')}`);
 
   revalidatePath('/', 'layout');
+  revalidatePath('/dashboard');
   redirect(`/dashboard?success=${encodeURIComponent(`Caja cerrada correctamente. ${diffText}`)}`);
 }

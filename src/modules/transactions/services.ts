@@ -27,10 +27,29 @@ export async function getActiveCashSession(storeId: string) {
     .select('*')
     .eq('store_id', storeId)
     .eq('status', 'open')
-    .single();
+    .maybeSingle();
 
-  if (error && error.code !== 'PGRST116') {
+  if (error) {
     console.error('Error fetching active cash session:', error);
+  }
+
+  return data;
+}
+
+export async function getLastClosedCashSession(storeId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('cash_closings')
+    .select('*, opening:cash_openings!inner(store_id, amount, created_at, status)')
+    .eq('opening.store_id', storeId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error fetching last closed session:', error);
+    return null;
   }
 
   return data;
