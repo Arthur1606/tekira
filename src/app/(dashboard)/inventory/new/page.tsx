@@ -1,103 +1,107 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createProduct } from '@/modules/inventory/actions';
-import { Card } from '@/components/ui/Card';
-import { SubmitButton } from '@/components/ui/SubmitButton';
 import { Input } from '@/components/ui/Input';
-import { PRODUCT_UNITS, PRODUCT_CATEGORIES, getQuantityStep } from '@/modules/inventory/types';
-import { ArrowLeft, Box, Tag, Layers, DollarSign, AlertTriangle, Barcode } from 'lucide-react';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
+import { SubmitButton } from '@/components/ui/SubmitButton';
+import { Card } from '@/components/ui/Card';
+import { ArrowLeft, Package, Tag, Layers, AlertCircle, Plus, Hash } from 'lucide-react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+
+const CATEGORIES = [
+  'General', 'Bebidas', 'Alimentos', 'Abarrotes', 'Limpieza', 
+  'Cuidado Personal', 'Lácteos', 'Panadería', 'Carnes', 'Frutas y Verduras', 
+  'Snacks', 'Dulcería', 'Licores', 'Cigarrillos', 'Hogar', 'Mascotas', 'Otro'
+];
+
+const UNITS = [
+  'unidad', 'kg', 'g', 'lb', 'l', 'ml', 'paquete', 'caja', 'botella', 'lata', 'porción'
+];
 
 export default function NewProductPage() {
-  const searchParams = useSearchParams();
-  const error = searchParams.get('error');
-  const success = searchParams.get('success');
-
-  const [selectedUnit, setSelectedUnit] = useState<string>('unidades');
-  const quantityStep = getQuantityStep(selectedUnit);
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [selectedUnit, setSelectedUnit] = useState<string>('unidad');
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in duration-500 pb-12">
+    <div className="w-full space-y-8 animate-in fade-in duration-500 pb-16">
       
-      <div className="flex items-center gap-4">
-        <Link href="/inventory" className="p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-full transition-colors">
-          <ArrowLeft className="w-6 h-6" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-zinc-100">Nuevo Producto</h1>
-          <p className="text-sm text-zinc-400">Agrega un artículo al inventario del comercio</p>
+      {/* Encabezado */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-zinc-950/40 backdrop-blur-2xl rounded-2xl border border-white/[0.03]">
+        <div className="flex items-center gap-4">
+          <Link href="/inventory" className="p-3 bg-zinc-900/80 hover:bg-zinc-800 rounded-xl text-zinc-400 hover:text-zinc-100 transition-colors border border-zinc-800 shrink-0">
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-zinc-100 tracking-tight">Nuevo Producto</h1>
+            <p className="text-sm font-medium text-zinc-400 mt-1">Registra un nuevo artículo en tu catálogo</p>
+          </div>
         </div>
       </div>
 
-      <Card className="p-6 sm:p-8">
+      <Card noPadding className="p-6 sm:p-8 max-w-3xl mx-auto">
         {error && (
           <div className="mb-6 p-4 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl flex items-start gap-3 text-sm font-medium">
+            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
             <p>{error}</p>
-          </div>
-        )}
-        {success && (
-          <div className="mb-6 p-4 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl flex items-start gap-3 text-sm font-medium">
-            <p>{success}</p>
           </div>
         )}
 
         <form action={createProduct} className="space-y-6">
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="space-y-6">
+            <h3 className="text-sm font-bold text-zinc-100 mb-4">Información Básica</h3>
+            
             <Input
               id="name"
               name="name"
               type="text"
-              label="Nombre del Producto"
-              placeholder="Ej. Sudadera Negra M"
-              icon={Box}
+              label="Nombre del Producto *"
+              placeholder="Ej. Arroz Diana 1kg"
+              icon={Package}
               required
             />
 
-            <div className="w-full">
-              <label className="block text-sm font-medium text-zinc-300 mb-1.5" htmlFor="category">
-                Categoría
-              </label>
-              <div className="relative">
-                <select
-                  id="category"
-                  name="category"
-                  required
-                  defaultValue=""
-                  className="block w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-4 py-2.5 pl-10 text-sm text-zinc-100 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-sm appearance-none capitalize"
-                >
-                  <option value="" disabled>Selecciona una categoría...</option>
-                  {PRODUCT_CATEGORIES.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
-                  <Tag className="w-5 h-5" />
-                </div>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-zinc-500">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-1.5" htmlFor="category">
+                  Categoría
+                </label>
+                <div className="relative">
+                  <select
+                    id="category"
+                    name="category"
+                    defaultValue="General"
+                    className="block w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-4 py-3 pl-10 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none"
+                  >
+                    {CATEGORIES.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
+                    <Tag className="w-4 h-4 text-indigo-400" />
+                  </div>
                 </div>
               </div>
+
+              <Input
+                id="sku"
+                name="sku"
+                type="text"
+                label="Código SKU (Opcional)"
+                placeholder="Ej. ARR-0001 (Auto-generado si está vacío)"
+                icon={Hash}
+              />
             </div>
-            
-            <Input
-              id="sku"
-              name="sku"
-              type="text"
-              label="SKU / Código (Opcional)"
-              placeholder="Ej. SUD-NEG-M"
-              icon={Barcode}
-            />
           </div>
 
           <div className="pt-4 border-t border-zinc-800">
-            <h3 className="text-sm font-bold text-zinc-100 mb-4">Stock Inicial y Medida</h3>
+            <h3 className="text-sm font-bold text-zinc-100 mb-4">Inventario e Insumos</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               
-              <div className="w-full">
+              <div>
                 <label className="block text-sm font-medium text-zinc-300 mb-1.5" htmlFor="unit">
                   Unidad de Medida
                 </label>
@@ -105,20 +109,16 @@ export default function NewProductPage() {
                   <select
                     id="unit"
                     name="unit"
-                    required
                     value={selectedUnit}
                     onChange={(e) => setSelectedUnit(e.target.value)}
-                    className="block w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-4 py-2.5 pl-10 text-sm text-zinc-100 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-sm appearance-none capitalize"
+                    className="block w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-4 py-3 pl-10 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none capitalize"
                   >
-                    {PRODUCT_UNITS.map(unit => (
-                      <option key={unit} value={unit} className="capitalize">{unit}</option>
+                    {UNITS.map(u => (
+                      <option key={u} value={u}>{u}</option>
                     ))}
                   </select>
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
-                    <Layers className="w-5 h-5" />
-                  </div>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-zinc-500">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                    <Layers className="w-4 h-4 text-indigo-400" />
                   </div>
                 </div>
               </div>
@@ -127,24 +127,24 @@ export default function NewProductPage() {
                 id="quantity"
                 name="quantity"
                 type="number"
-                step={quantityStep}
+                step={['kg', 'g', 'lb', 'l', 'ml'].includes(selectedUnit) ? '0.01' : '1'}
                 min="0"
-                label={`Cantidad Inicial (${selectedUnit})`}
+                label={`Stock Inicial (${selectedUnit})`}
                 placeholder="0"
-                required
+                icon={Package}
+                defaultValue="0"
               />
 
               <Input
                 id="min_stock"
                 name="min_stock"
                 type="number"
-                step={quantityStep}
+                step={['kg', 'g', 'lb', 'l', 'ml'].includes(selectedUnit) ? '0.01' : '1'}
                 min="0"
-                label="Stock Mínimo (Alerta)"
+                label={`Stock Mínimo Alerta (${selectedUnit})`}
                 placeholder="5"
-                icon={AlertTriangle}
+                icon={Package}
                 defaultValue="5"
-                required
               />
             </div>
           </div>
@@ -157,7 +157,7 @@ export default function NewProductPage() {
                 name="cost"
                 label="Costo (Opcional)"
                 placeholder="0"
-                icon={DollarSign}
+                iconName="dollar"
                 defaultValue="0"
               />
 
@@ -166,20 +166,25 @@ export default function NewProductPage() {
                 name="sale_price"
                 label="Precio de Venta"
                 placeholder="0"
-                icon={DollarSign}
+                iconName="dollar"
                 required
                 className="font-bold text-indigo-400"
               />
             </div>
           </div>
 
-          <div className="pt-6 border-t border-zinc-800">
-            <SubmitButton fullWidth className="py-3 text-base">
+          <div className="pt-6 border-t border-zinc-800 flex justify-end gap-3">
+            <Link href="/inventory" className="px-5 py-2.5 text-sm font-semibold text-zinc-400 hover:text-zinc-200 bg-zinc-900 hover:bg-zinc-800 rounded-xl border border-zinc-800 transition-colors">
+              Cancelar
+            </Link>
+            <SubmitButton className="px-6 py-2.5 text-sm font-bold">
               Guardar Producto
             </SubmitButton>
           </div>
+
         </form>
       </Card>
+
     </div>
   );
 }

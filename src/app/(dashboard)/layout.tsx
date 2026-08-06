@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { logout } from '@/modules/auth/actions';
 import { Store, Bell } from 'lucide-react';
 import Link from 'next/link';
 import { getUserStores } from '@/modules/stores/services';
@@ -85,7 +84,7 @@ export default async function DashboardLayout({
           
           <div className="h-6 w-px bg-zinc-800 hidden sm:block"></div>
 
-          {/* Menú de Usuario */}
+          {/* Menú de Usuario con Props 100% Serializables */}
           <UserDropdownMenu
             userName={userName}
             userEmail={user.email || ''}
@@ -93,7 +92,6 @@ export default async function DashboardLayout({
             userRole={userRole}
             storeName={activeStore.name}
             companyCode={activeStore.company_code}
-            logoutAction={logout}
           />
         </div>
       </header>

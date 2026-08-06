@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { User, Settings, LogOut, Building, KeyRound, Copy, Check, ChevronDown } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
+import { logout } from '@/modules/auth/actions';
 
 interface UserDropdownMenuProps {
   userName: string;
@@ -12,7 +13,6 @@ interface UserDropdownMenuProps {
   userRole: 'owner' | 'admin' | 'employee';
   storeName?: string;
   companyCode?: string;
-  logoutAction: () => Promise<void>;
 }
 
 export function UserDropdownMenu({
@@ -21,8 +21,7 @@ export function UserDropdownMenu({
   avatarLetter,
   userRole,
   storeName,
-  companyCode,
-  logoutAction
+  companyCode
 }: UserDropdownMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -141,8 +140,8 @@ export function UserDropdownMenu({
 
           <div className="border-t border-zinc-800/80 my-1"></div>
 
-          {/* Cerrar Sesión */}
-          <form action={logoutAction}>
+          {/* Cerrar Sesión (Invocación directa de logout action en Client Component) */}
+          <form action={logout}>
             <button
               type="submit"
               className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-colors text-left"

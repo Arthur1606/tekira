@@ -1,11 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { LucideIcon } from 'lucide-react';
+import { DollarSign, Wallet, Store, Tag } from 'lucide-react';
+
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  dollar: DollarSign,
+  wallet: Wallet,
+  store: Store,
+  tag: Tag,
+};
 
 interface CurrencyInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   label?: string;
-  icon?: LucideIcon;
+  iconName?: 'dollar' | 'wallet' | 'store' | 'tag';
   error?: string;
   onValueChange?: (value: number) => void;
   defaultValue?: string | number;
@@ -13,7 +20,7 @@ interface CurrencyInputProps extends Omit<React.InputHTMLAttributes<HTMLInputEle
 
 export function CurrencyInput({
   label,
-  icon: Icon,
+  iconName = 'dollar',
   error,
   className = '',
   id,
@@ -23,9 +30,10 @@ export function CurrencyInput({
   defaultValue = '',
   ...props
 }: CurrencyInputProps) {
-  // Inicializar estado con el valor por defecto si existe
   const [displayValue, setDisplayValue] = useState<string>('');
   const [realValue, setRealValue] = useState<string>('');
+
+  const IconComponent = iconName ? iconMap[iconName] : DollarSign;
 
   useEffect(() => {
     if (defaultValue) {
@@ -38,10 +46,8 @@ export function CurrencyInput({
   }, [defaultValue]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // 1. Extraer solo números
     const rawValue = e.target.value.replace(/[^0-9]/g, '');
     
-    // 2. Si está vacío, resetear
     if (!rawValue) {
       setDisplayValue('');
       setRealValue('');
@@ -49,7 +55,6 @@ export function CurrencyInput({
       return;
     }
 
-    // 3. Convertir a número y formatear para mostrar
     const numberValue = parseInt(rawValue, 10);
     const formattedValue = new Intl.NumberFormat('es-CO').format(numberValue);
     
@@ -69,9 +74,9 @@ export function CurrencyInput({
         </label>
       )}
       <div className="relative">
-        {Icon && (
+        {IconComponent && (
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
-            <Icon className="w-5 h-5" />
+            <IconComponent className="w-5 h-5" />
           </div>
         )}
         
@@ -83,7 +88,7 @@ export function CurrencyInput({
           className={`
             block w-full rounded-lg border bg-zinc-950/50 px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500
             focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm
-            ${Icon ? 'pl-10' : ''}
+            ${IconComponent ? 'pl-10' : ''}
             ${error 
               ? 'border-red-500/50' 
               : 'border-zinc-800'

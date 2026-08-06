@@ -215,7 +215,7 @@ export default async function DashboardPage({
                       name="amount"
                       label="Monto Inicial en Caja"
                       placeholder="0"
-                      icon={DollarSign}
+                      iconName="dollar"
                       required
                       className="text-lg font-bold"
                     />

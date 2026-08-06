@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { SubmitButton } from '@/components/ui/SubmitButton';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { closeCashRegister } from '@/modules/transactions/actions';
-import { Lock, X, DollarSign, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Lock, X, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 interface CloseCashModalProps {
   openingId: string;
@@ -100,7 +100,7 @@ export function CloseCashModal({
             name="counted_amount"
             label="Digite Dinero Contado en Caja"
             placeholder="0"
-            icon={DollarSign}
+            iconName="dollar"
             value={countedAmountStr}
             onValueChange={(val) => setCountedAmountStr(val.toString())}
             required
