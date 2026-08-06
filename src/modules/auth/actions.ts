@@ -9,7 +9,7 @@ export async function login(formData: FormData) {
   const supabase = await createClient();
 
   const data = {
-    email: (formData.get('email') as string || '').trim(),
+    email: (formData.get('email') as string || '').trim().toLowerCase(),
     password: (formData.get('password') as string || '').trim(),
   };
 
@@ -34,7 +34,7 @@ export async function signupOwner(formData: FormData) {
   const storeName = (formData.get('store_name') as string || '').trim();
   const category = (formData.get('category') as string || 'General').trim();
   const city = (formData.get('city') as string || '').trim();
-  const email = (formData.get('email') as string || '').trim();
+  const email = (formData.get('email') as string || '').trim().toLowerCase();
   const password = (formData.get('password') as string || '').trim();
 
   if (!name || !storeName || !email || !password) {
@@ -53,6 +53,9 @@ export async function signupOwner(formData: FormData) {
   });
 
   if (authErr || !authData.user) {
+    if (authErr?.message.toLowerCase().includes('already registered') || authErr?.message.toLowerCase().includes('already exists')) {
+      redirect(`/signup?mode=owner&error=${encodeURIComponent('Este correo ya pertenece a un usuario registrado. Intenta iniciar sesión.')}`);
+    }
     redirect(`/signup?mode=owner&error=${encodeURIComponent(authErr?.message || 'Error al crear la cuenta.')}`);
   }
 
@@ -106,27 +109,42 @@ export async function signupOwner(formData: FormData) {
 export async function joinCompany(formData: FormData) {
   const supabase = await createClient();
 
-  const companyCode = (formData.get('company_code') as string || '').trim().toUpperCase();
+  const rawCode = (formData.get('company_code') as string || '').trim();
   const name = (formData.get('name') as string || '').trim();
-  const email = (formData.get('email') as string || '').trim();
+  const email = (formData.get('email') as string || '').trim().toLowerCase();
   const password = (formData.get('password') as string || '').trim();
 
-  if (!companyCode || !name || !email || !password) {
+  if (!rawCode || !name || !email || !password) {
     redirect(`/signup?mode=join&error=${encodeURIComponent('Todos los campos son obligatorios.')}`);
   }
 
-  // 1. Validar existencia del código de empresa
-  const { data: targetStore } = await supabase
-    .from('stores')
-    .select('id, name, company_code')
-    .eq('company_code', companyCode)
-    .single();
+  // Normalización estricta: trim y mayúsculas
+  const cleanCode = rawCode.toUpperCase();
 
-  if (!targetStore) {
-    redirect(`/signup?mode=join&error=${encodeURIComponent('Código de empresa no válido o inexistente. Verifica el código con tu administrador.')}`);
+  // 1. Buscar comercio mediante RPC get_store_by_company_code (bypass RLS para usuarios no autenticados)
+  const { data: rpcStores, error: rpcErr } = await supabase
+    .rpc('get_store_by_company_code', { p_code: cleanCode });
+
+  let targetStore: { id: string; name: string; company_code: string } | null = null;
+
+  if (rpcStores && rpcStores.length > 0) {
+    targetStore = rpcStores[0];
+  } else {
+    // Fallback: consulta directa ilike por si la función aún se está propagando
+    const { data: storeFallback } = await supabase
+      .from('stores')
+      .select('id, name, company_code')
+      .ilike('company_code', cleanCode)
+      .maybeSingle();
+
+    targetStore = storeFallback;
   }
 
-  // 2. Registro de usuario en Supabase Auth
+  if (!targetStore) {
+    redirect(`/signup?mode=join&error=${encodeURIComponent('El código de empresa no existe. Por favor verifica el código ingresado con el propietario de tu comercio.')}`);
+  }
+
+  // 2. Intentar registrar el usuario en Supabase Auth
   const { data: authData, error: authErr } = await supabase.auth.signUp({
     email,
     password,
@@ -137,13 +155,21 @@ export async function joinCompany(formData: FormData) {
     }
   });
 
-  if (authErr || !authData.user) {
-    redirect(`/signup?mode=join&error=${encodeURIComponent(authErr?.message || 'Error al crear la cuenta.')}`);
+  if (authErr) {
+    console.error('[JOIN AUTH ERROR]:', authErr);
+    if (authErr.message.toLowerCase().includes('already registered') || authErr.message.toLowerCase().includes('already exists')) {
+      redirect(`/signup?mode=join&error=${encodeURIComponent('Este correo ya pertenece a un usuario registrado. Intenta iniciar sesión.')}`);
+    }
+    redirect(`/signup?mode=join&error=${encodeURIComponent(authErr.message)}`);
+  }
+
+  if (!authData.user) {
+    redirect(`/signup?mode=join&error=${encodeURIComponent('Error al crear el usuario. Inténtalo de nuevo.')}`);
   }
 
   const userId = authData.user.id;
 
-  // 3. Registrar al nuevo colaborador en team_members con rol inicial 'employee'
+  // 3. Registrar al colaborador en team_members con rol 'employee' y status 'active'
   const { error: memberErr } = await supabase.from('team_members').insert({
     store_id: targetStore.id,
     user_id: userId,
@@ -154,7 +180,7 @@ export async function joinCompany(formData: FormData) {
   });
 
   if (memberErr) {
-    console.error('[JOIN MEMBER ERROR]:', memberErr);
+    console.error('[JOIN MEMBER INSERT ERROR]:', memberErr);
   }
 
   // 4. Auditoría de seguridad
@@ -164,14 +190,14 @@ export async function joinCompany(formData: FormData) {
     action: 'USER_CREATED',
     entity: 'team_members',
     metadata: {
-      company_code: companyCode,
+      company_code: cleanCode,
       assigned_role: 'employee',
       joined_via: 'COMPANY_CODE'
     }
   });
 
   revalidatePath('/', 'layout');
-  redirect(`/dashboard?success=${encodeURIComponent(`Te has unido a ${targetStore.name} correctamente.`)}`);
+  redirect(`/dashboard?success=${encodeURIComponent(`Te has unido exitosamente a ${targetStore.name}`)}`);
 }
 
 export async function logout() {
