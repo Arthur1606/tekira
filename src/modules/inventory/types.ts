@@ -24,13 +24,16 @@ export interface Product {
   unit: string;
   min_stock: number;
   status: ProductStatus;
+  deleted_at?: string | null;
+  deleted_by?: string | null;
+  delete_reason?: string | null;
   created_at: string;
   variants?: ProductVariant[];
 }
 
 export interface InventoryMovement {
   id: string;
-  product_id?: string; // Legacy compatibility
+  product_id?: string;
   variant_id?: string;
   type: MovementType;
   quantity: number;

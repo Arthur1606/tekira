@@ -41,18 +41,19 @@ export async function createProduct(formData: FormData) {
     redirect(`/dashboard/inventory/new?error=${encodeURIComponent('Por favor, revisa todos los campos obligatorios.')}`);
   }
 
-  // Generación automática de SKU sanitizado si no se provee
+  // Generación automática de SKU sanitizado obligatorio en formato ROPA-PROD-VAR-0001
   let finalSku = (formData.get('sku') as string || '').trim().toUpperCase();
   if (!finalSku) {
-    const prefix = name.replace(/[^a-zA-Z0-9]/g, '').substring(0, 3).toUpperCase() || 'PRO';
+    const catCode = category ? category.replace(/[^a-zA-Z0-9]/g, '').substring(0, 4).toUpperCase() : 'ROPA';
+    const prodCode = name.replace(/[^a-zA-Z0-9]/g, '').substring(0, 4).toUpperCase() || 'PROD';
+    
     const { count } = await supabase
       .from('products')
       .select('*', { count: 'exact', head: true })
-      .eq('store_id', activeStore.id)
-      .like('sku', `${prefix}-%`);
+      .eq('store_id', activeStore.id);
       
-    const nextNumber = (count || 0) + 1;
-    finalSku = `${prefix}-${nextNumber.toString().padStart(4, '0')}`;
+    const nextSeq = ((count || 0) + 1).toString().padStart(4, '0');
+    finalSku = `${catCode}-${prodCode}-VAR-${nextSeq}`;
   }
 
   // 4. Insertar Producto (Inicialmente quantity 0)
@@ -263,4 +264,74 @@ export async function addMovement(formData: FormData) {
   revalidatePath('/inventory');
   revalidatePath(`/inventory/${targetProductId}/movement`);
   redirect(`/inventory/${targetProductId}/movement?success=${encodeURIComponent('Movimiento registrado correctamente.')}`);
+}
+
+export async function deleteProductAction(formData: FormData) {
+  const supabase = await createClient();
+
+  // 1. Obtener comercio activo
+  const stores = await getUserStores();
+  if (stores.length === 0) redirect('/onboarding');
+  const activeStore = stores[0];
+
+  // 2. Control Estricto: ÚNICAMENTE el OWNER del comercio puede eliminar productos
+  let securityCtx;
+  try {
+    securityCtx = await verifyPermission(activeStore.id, ['owner'], 'DELETE_PRODUCT');
+  } catch (err: any) {
+    redirect(`/inventory?error=${encodeURIComponent('Permisos insuficientes. Únicamente el propietario (owner) del comercio puede eliminar productos del catálogo.')}`);
+  }
+
+  const productId = (formData.get('product_id') as string || '').trim();
+  const deleteReason = (formData.get('delete_reason') as string || '').trim();
+
+  if (!productId || !deleteReason) {
+    redirect(`/inventory?error=${encodeURIComponent('Por favor, indica el motivo de eliminación del producto.')}`);
+  }
+
+  // 3. Obtener datos del producto para la auditoría
+  const { data: targetProduct } = await supabase
+    .from('products')
+    .select('*, variants:product_variants(*)')
+    .eq('id', productId)
+    .eq('store_id', activeStore.id)
+    .single();
+
+  if (!targetProduct) {
+    redirect(`/inventory?error=${encodeURIComponent('El producto a eliminar no existe en tu catálogo.')}`);
+  }
+
+  // 4. Aplicar Soft Delete (Preserva ventas e historial intactos)
+  const { error: deleteErr } = await supabase
+    .from('products')
+    .update({
+      deleted_at: new Date().toISOString(),
+      deleted_by: securityCtx.user.id,
+      delete_reason: deleteReason
+    })
+    .eq('id', productId)
+    .eq('store_id', activeStore.id);
+
+  if (deleteErr) {
+    redirect(`/inventory?error=${encodeURIComponent(deleteErr.message)}`);
+  }
+
+  // 5. Auditoría de Seguridad: PRODUCT_DELETED
+  await logSecurityEvent({
+    storeId: activeStore.id,
+    userId: securityCtx.user.id,
+    action: 'PRODUCT_DELETED',
+    entity: 'products',
+    entityId: productId,
+    metadata: {
+      product_name: targetProduct.name,
+      product_sku: targetProduct.sku,
+      variants_count: targetProduct.variants?.length || 0,
+      delete_reason: deleteReason,
+      deleted_by_owner: securityCtx.user.id
+    }
+  });
+
+  revalidatePath('/inventory');
+  redirect(`/inventory?success=${encodeURIComponent(`El producto "${targetProduct.name}" fue retirado del catálogo. Su historial de ventas e inventario se conservará guardado.`)}`);
 }

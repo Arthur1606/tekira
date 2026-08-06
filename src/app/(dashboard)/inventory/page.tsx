@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Plus, PackageSearch, AlertTriangle, PackageX, Box, ArrowRightLeft, Layers, Warehouse, Store, MapPin, Hash } from 'lucide-react';
+import { Plus, PackageSearch, AlertTriangle, PackageX, Box, ArrowRightLeft, Layers, Warehouse, Store, MapPin, Hash, Trash2, Filter } from 'lucide-react';
 import Link from 'next/link';
 import { getUserStores } from '@/modules/stores/services';
 import { getProducts, getInventorySummary } from '@/modules/inventory/services';
@@ -10,19 +10,42 @@ import { Product } from '@/modules/inventory/types';
 import { Badge } from '@/components/ui/Badge';
 import { CreateLocationModal } from '@/components/inventory/CreateLocationModal';
 import { TransferStockModal } from '@/components/inventory/TransferStockModal';
+import { DeleteProductModal } from '@/components/inventory/DeleteProductModal';
 
 export default async function InventoryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; success?: string }>;
+  searchParams: Promise<{ filter?: string; error?: string; success?: string }>;
 }) {
   const resolvedSearchParams = await searchParams;
+  const currentFilter = (resolvedSearchParams.filter || 'active') as 'active' | 'out_of_stock' | 'deleted';
+
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   const stores = await getUserStores();
+  if (stores.length === 0) return null;
   const activeStore = stores[0];
 
+  // Determinar rol del usuario actual
+  let currentUserRole: 'owner' | 'admin' | 'employee' = 'employee';
+  if (user && activeStore.owner_id === user.id) {
+    currentUserRole = 'owner';
+  } else if (user) {
+    const { data: member } = await supabase
+      .from('team_members')
+      .select('role')
+      .eq('store_id', activeStore.id)
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+    if (member?.role) {
+      currentUserRole = member.role as 'owner' | 'admin' | 'employee';
+    }
+  }
+
   const [products, summary, locations] = await Promise.all([
-    getProducts(activeStore.id),
+    getProducts(activeStore.id, currentFilter, currentUserRole),
     getInventorySummary(activeStore.id),
     getLocations(activeStore.id)
   ]);
@@ -121,45 +144,87 @@ export default async function InventoryPage({
         </div>
       </Card>
 
-      {/* Grid Resumen */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        <Card className="justify-between">
-          <div className="flex items-start justify-between mb-4">
-            <div className="w-12 h-12 bg-indigo-500/10 text-indigo-400 rounded-2xl flex items-center justify-center border border-indigo-500/20">
-              <Box className="w-6 h-6" />
+      {/* Grid Resumen y Filtros */}
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="justify-between">
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 bg-indigo-500/10 text-indigo-400 rounded-2xl flex items-center justify-center border border-indigo-500/20">
+                <Box className="w-6 h-6" />
+              </div>
             </div>
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-zinc-400 mb-1">Total Productos</p>
-            <h3 className="text-3xl font-black text-zinc-100">{summary.total}</h3>
-          </div>
-        </Card>
-
-        <Card className="justify-between">
-          <div className="flex items-start justify-between mb-4">
-            <div className="w-12 h-12 bg-amber-500/10 text-amber-400 rounded-2xl flex items-center justify-center border border-amber-500/20">
-              <AlertTriangle className="w-6 h-6" />
+            <div>
+              <p className="text-sm font-semibold text-zinc-400 mb-1">Total Productos</p>
+              <h3 className="text-3xl font-black text-zinc-100">{summary.total}</h3>
             </div>
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-zinc-400 mb-1">Bajo Stock</p>
-            <h3 className="text-3xl font-black text-zinc-100">{summary.lowStock}</h3>
-          </div>
-        </Card>
+          </Card>
 
-        <Card className="justify-between">
-          <div className="flex items-start justify-between mb-4">
-            <div className="w-12 h-12 bg-rose-500/10 text-rose-400 rounded-2xl flex items-center justify-center border border-rose-500/20">
-              <PackageX className="w-6 h-6" />
+          <Card className="justify-between">
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 bg-amber-500/10 text-amber-400 rounded-2xl flex items-center justify-center border border-amber-500/20">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
             </div>
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-zinc-400 mb-1">Agotados</p>
-            <h3 className="text-3xl font-black text-zinc-100">{summary.outOfStock}</h3>
-          </div>
-        </Card>
+            <div>
+              <p className="text-sm font-semibold text-zinc-400 mb-1">Bajo Stock</p>
+              <h3 className="text-3xl font-black text-zinc-100">{summary.lowStock}</h3>
+            </div>
+          </Card>
 
+          <Card className="justify-between">
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 bg-rose-500/10 text-rose-400 rounded-2xl flex items-center justify-center border border-rose-500/20">
+                <PackageX className="w-6 h-6" />
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-zinc-400 mb-1">Agotados</p>
+              <h3 className="text-3xl font-black text-zinc-100">{summary.outOfStock}</h3>
+            </div>
+          </Card>
+        </div>
+
+        {/* FILTROS DE INVENTARIO */}
+        <div className="flex items-center gap-2 border-b border-zinc-800 pb-3 pt-2 flex-wrap">
+          <span className="text-xs font-bold uppercase tracking-wider text-zinc-500 flex items-center gap-1.5 mr-2">
+            <Filter className="w-3.5 h-3.5" /> Filtrar:
+          </span>
+
+          <Link
+            href="/inventory?filter=active"
+            className={`py-1.5 px-3.5 text-xs font-bold rounded-xl transition-all ${
+              currentFilter === 'active'
+                ? 'bg-indigo-600 text-white shadow-md'
+                : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+            }`}
+          >
+            Productos Activos
+          </Link>
+
+          <Link
+            href="/inventory?filter=out_of_stock"
+            className={`py-1.5 px-3.5 text-xs font-bold rounded-xl transition-all ${
+              currentFilter === 'out_of_stock'
+                ? 'bg-amber-600 text-white shadow-md'
+                : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+            }`}
+          >
+            Productos Sin Stock
+          </Link>
+
+          {currentUserRole === 'owner' && (
+            <Link
+              href="/inventory?filter=deleted"
+              className={`py-1.5 px-3.5 text-xs font-bold rounded-xl transition-all ${
+                currentFilter === 'deleted'
+                  ? 'bg-rose-600 text-white shadow-md'
+                  : 'bg-zinc-900 text-rose-400 hover:bg-rose-500/10 border border-rose-500/20'
+              }`}
+            >
+              🗑️ Productos Retirados (Owner)
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Lista de Productos */}
@@ -169,13 +234,10 @@ export default async function InventoryPage({
             <div className="w-16 h-16 bg-zinc-800/50 text-zinc-500 rounded-full flex items-center justify-center mb-4">
               <PackageSearch className="w-8 h-8" />
             </div>
-            <h4 className="text-lg font-semibold text-zinc-100 mb-2">Aún no hay productos</h4>
+            <h4 className="text-lg font-semibold text-zinc-100 mb-2">No se encontraron productos</h4>
             <p className="text-sm text-zinc-400 max-w-sm">
-              Comienza a construir el inventario físico de tu negocio agregando tu primer producto.
+              {currentFilter === 'deleted' ? 'No hay productos retirados en el historial de auditoría.' : 'Comienza a construir el inventario agregando productos.'}
             </p>
-            <Link href="/inventory/new" className="mt-6">
-              <Button variant="secondary">Crear Producto</Button>
-            </Link>
           </div>
         ) : (
           <div className="divide-y divide-zinc-800">
@@ -212,13 +274,18 @@ export default async function InventoryPage({
                   </div>
                 </div>
                 
-                <div className="col-span-3 sm:col-span-3 flex justify-end items-start pt-1">
+                <div className="col-span-3 sm:col-span-3 flex justify-end items-center gap-2 pt-1">
                   <Link href={`/inventory/${product.id}/movement`}>
                     <Button variant="secondary" className="px-3 py-1.5 h-auto text-xs">
                       <ArrowRightLeft className="w-4 h-4 sm:mr-1.5" />
                       <span className="hidden sm:inline">Movimiento</span>
                     </Button>
                   </Link>
+
+                  {/* Modal de Eliminación Segura (Soft Delete) - Solo Propietario */}
+                  {currentUserRole === 'owner' && !product.deleted_at && (
+                    <DeleteProductModal product={product} userRole={currentUserRole} />
+                  )}
                 </div>
 
                 {/* Variantes y SKU Obligatorio - Fila Secundaria */}

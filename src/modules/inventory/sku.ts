@@ -1,9 +1,9 @@
 /**
- * Generador automático de SKU Obligatorio en formato:
- * [CATEGORIA]-[PRODUCTO]-[VARIANTE]
- * Ejemplo: ROPA-SUD-NEG-M
+ * Generador automático de SKU Interno Obligatorio en formato:
+ * [CATEGORIA]-[PRODUCTO]-[VARIANTE]-[SECUENCIA]
+ * Ejemplo: ROPA-SUD-NEG-M-0001
  */
-export function generateAutoSku(category: string, productName: string, variantName: string): string {
+export function generateAutoSku(category: string, productName: string, variantName: string, sequenceNumber: number = 1): string {
   const sanitize = (text: string) => 
     text
       .toUpperCase()
@@ -12,11 +12,10 @@ export function generateAutoSku(category: string, productName: string, variantNa
       .replace(/[^A-Z0-9]/g, "") // mantener solo letras y números
       .trim();
 
-  const catCode = sanitize(category).slice(0, 3) || 'GEN';
-  const prodCode = sanitize(productName).slice(0, 3) || 'PRD';
+  const catCode = sanitize(category).slice(0, 4) || 'ROPA';
+  const prodCode = sanitize(productName).slice(0, 4) || 'PROD';
   const varCode = sanitize(variantName).slice(0, 4) || 'VAR';
+  const seqStr = sequenceNumber.toString().padStart(4, '0');
 
-  const randomNum = Math.floor(100 + Math.random() * 900); // 3 dígitos aleatorios para evitar colisión
-
-  return `${catCode}-${prodCode}-${varCode}-${randomNum}`;
+  return `${catCode}-${prodCode}-${varCode}-${seqStr}`;
 }

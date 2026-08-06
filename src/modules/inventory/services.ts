@@ -1,17 +1,31 @@
 import { createClient } from '@/lib/supabase/server';
-import { Product, InventoryMovement } from './types';
+import { Product } from './types';
 
-export async function getProducts(storeId: string): Promise<Product[]> {
+export async function getProducts(
+  storeId: string, 
+  filter: 'active' | 'out_of_stock' | 'deleted' = 'active',
+  userRole: 'owner' | 'admin' | 'employee' = 'employee'
+): Promise<Product[]> {
   const supabase = await createClient();
   
-  const { data, error } = await supabase
+  let query = supabase
     .from('products')
     .select(`
       *,
       variants:product_variants(*)
     `)
-    .eq('store_id', storeId)
-    .order('name', { ascending: true });
+    .eq('store_id', storeId);
+
+  if (filter === 'deleted') {
+    if (userRole !== 'owner') return [];
+    query = query.not('deleted_at', 'is', null);
+  } else if (filter === 'out_of_stock') {
+    query = query.is('deleted_at', null).eq('status', 'out_of_stock');
+  } else {
+    query = query.is('deleted_at', null);
+  }
+
+  const { data, error } = await query.order('name', { ascending: true });
 
   if (error) {
     console.error('Error fetching products:', error);
@@ -47,10 +61,11 @@ export async function getInventorySummary(storeId: string) {
   
   const { data, error } = await supabase
     .from('products')
-    .select('status')
-    .eq('store_id', storeId);
+    .select('status, deleted_at')
+    .eq('store_id', storeId)
+    .is('deleted_at', null);
 
-  if (error) {
+  if (error || !data) {
     return { total: 0, lowStock: 0, outOfStock: 0 };
   }
 
@@ -72,7 +87,6 @@ export async function getInventorySummary(storeId: string) {
 export async function getMovementHistory(productId: string, storeId: string) {
   const supabase = await createClient();
 
-  // Obtener variantes asociadas al producto
   const { data: variants, error: varError } = await supabase
     .from('product_variants')
     .select('id, name, sku')
@@ -85,7 +99,6 @@ export async function getMovementHistory(productId: string, storeId: string) {
   const variantIds = variants.map(v => v.id);
   const variantMap = new Map(variants.map(v => [v.id, v]));
 
-  // Obtener movimientos de las variantes de este producto
   const { data: movements, error: movError } = await supabase
     .from('inventory_movements')
     .select('*')
