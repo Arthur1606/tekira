@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { User, Settings, LogOut, Shield, ChevronDown } from 'lucide-react';
+import { User, Settings, LogOut, Building, KeyRound, Copy, Check, ChevronDown } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 
 interface UserDropdownMenuProps {
@@ -10,6 +10,8 @@ interface UserDropdownMenuProps {
   userEmail: string;
   avatarLetter: string;
   userRole: 'owner' | 'admin' | 'employee';
+  storeName?: string;
+  companyCode?: string;
   logoutAction: () => Promise<void>;
 }
 
@@ -18,9 +20,12 @@ export function UserDropdownMenu({
   userEmail,
   avatarLetter,
   userRole,
+  storeName,
+  companyCode,
   logoutAction
 }: UserDropdownMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Cerrar menú al hacer clic afuera
@@ -33,6 +38,14 @@ export function UserDropdownMenu({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const copyCode = () => {
+    if (companyCode) {
+      navigator.clipboard.writeText(companyCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   const getRoleBadge = (role: string) => {
     switch (role) {
@@ -62,7 +75,7 @@ export function UserDropdownMenu({
 
       {/* Menú Desplegable */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150 py-1">
+        <div className="absolute right-0 mt-2 w-72 bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150 py-1">
           
           {/* Cabecera del Usuario */}
           <div className="px-4 py-3 border-b border-zinc-800/80 bg-zinc-900/40">
@@ -72,6 +85,38 @@ export function UserDropdownMenu({
               {getRoleBadge(userRole)}
             </div>
           </div>
+
+          {/* CÓDIGO DE EMPRESA: SOLO VISIBLE PARA ROLE === 'OWNER' */}
+          {userRole === 'owner' && companyCode && (
+            <div className="px-4 py-3 bg-indigo-500/10 border-b border-indigo-500/20 my-1 space-y-1.5">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-zinc-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                  <Building className="w-3.5 h-3.5 text-indigo-400" /> Empresa
+                </span>
+                <span className="font-bold text-zinc-200 truncate max-w-[130px]">{storeName}</span>
+              </div>
+
+              <div className="flex items-center justify-between pt-1 border-t border-indigo-500/20 text-xs">
+                <span className="text-[11px] text-zinc-400 flex items-center gap-1">
+                  <KeyRound className="w-3 h-3 text-indigo-400" /> Código:
+                </span>
+                
+                <button
+                  type="button"
+                  onClick={copyCode}
+                  className="font-mono font-bold text-xs text-indigo-300 bg-indigo-950/80 hover:bg-indigo-900/80 px-2 py-1 rounded-lg border border-indigo-500/30 flex items-center gap-1.5 transition-colors group"
+                  title="Copiar código de empresa"
+                >
+                  <span>{companyCode}</span>
+                  {copied ? (
+                    <Check className="w-3 h-3 text-emerald-400" />
+                  ) : (
+                    <Copy className="w-3 h-3 text-indigo-400 group-hover:text-indigo-200" />
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Opciones de Navegación */}
           <div className="py-1">

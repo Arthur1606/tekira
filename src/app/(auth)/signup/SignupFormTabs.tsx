@@ -1,0 +1,197 @@
+'use client';
+
+import { useState } from 'react';
+import { signupOwner, joinCompany } from '@/modules/auth/actions';
+import { Mail, Lock, User, Building, KeyRound, Shield, Tag, MapPin } from 'lucide-react';
+import { SubmitButton } from '@/components/ui/SubmitButton';
+import { Input } from '@/components/ui/Input';
+
+interface SignupFormTabsProps {
+  initialMode?: 'owner' | 'join';
+}
+
+export function SignupFormTabs({ initialMode = 'owner' }: SignupFormTabsProps) {
+  const [mode, setMode] = useState<'owner' | 'join'>(initialMode);
+
+  return (
+    <div className="space-y-6">
+      
+      {/* Selector de Modo */}
+      <div className="grid grid-cols-2 p-1 bg-zinc-900 border border-zinc-800 rounded-xl">
+        <button
+          type="button"
+          onClick={() => setMode('owner')}
+          className={`flex items-center justify-center gap-2 py-3 px-4 text-xs sm:text-sm font-bold rounded-lg transition-all ${
+            mode === 'owner'
+              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
+              : 'text-zinc-400 hover:text-zinc-200'
+          }`}
+        >
+          <Building className="w-4 h-4" /> Crear Empresa
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setMode('join')}
+          className={`flex items-center justify-center gap-2 py-3 px-4 text-xs sm:text-sm font-bold rounded-lg transition-all ${
+            mode === 'join'
+              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
+              : 'text-zinc-400 hover:text-zinc-200'
+          }`}
+        >
+          <KeyRound className="w-4 h-4" /> Unirme a Empresa
+        </button>
+      </div>
+
+      {/* MODO 1: CREAR NUEVA EMPRESA */}
+      {mode === 'owner' ? (
+        <form action={signupOwner} className="space-y-5">
+          <div className="p-3.5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-xs text-indigo-300 font-medium leading-relaxed">
+            Registra tu negocio como <strong>Propietario Principal</strong>. Se generará automáticamente tu <strong>Código de Empresa</strong> para invitar a tu equipo.
+          </div>
+
+          <Input
+            id="store_name"
+            name="store_name"
+            type="text"
+            label="Nombre Comercial de la Empresa"
+            placeholder="Ej. Tienda María, Distribuidora San José"
+            icon={Building}
+            required
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="w-full">
+              <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5" htmlFor="category">
+                Categoría del Negocio
+              </label>
+              <div className="relative">
+                <select
+                  id="category"
+                  name="category"
+                  defaultValue="Tienda de barrio"
+                  className="block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 pl-10 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none"
+                >
+                  <option value="Restaurante">Restaurante / Cafetería</option>
+                  <option value="Tienda de barrio">Tienda de Barrio / Minimercado</option>
+                  <option value="Supermercado">Supermercado</option>
+                  <option value="Ferretería">Ferretería / Repuestos</option>
+                  <option value="Licorería">Licorería</option>
+                  <option value="Droguería">Droguería / Farmacia</option>
+                  <option value="Tienda de ropa">Tienda de Ropa / Calzado</option>
+                  <option value="Tecnología">Tecnología / Miscelánea</option>
+                  <option value="Otro">Otro Rubro</option>
+                </select>
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
+                  <Tag className="w-4 h-4 text-indigo-400" />
+                </div>
+              </div>
+            </div>
+
+            <Input
+              id="city"
+              name="city"
+              type="text"
+              label="Ciudad / Ubicación"
+              placeholder="Ej. Bogotá, Medellín"
+              icon={MapPin}
+            />
+          </div>
+
+          <Input
+            id="name"
+            name="name"
+            type="text"
+            label="Tu Nombre Completo (Propietario)"
+            placeholder="Ej. María Rodríguez"
+            icon={User}
+            required
+          />
+
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            label="Correo Electrónico Principal"
+            placeholder="propietario@empresa.com"
+            icon={Mail}
+            required
+          />
+
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            label="Contraseña"
+            placeholder="Mínimo 6 caracteres"
+            icon={Lock}
+            required
+            minLength={6}
+          />
+
+          <div className="pt-2">
+            <SubmitButton fullWidth className="py-3.5 text-sm font-bold shadow-xl shadow-indigo-600/20">
+              Crear Empresa y Continuar
+            </SubmitButton>
+          </div>
+        </form>
+      ) : (
+        /* MODO 2: UNIRSE A EMPRESA EXISTENTE */
+        <form action={joinCompany} className="space-y-5">
+          <div className="p-3.5 bg-purple-500/10 border border-purple-500/20 rounded-xl text-xs text-purple-300 font-medium leading-relaxed">
+            Ingresa el <strong>Código de Empresa</strong> proporcionado por tu Administrador o Propietario (ej. <strong>TEK-83921</strong>) para vincularte a su equipo.
+          </div>
+
+          <Input
+            id="company_code"
+            name="company_code"
+            type="text"
+            label="Código de Empresa"
+            placeholder="Ej. TEK-83921 o MAR-48291"
+            icon={KeyRound}
+            required
+            className="uppercase font-mono tracking-wider font-bold text-indigo-400 placeholder:text-zinc-600 placeholder:font-normal placeholder:tracking-normal"
+          />
+
+          <Input
+            id="name"
+            name="name"
+            type="text"
+            label="Tu Nombre Completo"
+            placeholder="Ej. Carlos Mendoza"
+            icon={User}
+            required
+          />
+
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            label="Correo Electrónico"
+            placeholder="carlos@gmail.com"
+            icon={Mail}
+            required
+          />
+
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            label="Contraseña"
+            placeholder="Mínimo 6 caracteres"
+            icon={Lock}
+            required
+            minLength={6}
+          />
+
+          <div className="pt-2">
+            <SubmitButton fullWidth className="py-3.5 text-sm font-bold bg-purple-600 hover:bg-purple-500 shadow-xl shadow-purple-600/20">
+              Unirme a la Empresa
+            </SubmitButton>
+          </div>
+        </form>
+      )}
+
+    </div>
+  );
+}

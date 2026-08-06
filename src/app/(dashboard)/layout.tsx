@@ -91,6 +91,8 @@ export default async function DashboardLayout({
             userEmail={user.email || ''}
             avatarLetter={avatarLetter}
             userRole={userRole}
+            storeName={activeStore.name}
+            companyCode={activeStore.company_code}
             logoutAction={logout}
           />
         </div>

@@ -27,6 +27,7 @@ export interface Store {
   id: string;
   name: string;
   owner_id: string;
+  company_code: string;
   category: StoreCategory;
   city: string;
   created_at: string;
