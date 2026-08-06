@@ -5,8 +5,7 @@ import { QrCodeDisplay } from '@/components/security/QrCodeSvg';
 import { Input } from '@/components/ui/Input';
 import { SubmitButton } from '@/components/ui/SubmitButton';
 import { enableMfaMandatoryAction } from '@/modules/security/mfaActions';
-import { ShieldCheck, ShieldAlert, KeyRound, QrCode, AlertCircle, Lock, CheckCircle2, Building2, UserCheck, Smartphone } from 'lucide-react';
-import Link from 'next/link';
+import { ShieldCheck, ShieldAlert, KeyRound, QrCode, AlertCircle, Lock, CheckCircle2, Building2, UserCheck, Smartphone, Check } from 'lucide-react';
 
 export default async function SetupMfaPage({
   searchParams,
@@ -29,69 +28,100 @@ export default async function SetupMfaPage({
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#09090B] font-sans p-4 sm:p-6 lg:p-12 relative overflow-x-hidden">
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#09090B] font-sans p-4 sm:p-6 lg:p-10 xl:p-12 relative overflow-x-hidden">
       
-      {/* Glow Decor Background Style Vercel / Linear */}
-      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-900/20 blur-[140px] pointer-events-none"></div>
-      <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-900/15 blur-[140px] pointer-events-none"></div>
+      {/* Ambient Glow Background Style Stripe / Linear */}
+      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-900/25 blur-[160px] pointer-events-none"></div>
+      <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-900/20 blur-[160px] pointer-events-none"></div>
 
-      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-stretch relative z-10 my-auto">
+      {/* Contenedor Principal Desktop First Max-Width 1440px */}
+      <div className="w-full max-w-[1440px] grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 xl:gap-16 items-stretch relative z-10 my-auto">
         
-        {/* PANEL IZQUIERDO: Tarjeta de Activación 2FA (Ampla, Responsive y Estilo SaaS Premium) */}
-        <div className="lg:col-span-7 bg-zinc-900/50 backdrop-blur-xl rounded-3xl shadow-2xl border border-zinc-800/90 p-6 sm:p-8 lg:p-10 flex flex-col justify-between space-y-8 animate-in zoom-in-95 duration-300">
+        {/* PANEL IZQUIERDO: Card Principal de Activación 2FA (60% Ancho en Desktop) */}
+        <div className="lg:col-span-7 bg-zinc-900/50 backdrop-blur-2xl rounded-3xl shadow-2xl border border-zinc-800/90 p-6 sm:p-10 lg:p-12 flex flex-col justify-between space-y-8 animate-in zoom-in-95 duration-300 min-w-0">
           
-          {/* Header del Card */}
+          {/* Header Principal */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
+              <div className="w-11 h-11 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/25 shrink-0">
                 <span className="text-white font-black text-2xl leading-none">T</span>
               </div>
               <div>
-                <span className="font-black text-xl text-zinc-100 tracking-tight block">TEKIRA</span>
-                <span className="text-[10px] font-mono text-indigo-400 uppercase tracking-widest block font-bold">Enterprise Security</span>
+                <span className="font-black text-2xl text-zinc-100 tracking-tight block">TEKIRA</span>
+                <span className="text-xs font-mono text-indigo-400 uppercase tracking-widest block font-bold">Enterprise Security</span>
               </div>
             </div>
 
-            <div className="pt-2 border-t border-zinc-800/80">
-              <h1 className="text-2xl sm:text-3xl font-black text-zinc-100 tracking-tight">Activación Obligatoria de 2FA</h1>
-              <p className="text-xs sm:text-sm text-zinc-400 font-medium leading-relaxed mt-1.5">
-                Por políticas de seguridad empresarial, todas las cuentas deben vincular una aplicación autenticadora para continuar.
+            <div className="pt-3 border-t border-zinc-800/80">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-zinc-100 tracking-tight">Activación Obligatoria de 2FA</h1>
+              <p className="text-sm sm:text-base text-zinc-400 font-medium leading-relaxed mt-2">
+                Vincula tu aplicación autenticadora para proteger la privacidad operativa y financiera de tu empresa.
               </p>
             </div>
           </div>
 
           {error && (
-            <div className="p-4 bg-red-500/10 text-red-400 border border-red-500/20 rounded-2xl flex items-start gap-3 text-xs font-medium">
-              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <div className="p-4 bg-red-500/10 text-red-400 border border-red-500/20 rounded-2xl flex items-start gap-3 text-sm font-medium">
+              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
               <p>{error}</p>
             </div>
           )}
 
-          <div className="space-y-6">
+          <div className="space-y-8">
             
-            {/* PASO 1 DE 2: Escanear QR & Clave Manual */}
-            <div className="bg-zinc-950/80 p-5 sm:p-7 rounded-2xl border border-zinc-800/80 space-y-5 shadow-inner">
-              <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
-                <span className="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-2">
+            {/* PASO 1 DE 2: Escanear QR & Clave Manual (Distribución Horizontal Interna en Desktop) */}
+            <div className="bg-zinc-950/80 p-6 sm:p-8 rounded-3xl border border-zinc-800/90 space-y-6 shadow-inner">
+              <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
+                <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-2">
                   <QrCode className="w-4 h-4" /> Paso 1 de 2
                 </span>
-                <span className="text-xs font-semibold text-zinc-400">Configura tu aplicación</span>
+                <span className="text-xs sm:text-sm font-semibold text-zinc-400">Configura tu aplicación</span>
               </div>
 
-              {/* Contenedor del QR y Botón Copiar */}
-              <QrCodeDisplay qrDataUrl={mfaRes.qrDataUrl} secret={mfaRes.secret} size={220} />
+              {/* Layout Interno: QR Grande (240px) a la izquierda, Instrucciones y Clave Manual a la derecha en Desktop */}
+              <div className="flex flex-col lg:flex-row items-center gap-8">
+                
+                {/* QR Code 240px */}
+                <div className="shrink-0 flex flex-col items-center justify-center">
+                  <QrCodeDisplay qrDataUrl={mfaRes.qrDataUrl} secret={mfaRes.secret} size={240} />
+                </div>
+
+                {/* Instrucciones Detalladas */}
+                <div className="space-y-4 flex-1 min-w-0">
+                  <h3 className="text-sm font-bold text-zinc-200 uppercase tracking-wider flex items-center gap-2">
+                    <Smartphone className="w-4 h-4 text-indigo-400" /> ¿Cómo escanear el código?
+                  </h3>
+
+                  <ul className="space-y-2.5 text-xs sm:text-sm text-zinc-300 font-medium">
+                    <li className="flex items-start gap-2.5">
+                      <div className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</div>
+                      <span>Abre <strong>Google Authenticator</strong>, <strong>Authy</strong> o <strong>Microsoft Authenticator</strong> en tu teléfono.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <div className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</div>
+                      <span>Selecciona <strong>"Escanear código QR"</strong> y apunta la cámara a la pantalla.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <div className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">3</div>
+                      <span>O ingresa manualmente la clave secreta indicada abajo.</span>
+                    </li>
+                  </ul>
+                </div>
+
+              </div>
+
             </div>
 
             {/* PASO 2 DE 2: Código de 6 Dígitos */}
-            <div className="bg-zinc-950/80 p-5 sm:p-7 rounded-2xl border border-zinc-800/80 space-y-5 shadow-inner">
-              <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
-                <span className="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-2">
+            <div className="bg-zinc-950/80 p-6 sm:p-8 rounded-3xl border border-zinc-800/90 space-y-6 shadow-inner">
+              <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
+                <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-2">
                   <KeyRound className="w-4 h-4" /> Paso 2 de 2
                 </span>
-                <span className="text-xs font-semibold text-zinc-400">Confirma el código</span>
+                <span className="text-xs sm:text-sm font-semibold text-zinc-400">Confirma el código</span>
               </div>
 
-              <form action={enableMfaMandatoryAction} className="space-y-4">
+              <form action={enableMfaMandatoryAction} className="space-y-5">
                 <Input
                   id="code"
                   name="code"
@@ -101,10 +131,10 @@ export default async function SetupMfaPage({
                   icon={KeyRound}
                   maxLength={6}
                   required
-                  className="text-center font-mono text-xl sm:text-2xl font-bold tracking-widest"
+                  className="text-center font-mono text-xl sm:text-2xl font-bold tracking-widest py-3.5"
                 />
 
-                <SubmitButton fullWidth className="py-4 text-sm font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xl shadow-indigo-600/20">
+                <SubmitButton fullWidth className="py-4 text-sm sm:text-base font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xl shadow-indigo-600/25">
                   Confirmar y Activar Protección 2FA
                 </SubmitButton>
               </form>
@@ -112,31 +142,34 @@ export default async function SetupMfaPage({
 
           </div>
 
-          <div className="pt-2 text-center text-xs text-zinc-500 flex items-center justify-center gap-1.5 font-mono">
-            <Lock className="w-3.5 h-3.5 text-zinc-600" /> TEKIRA Multi-Tenant Universal Security Enforcement
+          <div className="pt-2 text-center text-xs text-zinc-500 flex items-center justify-center gap-2 font-mono">
+            <Lock className="w-4 h-4 text-zinc-600" /> TEKIRA Multi-Tenant Universal Security Enforcement
           </div>
 
         </div>
 
-        {/* PANEL DERECHO: Información de Seguridad Empresarial (Visible en Desktop lg:flex, Hidden on Mobile) */}
-        <div className="hidden lg:flex lg:col-span-5 flex-col justify-between p-8 lg:p-10 bg-zinc-950/70 backdrop-blur-xl rounded-3xl border border-zinc-800/90 shadow-2xl space-y-8">
+        {/* PANEL DERECHO: Landing Informativa de Seguridad SaaS (40% Ancho en Desktop, Visible en lg:flex) */}
+        <div className="hidden lg:flex lg:col-span-5 flex-col justify-between p-8 sm:p-10 lg:p-12 bg-zinc-950/80 backdrop-blur-2xl rounded-3xl border border-zinc-800/90 shadow-2xl space-y-8 min-w-0">
           
           <div className="space-y-6">
-            <div className="w-14 h-14 bg-indigo-500/10 rounded-2xl flex items-center justify-center border border-indigo-500/20 shadow-inner">
-              <ShieldCheck className="w-7 h-7 text-indigo-400" />
+            <div className="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center border border-indigo-500/20 shadow-inner">
+              <ShieldCheck className="w-8 h-8 text-indigo-400" />
             </div>
 
             <div>
-              <h2 className="text-2xl font-black text-zinc-100 tracking-tight">Seguridad Reforzada TEKIRA</h2>
-              <p className="text-xs text-zinc-400 mt-2 leading-relaxed font-medium">
-                Protegemos la información financiera, inventarios y transacciones de tu comercio mediante autenticación universal de dos factores y aislamiento multiempresa.
+              <span className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest block mb-1">Protección Empresarial</span>
+              <h2 className="text-2xl sm:text-3xl font-black text-zinc-100 tracking-tight leading-snug">Seguridad Reforzada para tu Empresa</h2>
+              <p className="text-xs sm:text-sm text-zinc-400 mt-3 leading-relaxed font-medium">
+                TEKIRA protege la información financiera, existencias de inventario y transacciones de tu comercio mediante autenticación de dos factores y aislamiento multiempresa RLS.
               </p>
             </div>
 
             <div className="space-y-4 pt-2">
               
-              <div className="flex items-start gap-3.5 p-4 bg-zinc-900/60 rounded-2xl border border-zinc-800/70">
-                <Smartphone className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-4 p-4 bg-zinc-900/60 rounded-2xl border border-zinc-800/70 hover:border-zinc-700 transition-colors">
+                <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-400 shrink-0">
+                  <Smartphone className="w-5 h-5" />
+                </div>
                 <div>
                   <span className="font-bold text-sm text-zinc-200 block">Compatibilidad Universal TOTP</span>
                   <span className="text-xs text-zinc-400 leading-relaxed block mt-0.5">
@@ -145,8 +178,10 @@ export default async function SetupMfaPage({
                 </div>
               </div>
 
-              <div className="flex items-start gap-3.5 p-4 bg-zinc-900/60 rounded-2xl border border-zinc-800/70">
-                <Building2 className="w-5 h-5 text-purple-400 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-4 p-4 bg-zinc-900/60 rounded-2xl border border-zinc-800/70 hover:border-zinc-700 transition-colors">
+                <div className="p-2 bg-purple-500/10 rounded-xl text-purple-400 shrink-0">
+                  <Building2 className="w-5 h-5" />
+                </div>
                 <div>
                   <span className="font-bold text-sm text-zinc-200 block">Aislamiento por Comercio</span>
                   <span className="text-xs text-zinc-400 leading-relaxed block mt-0.5">
@@ -155,12 +190,14 @@ export default async function SetupMfaPage({
                 </div>
               </div>
 
-              <div className="flex items-start gap-3.5 p-4 bg-zinc-900/60 rounded-2xl border border-zinc-800/70">
-                <UserCheck className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-4 p-4 bg-zinc-900/60 rounded-2xl border border-zinc-800/70 hover:border-zinc-700 transition-colors">
+                <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-400 shrink-0">
+                  <UserCheck className="w-5 h-5" />
+                </div>
                 <div>
                   <span className="font-bold text-sm text-zinc-200 block">Recuperación Controlada</span>
                   <span className="text-xs text-zinc-400 leading-relaxed block mt-0.5">
-                    Restablecimiento seguro mediante aprobación administrativa previa del Propietario o Admin.
+                    Restablecimiento seguro mediante previa aprobación del Propietario o Administrador.
                   </span>
                 </div>
               </div>
@@ -168,8 +205,8 @@ export default async function SetupMfaPage({
             </div>
           </div>
 
-          <div className="p-4 bg-indigo-500/10 rounded-2xl border border-indigo-500/20 text-xs text-indigo-300 font-medium leading-relaxed">
-            💡 Una vez activado, tu token de seguridad quedará vinculado a tu cuenta en todos tus dispositivos.
+          <div className="p-4 sm:p-5 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-2xl border border-indigo-500/20 text-xs sm:text-sm text-indigo-300 font-medium leading-relaxed">
+            ✨ Una vez activado, tu token de seguridad quedará vinculado a tu cuenta para garantizar el acceso en todos tus dispositivos.
           </div>
 
         </div>
