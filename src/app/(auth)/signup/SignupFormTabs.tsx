@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { signupOwner, joinCompany } from '@/modules/auth/actions';
-import { Mail, Lock, User, Building, KeyRound, Shield, Tag, MapPin } from 'lucide-react';
+import { Mail, Lock, User, Building, KeyRound, Tag, MapPin, Scale } from 'lucide-react';
 import { SubmitButton } from '@/components/ui/SubmitButton';
 import { Input } from '@/components/ui/Input';
 
@@ -12,6 +13,7 @@ interface SignupFormTabsProps {
 
 export function SignupFormTabs({ initialMode = 'owner' }: SignupFormTabsProps) {
   const [mode, setMode] = useState<'owner' | 'join'>(initialMode);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -129,6 +131,31 @@ export function SignupFormTabs({ initialMode = 'owner' }: SignupFormTabsProps) {
             minLength={6}
           />
 
+          {/* CHECKBOX DE ACEPACIÓN LEGAL OBLIGATORIA */}
+          <div className="p-3 bg-zinc-900/80 border border-zinc-800 rounded-xl space-y-2">
+            <label className="flex items-start gap-2.5 cursor-pointer text-xs text-zinc-300">
+              <input
+                type="checkbox"
+                name="terms_accepted"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                required
+                className="mt-0.5 rounded border-zinc-700 bg-zinc-950 text-indigo-600 focus:ring-indigo-500 shrink-0"
+              />
+              <span className="leading-snug">
+                Acepto los{' '}
+                <Link href="/legal/terms" target="_blank" className="text-indigo-400 underline hover:text-indigo-300 font-bold">
+                  Términos y Condiciones
+                </Link>{' '}
+                y la{' '}
+                <Link href="/legal/privacy-policy" target="_blank" className="text-indigo-400 underline hover:text-indigo-300 font-bold">
+                  Política de Privacidad
+                </Link>{' '}
+                de TEKIRA (v0.12.0).
+              </span>
+            </label>
+          </div>
+
           <div className="pt-2">
             <SubmitButton fullWidth className="py-3.5 text-sm font-bold shadow-xl shadow-indigo-600/20">
               Crear Empresa y Continuar
@@ -183,6 +210,31 @@ export function SignupFormTabs({ initialMode = 'owner' }: SignupFormTabsProps) {
             required
             minLength={6}
           />
+
+          {/* CHECKBOX DE ACEPTACIÓN LEGAL OBLIGATORIA */}
+          <div className="p-3 bg-zinc-900/80 border border-zinc-800 rounded-xl space-y-2">
+            <label className="flex items-start gap-2.5 cursor-pointer text-xs text-zinc-300">
+              <input
+                type="checkbox"
+                name="terms_accepted"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                required
+                className="mt-0.5 rounded border-zinc-700 bg-zinc-950 text-purple-600 focus:ring-purple-500 shrink-0"
+              />
+              <span className="leading-snug">
+                Acepto los{' '}
+                <Link href="/legal/terms" target="_blank" className="text-purple-400 underline hover:text-purple-300 font-bold">
+                  Términos y Condiciones
+                </Link>{' '}
+                y la{' '}
+                <Link href="/legal/privacy-policy" target="_blank" className="text-purple-400 underline hover:text-purple-300 font-bold">
+                  Política de Privacidad
+                </Link>{' '}
+                de TEKIRA (v0.12.0).
+              </span>
+            </label>
+          </div>
 
           <div className="pt-2">
             <SubmitButton fullWidth className="py-3.5 text-sm font-bold bg-purple-600 hover:bg-purple-500 shadow-xl shadow-purple-600/20">

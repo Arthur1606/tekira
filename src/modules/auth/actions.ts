@@ -119,6 +119,12 @@ export async function signupOwner(formData: FormData) {
     status: 'active'
   });
 
+  // Registrar consentimiento legal de Términos y Privacidad v0.12.0
+  await supabase.from('legal_consents').insert({
+    user_id: userId,
+    terms_version: 'v0.12.0'
+  });
+
   await logSecurityEvent({
     storeId: newStore.id,
     userId,
@@ -216,6 +222,12 @@ export async function joinCompany(formData: FormData) {
       status: 'active'
     });
   }
+
+  // Registrar consentimiento legal de Términos y Privacidad v0.12.0
+  await supabase.from('legal_consents').insert({
+    user_id: userId,
+    terms_version: 'v0.12.0'
+  });
 
   await logSecurityEvent({
     storeId: targetStore.id,

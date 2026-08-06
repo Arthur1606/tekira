@@ -11,7 +11,7 @@ import { updateStoreSettings } from '@/modules/stores/actions';
 import { generateMfaSecret, enableMfa, disableMfa, approveMfaReset, rejectMfaReset } from '@/modules/security/mfaActions';
 import { EditMemberModal } from '@/components/team/EditMemberModal';
 import { DeleteMemberModal } from '@/components/team/DeleteMemberModal';
-import { User, Users, Lock, Plus, Building, CheckCircle2, Clock, Info, Globe, Phone, Mail, DollarSign, ShieldAlert, ShieldCheck, KeyRound, QrCode, Check, X, Hash } from 'lucide-react';
+import { User, Users, Lock, Plus, Building, CheckCircle2, Clock, Info, Globe, Phone, Mail, DollarSign, ShieldAlert, ShieldCheck, KeyRound, QrCode, Check, X, Hash, Scale, FileText } from 'lucide-react';
 import Link from 'next/link';
 
 const CURRENCIES = [
@@ -41,7 +41,9 @@ export default async function SettingsPage({
     ? 'company' 
     : (resolvedSearchParams.tab === 'security' 
       ? 'security' 
-      : (resolvedSearchParams.tab === 'team' ? 'team' : 'profile'));
+      : (resolvedSearchParams.tab === 'legal'
+        ? 'legal'
+        : (resolvedSearchParams.tab === 'team' ? 'team' : 'profile')));
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -144,7 +146,7 @@ export default async function SettingsPage({
       {/* Encabezado */}
       <div>
         <h1 className="text-3xl font-bold text-zinc-100 tracking-tight">Configuraciones</h1>
-        <p className="text-sm text-zinc-400 mt-1">Gestiona tu perfil, datos empresariales, seguridad 2FA obligatoria y equipo</p>
+        <p className="text-sm text-zinc-400 mt-1">Gestiona tu perfil, datos empresariales, seguridad 2FA obligatoria, equipo e información legal</p>
       </div>
 
       {/* Retroalimentación */}
@@ -206,6 +208,17 @@ export default async function SettingsPage({
             <Users className="w-4 h-4" /> Gestión de Equipo
           </Link>
         )}
+
+        <Link
+          href="/settings?tab=legal"
+          className={`flex items-center gap-2 py-2.5 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all ${
+            activeTab === 'legal'
+              ? 'bg-zinc-800 text-indigo-400 border border-zinc-700 shadow-sm'
+              : 'text-zinc-400 hover:text-zinc-200'
+          }`}
+        >
+          <Scale className="w-4 h-4" /> Información Legal
+        </Link>
       </div>
 
       {/* TAB 1: MI PERFIL */}
@@ -725,11 +738,81 @@ export default async function SettingsPage({
         </div>
       )}
 
+      {/* TAB 5: INFORMACIÓN LEGAL Y DERECHOS DE AUTOR */}
+      {activeTab === 'legal' && (
+        <Card noPadding className="p-6 sm:p-8 max-w-3xl mx-auto space-y-6">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+            <div>
+              <h2 className="text-xl font-bold text-zinc-100 flex items-center gap-2">
+                <Scale className="w-5 h-5 text-indigo-400" /> Información Legal & Licencia del Software
+              </h2>
+              <p className="text-xs text-zinc-400 mt-0.5">Protección de propiedad intelectual y políticas SaaS TEKIRA</p>
+            </div>
+            <span className="bg-indigo-500/20 text-indigo-300 font-mono font-bold text-xs px-3 py-1 rounded-full border border-indigo-500/30">
+              TEKIRA v0.12.0
+            </span>
+          </div>
+
+          <div className="space-y-4 text-xs text-zinc-300">
+            <div className="p-4 bg-zinc-950 rounded-2xl border border-zinc-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-400 font-bold uppercase tracking-wider text-[10px]">Titular de Derechos & Creador:</span>
+                <span className="font-bold text-zinc-100">Propietario / Creador TEKIRA</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-400 font-bold uppercase tracking-wider text-[10px]">Año de Creación:</span>
+                <span className="font-mono text-zinc-300">2026</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-400 font-bold uppercase tracking-wider text-[10px]">Estado de Derechos:</span>
+                <Badge variant="primary" className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30">
+                  © Todos los derechos reservados
+                </Badge>
+              </div>
+            </div>
+
+            <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl text-indigo-200 leading-relaxed text-xs">
+              <p className="font-bold text-indigo-100 mb-1">Protección de Software Propietario:</p>
+              <p>
+                TEKIRA es una plataforma SaaS protegida por las leyes internacionales y nacionales de propiedad intelectual. Queda prohibida la copia, reproducción, ingeniería inversa, distribución o comercialización del código fuente o componentes visuales sin autorización expresa por escrito del titular.
+              </p>
+            </div>
+
+            {/* Enlaces Legales Oficiales */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+              <Link href="/legal/privacy-policy" target="_blank" className="p-4 bg-zinc-950/70 hover:bg-zinc-900 border border-zinc-800 rounded-2xl flex flex-col justify-between space-y-2 transition-colors group">
+                <ShieldCheck className="w-5 h-5 text-indigo-400 group-hover:scale-110 transition-transform" />
+                <div>
+                  <span className="font-bold text-zinc-100 block text-xs">Política de Privacidad</span>
+                  <span className="text-[10px] text-zinc-500">Ley 1581 Habeas Data</span>
+                </div>
+              </Link>
+
+              <Link href="/legal/terms" target="_blank" className="p-4 bg-zinc-950/70 hover:bg-zinc-900 border border-zinc-800 rounded-2xl flex flex-col justify-between space-y-2 transition-colors group">
+                <FileText className="w-5 h-5 text-indigo-400 group-hover:scale-110 transition-transform" />
+                <div>
+                  <span className="font-bold text-zinc-100 block text-xs">Términos y Condiciones</span>
+                  <span className="text-[10px] text-zinc-500">Uso de la plataforma</span>
+                </div>
+              </Link>
+
+              <Link href="/legal/security" target="_blank" className="p-4 bg-zinc-950/70 hover:bg-zinc-900 border border-zinc-800 rounded-2xl flex flex-col justify-between space-y-2 transition-colors group">
+                <Lock className="w-5 h-5 text-indigo-400 group-hover:scale-110 transition-transform" />
+                <div>
+                  <span className="font-bold text-zinc-100 block text-xs">Política de Seguridad</span>
+                  <span className="text-[10px] text-zinc-500">2FA y Multi-tenant</span>
+                </div>
+              </Link>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Footer de Versión del Sistema */}
       <div className="pt-6 border-t border-zinc-800/60 flex items-center justify-between text-xs text-zinc-500 font-mono">
         <span className="flex items-center gap-1.5"><Info className="w-3.5 h-3.5 text-zinc-600" /> TEKIRA Enterprise Universal 2FA System</span>
         <span className="bg-zinc-900 px-3 py-1 rounded-lg border border-zinc-800 text-zinc-400">
-          TEKIRA Versión 0.11.3
+          TEKIRA Versión 0.12.0 — © Todos los derechos reservados
         </span>
       </div>
 
