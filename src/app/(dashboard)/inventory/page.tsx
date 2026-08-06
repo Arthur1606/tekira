@@ -1,20 +1,31 @@
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Plus, PackageSearch, AlertTriangle, PackageX, Box, ArrowRightLeft, Layers } from 'lucide-react';
+import { Plus, PackageSearch, AlertTriangle, PackageX, Box, ArrowRightLeft, Layers, Warehouse, Store, MapPin, Hash } from 'lucide-react';
 import Link from 'next/link';
 import { getUserStores } from '@/modules/stores/services';
 import { getProducts, getInventorySummary } from '@/modules/inventory/services';
+import { getLocations } from '@/modules/inventory/locations';
 import { Product } from '@/modules/inventory/types';
 import { Badge } from '@/components/ui/Badge';
+import { CreateLocationModal } from '@/components/inventory/CreateLocationModal';
+import { TransferStockModal } from '@/components/inventory/TransferStockModal';
 
-export default async function InventoryPage() {
+export default async function InventoryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string; success?: string }>;
+}) {
+  const resolvedSearchParams = await searchParams;
   const supabase = await createClient();
   const stores = await getUserStores();
   const activeStore = stores[0];
 
-  const products = await getProducts(activeStore.id);
-  const summary = await getInventorySummary(activeStore.id);
+  const [products, summary, locations] = await Promise.all([
+    getProducts(activeStore.id),
+    getInventorySummary(activeStore.id),
+    getLocations(activeStore.id)
+  ]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CO', {
@@ -35,61 +46,116 @@ export default async function InventoryPage() {
     }
   };
 
+  const getLocationTypeBadge = (type: string) => {
+    switch (type) {
+      case 'store':
+        return <Badge variant="primary" className="bg-indigo-500/20 text-indigo-300 text-[10px]"><Store className="w-3 h-3 mr-1" /> Tienda / Punto de Venta</Badge>;
+      case 'warehouse':
+        return <Badge variant="neutral" className="bg-purple-500/20 text-purple-300 text-[10px]"><Warehouse className="w-3 h-3 mr-1" /> Bodega Principal</Badge>;
+      default:
+        return <Badge variant="neutral" className="text-[10px]"><MapPin className="w-3 h-3 mr-1" /> Depósito</Badge>;
+    }
+  };
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-16">
       
+      {/* Feedback Messages */}
+      {resolvedSearchParams.error && (
+        <div className="p-4 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl text-xs font-medium">
+          <p>{resolvedSearchParams.error}</p>
+        </div>
+      )}
+      {resolvedSearchParams.success && (
+        <div className="p-4 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl text-xs font-medium">
+          <p>{resolvedSearchParams.success}</p>
+        </div>
+      )}
+
       {/* Header Acción */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-zinc-100 tracking-tight">
-            Inventario
+            Inventario & Bodegas
           </h1>
           <p className="text-sm font-medium text-zinc-400 mt-1">
-            Gestiona tus productos y existencias.
+            Gestión comercial de existencias por ubicación física y SKU ({activeStore.name})
           </p>
         </div>
-        <Link href="/inventory/new">
-          <Button className="w-full sm:w-auto shadow-sm hover:shadow">
-            <Plus className="w-5 h-5 mr-1.5 -ml-1" /> Nuevo Producto
-          </Button>
-        </Link>
+        <div className="flex items-center gap-3 flex-wrap">
+          <CreateLocationModal />
+          <TransferStockModal locations={locations} products={products} />
+          <Link href="/inventory/new">
+            <Button className="w-full sm:w-auto shadow-sm hover:shadow text-xs py-2 px-3 h-auto">
+              <Plus className="w-4 h-4 mr-1.5" /> Nuevo Producto
+            </Button>
+          </Link>
+        </div>
       </div>
+
+      {/* TARJETA DE BODEGAS Y UBICACIONES FÍSICAS */}
+      <Card noPadding className="p-6 bg-zinc-950/80 border-zinc-800 space-y-4">
+        <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-2">
+            <Warehouse className="w-4 h-4" /> Ubicaciones Físicas de Almacenamiento ({locations.length})
+          </h3>
+          <span className="text-[11px] text-zinc-500 font-mono">Control de Bodega Activo</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {locations.map((loc) => (
+            <div key={loc.id} className="p-4 bg-zinc-900/60 rounded-2xl border border-zinc-800/80 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-indigo-500/10 rounded-xl flex items-center justify-center border border-indigo-500/20 text-indigo-400">
+                  {loc.type === 'warehouse' ? <Warehouse className="w-5 h-5" /> : <Store className="w-5 h-5" />}
+                </div>
+                <div>
+                  <span className="font-bold text-sm text-zinc-100 block">{loc.name}</span>
+                  <div className="mt-0.5">
+                    {getLocationTypeBadge(loc.type)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
 
       {/* Grid Resumen */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         <Card className="justify-between">
           <div className="flex items-start justify-between mb-4">
-            <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center border border-indigo-100">
+            <div className="w-12 h-12 bg-indigo-500/10 text-indigo-400 rounded-2xl flex items-center justify-center border border-indigo-500/20">
               <Box className="w-6 h-6" />
             </div>
           </div>
           <div>
-            <p className="text-sm font-semibold text-zinc-500 mb-1">Total Productos</p>
+            <p className="text-sm font-semibold text-zinc-400 mb-1">Total Productos</p>
             <h3 className="text-3xl font-black text-zinc-100">{summary.total}</h3>
           </div>
         </Card>
 
         <Card className="justify-between">
           <div className="flex items-start justify-between mb-4">
-            <div className="w-12 h-12 bg-yellow-50 text-yellow-600 rounded-full flex items-center justify-center border border-yellow-100">
+            <div className="w-12 h-12 bg-amber-500/10 text-amber-400 rounded-2xl flex items-center justify-center border border-amber-500/20">
               <AlertTriangle className="w-6 h-6" />
             </div>
           </div>
           <div>
-            <p className="text-sm font-semibold text-zinc-500 mb-1">Bajo Stock</p>
+            <p className="text-sm font-semibold text-zinc-400 mb-1">Bajo Stock</p>
             <h3 className="text-3xl font-black text-zinc-100">{summary.lowStock}</h3>
           </div>
         </Card>
 
         <Card className="justify-between">
           <div className="flex items-start justify-between mb-4">
-            <div className="w-12 h-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center border border-red-100">
+            <div className="w-12 h-12 bg-rose-500/10 text-rose-400 rounded-2xl flex items-center justify-center border border-rose-500/20">
               <PackageX className="w-6 h-6" />
             </div>
           </div>
           <div>
-            <p className="text-sm font-semibold text-zinc-500 mb-1">Agotados</p>
+            <p className="text-sm font-semibold text-zinc-400 mb-1">Agotados</p>
             <h3 className="text-3xl font-black text-zinc-100">{summary.outOfStock}</h3>
           </div>
         </Card>
@@ -105,7 +171,7 @@ export default async function InventoryPage() {
             </div>
             <h4 className="text-lg font-semibold text-zinc-100 mb-2">Aún no hay productos</h4>
             <p className="text-sm text-zinc-400 max-w-sm">
-              Comienza a construir la memoria física de tu negocio agregando tu primer producto.
+              Comienza a construir el inventario físico de tu negocio agregando tu primer producto.
             </p>
             <Link href="/inventory/new" className="mt-6">
               <Button variant="secondary">Crear Producto</Button>
@@ -114,10 +180,10 @@ export default async function InventoryPage() {
         ) : (
           <div className="divide-y divide-zinc-800">
             <div className="bg-zinc-900/50 p-4 grid grid-cols-12 gap-4 text-xs font-bold text-zinc-400 uppercase tracking-wider">
-              <div className="col-span-6 sm:col-span-5">Producto</div>
-              <div className="col-span-3 sm:col-span-2 text-right">Cantidad</div>
-              <div className="hidden sm:block sm:col-span-2 text-right">Precio</div>
-              <div className="col-span-3 sm:col-span-3 text-right">Acción</div>
+              <div className="col-span-6 sm:col-span-5">Producto / SKU</div>
+              <div className="col-span-3 sm:col-span-2 text-right">Existencia Global</div>
+              <div className="hidden sm:block sm:col-span-2 text-right">Precio Venta</div>
+              <div className="col-span-3 sm:col-span-3 text-right">Acciones</div>
             </div>
             
             {products.map((product) => (
@@ -127,7 +193,7 @@ export default async function InventoryPage() {
                   <span className="font-bold text-zinc-100 truncate">{product.name}</span>
                   <div className="flex items-center gap-2 mt-1">
                     <Badge variant="neutral" className="px-1.5 py-0 text-[10px] bg-zinc-800/80">{product.category}</Badge>
-                    {product.sku && <span className="text-xs font-mono text-zinc-500">{product.sku}</span>}
+                    {product.sku && <span className="text-xs font-mono font-bold text-indigo-400 flex items-center gap-1"><Hash className="w-3 h-3" /> {product.sku}</span>}
                   </div>
                   <div className="mt-2 sm:hidden">
                     {getStatusBadge(product.status)}
@@ -155,24 +221,24 @@ export default async function InventoryPage() {
                   </Link>
                 </div>
 
-                {/* Variantes - Fila secundaria organizada */}
+                {/* Variantes y SKU Obligatorio - Fila Secundaria */}
                 {product.variants && product.variants.length > 0 && (
                   <div className="col-span-12 mt-2 pt-3 border-t border-zinc-800/30">
                     <div className="flex items-center gap-1.5 mb-2 pl-1">
                       <Layers className="w-3.5 h-3.5 text-zinc-500" />
-                      <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-500">Variantes</span>
+                      <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-500">Variantes & SKU Obligatorio</span>
                     </div>
-                    <div className="flex flex-col gap-1 pl-3 border-l-2 border-indigo-500/20 ml-2">
+                    <div className="flex flex-col gap-1.5 pl-3 border-l-2 border-indigo-500/20 ml-2">
                       {product.variants.map((variant) => (
-                        <div key={variant.id} className="flex items-center justify-between text-xs bg-zinc-900/30 px-3 py-1.5 rounded-md">
+                        <div key={variant.id} className="flex items-center justify-between text-xs bg-zinc-900/40 px-3 py-2 rounded-xl border border-zinc-800/60">
                           <div className="flex flex-col">
-                            <span className="text-zinc-300 font-bold">{variant.name}</span>
-                            {variant.sku && <span className="text-zinc-600 font-mono text-[10px]">{variant.sku}</span>}
+                            <span className="text-zinc-200 font-bold">{variant.name}</span>
+                            <span className="text-indigo-400 font-mono text-[10px] font-bold">SKU: {variant.sku || 'SKU-PENDIENTE'}</span>
                           </div>
                           <div className="flex items-center gap-3">
                             <div className="flex flex-col items-end">
-                              <span className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Stock</span>
-                              <span className={`font-bold ${variant.quantity > 0 ? 'text-zinc-200' : 'text-rose-400'}`}>{variant.quantity}</span>
+                              <span className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Saldo Global</span>
+                              <span className={`font-bold font-mono ${variant.quantity > 0 ? 'text-zinc-200' : 'text-rose-400'}`}>{variant.quantity} unidades</span>
                             </div>
                           </div>
                         </div>
