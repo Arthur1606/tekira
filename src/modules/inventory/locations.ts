@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getUserStores } from '@/modules/stores/services';
 import { verifyPermission, logSecurityEvent } from '@/modules/security/services';
+import { checkStoreLimits } from '@/modules/subscriptions/services';
 
 export interface InventoryLocation {
   id: string;
@@ -52,6 +53,12 @@ export async function createLocationAction(formData: FormData) {
 
   if (!name) {
     redirect(`/inventory?error=${encodeURIComponent('El nombre de la ubicación es obligatorio.')}`);
+  }
+
+  // Validación de límites del plan SaaS activo
+  const limits = await checkStoreLimits(activeStore.id);
+  if (!limits.canAddLocation) {
+    redirect(`/inventory?error=${encodeURIComponent(`Has alcanzado el límite de ubicaciones/bodegas (${limits.usage.locations.max}) de tu plan SaaS (${limits.subscription.plan_tier}). Contáctate con soporte para realizar un upgrade.`)}`);
   }
 
   const { data: newLoc, error } = await supabase
@@ -104,7 +111,6 @@ export async function transferStockAction(formData: FormData) {
     redirect(`/inventory?error=${encodeURIComponent('La ubicación de origen y destino deben ser distintas.')}`);
   }
 
-  // 1. Obtener existencias actuales en origen
   const { data: fromStock } = await supabase
     .from('inventory_location_stock')
     .select('*')
@@ -117,7 +123,6 @@ export async function transferStockAction(formData: FormData) {
     redirect(`/inventory?error=${encodeURIComponent(`Stock insuficiente en ubicación de origen. Disponibles: ${currentFromQty} unidades.`)}`);
   }
 
-  // 2. Descontar en origen
   const { error: decErr } = await supabase
     .from('inventory_location_stock')
     .upsert({
@@ -131,7 +136,6 @@ export async function transferStockAction(formData: FormData) {
     redirect(`/inventory?error=${encodeURIComponent(decErr.message)}`);
   }
 
-  // 3. Aumentar en destino
   const { data: toStock } = await supabase
     .from('inventory_location_stock')
     .select('*')
@@ -154,7 +158,6 @@ export async function transferStockAction(formData: FormData) {
     redirect(`/inventory?error=${encodeURIComponent(incErr.message)}`);
   }
 
-  // 4. Registrar en inventory_transfers
   await supabase.from('inventory_transfers').insert({
     store_id: activeStore.id,
     from_location_id: fromLocationId,
@@ -165,7 +168,6 @@ export async function transferStockAction(formData: FormData) {
     created_by: securityCtx.user.id
   });
 
-  // 5. Registrar en auditoría
   await logSecurityEvent({
     storeId: activeStore.id,
     userId: securityCtx.user.id,

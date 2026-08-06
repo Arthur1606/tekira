@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getUserStores } from '@/modules/stores/services';
 import { verifyPermission, logSecurityEvent } from '@/modules/security/services';
 import { extractRepresentativeLetters } from '@/modules/inventory/sku';
+import { checkStoreLimits } from '@/modules/subscriptions/services';
 
 export async function createProduct(formData: FormData) {
   const supabase = await createClient();
@@ -21,6 +22,12 @@ export async function createProduct(formData: FormData) {
     securityCtx = await verifyPermission(activeStore.id, ['owner', 'admin'], 'CREATE_PRODUCT');
   } catch (err: any) {
     redirect(`/dashboard/inventory/new?error=${encodeURIComponent(err.message || 'Sin permisos para crear productos.')}`);
+  }
+
+  // 2.1 Validar Límite de Productos del Plan SaaS Activo
+  const limits = await checkStoreLimits(activeStore.id);
+  if (!limits.canAddProduct) {
+    redirect(`/dashboard/inventory/new?error=${encodeURIComponent(`Has alcanzado el límite de productos (${limits.usage.products.max}) de tu plan SaaS actual (${limits.subscription.plan_tier}). Contáctate con soporte para solicitar un upgrade de plan.`)}`);
   }
 
   // 3. Extraer y sanitizar datos de entrada

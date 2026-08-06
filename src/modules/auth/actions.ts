@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { headers, cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { logSecurityEvent } from '@/modules/security/services';
+import { checkStoreLimits } from '@/modules/subscriptions/services';
 
 async function getAuthRedirectUrl() {
   const headersList = await headers();
@@ -175,6 +176,12 @@ export async function joinCompany(formData: FormData) {
 
   if (!targetStore) {
     redirect(`/signup?mode=join&error=${encodeURIComponent('El código de empresa no existe. Por favor verifica el código ingresado con el propietario de tu comercio.')}`);
+  }
+
+  // Validar Límite de Usuarios del Plan SaaS Activo de la Empresa
+  const limits = await checkStoreLimits(targetStore.id);
+  if (!limits.canAddUser) {
+    redirect(`/signup?mode=join&error=${encodeURIComponent(`La empresa "${targetStore.name}" ha alcanzado el límite de usuarios (${limits.usage.users.max}) de su plan SaaS actual (${limits.subscription.plan_tier}). El propietario debe solicitar un upgrade de plan.`)}`);
   }
 
   const emailRedirectTo = await getAuthRedirectUrl();

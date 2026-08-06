@@ -9,9 +9,10 @@ import { getTeamMembers } from '@/modules/team/services';
 import { updateProfile } from '@/modules/team/actions';
 import { updateStoreSettings } from '@/modules/stores/actions';
 import { generateMfaSecret, enableMfa, disableMfa, approveMfaReset, rejectMfaReset } from '@/modules/security/mfaActions';
+import { checkStoreLimits, getSuperAdminMetrics } from '@/modules/subscriptions/services';
 import { EditMemberModal } from '@/components/team/EditMemberModal';
 import { DeleteMemberModal } from '@/components/team/DeleteMemberModal';
-import { User, Users, Lock, Plus, Building, CheckCircle2, Clock, Info, Globe, Phone, Mail, DollarSign, ShieldAlert, ShieldCheck, KeyRound, QrCode, Check, X, Hash, Scale, FileText } from 'lucide-react';
+import { User, Users, Lock, Plus, Building, CheckCircle2, Clock, Info, Globe, Phone, Mail, DollarSign, ShieldAlert, ShieldCheck, KeyRound, QrCode, Check, X, Hash, Scale, FileText, CreditCard, Sparkles, Server, Zap, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
 const CURRENCIES = [
@@ -37,13 +38,19 @@ export default async function SettingsPage({
   searchParams: Promise<{ tab?: string; error?: string; success?: string }>;
 }) {
   const resolvedSearchParams = await searchParams;
-  const activeTab = resolvedSearchParams.tab === 'company' 
+  const rawTab = resolvedSearchParams.tab;
+
+  const activeTab = rawTab === 'company' 
     ? 'company' 
-    : (resolvedSearchParams.tab === 'security' 
+    : (rawTab === 'security' 
       ? 'security' 
-      : (resolvedSearchParams.tab === 'legal'
-        ? 'legal'
-        : (resolvedSearchParams.tab === 'team' ? 'team' : 'profile')));
+      : (rawTab === 'plan'
+        ? 'plan'
+        : (rawTab === 'super-admin'
+          ? 'super-admin'
+          : (rawTab === 'legal'
+            ? 'legal'
+            : (rawTab === 'team' ? 'team' : 'profile')))));
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -85,6 +92,9 @@ export default async function SettingsPage({
   const canManageTeam = currentUserRole === 'owner' || currentUserRole === 'admin';
   const teamMembers = canManageTeam ? await getTeamMembers(activeStore.id) : [];
 
+  // Datos de Suscripción y Límites SaaS
+  const planLimits = await checkStoreLimits(activeStore.id);
+
   // Datos de 2FA TOTP si la pestaña activa es security
   let mfaData = { secret: '', otpAuthUri: '', isEnabled: false };
   let pendingResetRequests: any[] = [];
@@ -105,6 +115,12 @@ export default async function SettingsPage({
 
       pendingResetRequests = resetReqs || [];
     }
+  }
+
+  // Datos de Super Admin SaaS Telemetría (si tab === super-admin)
+  let superAdminMetrics = null;
+  if (activeTab === 'super-admin' && currentUserRole === 'owner') {
+    superAdminMetrics = await getSuperAdminMetrics();
   }
 
   const formatDate = (dateStr: string) => {
@@ -146,7 +162,7 @@ export default async function SettingsPage({
       {/* Encabezado */}
       <div>
         <h1 className="text-3xl font-bold text-[#F5F5F0] tracking-tight">Configuraciones</h1>
-        <p className="text-sm text-zinc-400 mt-1">Gestiona tu perfil, datos empresariales, seguridad 2FA obligatoria, equipo e información legal</p>
+        <p className="text-sm text-zinc-400 mt-1">Gestiona tu perfil, datos empresariales, suscripción SaaS, seguridad 2FA obligatoria e información legal</p>
       </div>
 
       {/* Retroalimentación */}
@@ -167,7 +183,7 @@ export default async function SettingsPage({
           href="/settings?tab=profile"
           className={`flex items-center gap-2 py-2.5 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all ${
             activeTab === 'profile'
-              ? 'bg-zinc-800 text-[#8EA653] border border-[#2B372F] shadow-sm'
+              ? 'bg-[#141A16] text-[#8EA653] border border-[#2B372F] shadow-sm'
               : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
@@ -178,7 +194,7 @@ export default async function SettingsPage({
           href="/settings?tab=company"
           className={`flex items-center gap-2 py-2.5 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all ${
             activeTab === 'company'
-              ? 'bg-zinc-800 text-[#8EA653] border border-[#2B372F] shadow-sm'
+              ? 'bg-[#141A16] text-[#8EA653] border border-[#2B372F] shadow-sm'
               : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
@@ -186,10 +202,21 @@ export default async function SettingsPage({
         </Link>
 
         <Link
+          href="/settings?tab=plan"
+          className={`flex items-center gap-2 py-2.5 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all ${
+            activeTab === 'plan'
+              ? 'bg-[#141A16] text-[#8EA653] border border-[#2B372F] shadow-sm'
+              : 'text-zinc-400 hover:text-zinc-200'
+          }`}
+        >
+          <CreditCard className="w-4 h-4" /> Mi Plan SaaS
+        </Link>
+
+        <Link
           href="/settings?tab=security"
           className={`flex items-center gap-2 py-2.5 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all ${
             activeTab === 'security'
-              ? 'bg-zinc-800 text-[#8EA653] border border-[#2B372F] shadow-sm'
+              ? 'bg-[#141A16] text-[#8EA653] border border-[#2B372F] shadow-sm'
               : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
@@ -201,7 +228,7 @@ export default async function SettingsPage({
             href="/settings?tab=team"
             className={`flex items-center gap-2 py-2.5 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all ${
               activeTab === 'team'
-                ? 'bg-zinc-800 text-[#8EA653] border border-[#2B372F] shadow-sm'
+                ? 'bg-[#141A16] text-[#8EA653] border border-[#2B372F] shadow-sm'
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
@@ -213,12 +240,25 @@ export default async function SettingsPage({
           href="/settings?tab=legal"
           className={`flex items-center gap-2 py-2.5 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all ${
             activeTab === 'legal'
-              ? 'bg-zinc-800 text-[#8EA653] border border-[#2B372F] shadow-sm'
+              ? 'bg-[#141A16] text-[#8EA653] border border-[#2B372F] shadow-sm'
               : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
           <Scale className="w-4 h-4" /> Información Legal
         </Link>
+
+        {currentUserRole === 'owner' && (
+          <Link
+            href="/settings?tab=super-admin"
+            className={`flex items-center gap-2 py-2.5 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all ${
+              activeTab === 'super-admin'
+                ? 'bg-[#556B2F]/20 text-[#8EA653] border border-[#7C9A42]/40 shadow-sm'
+                : 'text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            <Server className="w-4 h-4 text-[#7C9A42]" /> Super Admin SaaS
+          </Link>
+        )}
       </div>
 
       {/* TAB 1: MI PERFIL */}
@@ -226,7 +266,7 @@ export default async function SettingsPage({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           <div className="lg:col-span-7">
             <Card noPadding className="p-6 sm:p-8 space-y-6">
-              <div className="flex items-center gap-4 pb-6 border-b border-zinc-800">
+              <div className="flex items-center gap-4 pb-6 border-b border-[#232C26]">
                 <div className="w-16 h-16 bg-gradient-to-br from-[#556B2F] to-[#3B4B20] rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-xl shadow-[#556B2F]/10 border border-[#7C9A42]/30">
                   {profile?.name ? profile.name.charAt(0).toUpperCase() : 'U'}
                 </div>
@@ -259,9 +299,9 @@ export default async function SettingsPage({
                       type="text"
                       value={currentEmployeeCode}
                       disabled
-                      className="block w-full rounded-xl border border-[#7C9A42]/30 bg-[#0E1310]/30 px-4 py-3 pl-10 text-sm font-mono font-bold text-[#8EA653] cursor-not-allowed"
+                      className="block w-full rounded-xl border border-[#7C9A42]/30 bg-[#0E1310] px-4 py-3 pl-10 text-sm font-mono font-bold text-[#8EA653] cursor-not-allowed"
                     />
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#8EA653]">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#7C9A42]">
                       <Hash className="w-4 h-4" />
                     </div>
                   </div>
@@ -287,7 +327,7 @@ export default async function SettingsPage({
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-zinc-800">
+                <div className="pt-2 border-t border-[#232C26]">
                   <SubmitButton fullWidth className="py-3 text-sm font-bold shadow-lg">
                     Guardar Cambios de Perfil
                   </SubmitButton>
@@ -318,7 +358,7 @@ export default async function SettingsPage({
                   {getStatusBadge(activeStore.status || 'active')}
                 </div>
 
-                <div className="p-3 bg-[#556B2F]/10 rounded-xl border border-[#7C9A42]/30 text-[#8EA653]">
+                <div className="p-3 bg-[#556B2F]/15 rounded-xl border border-[#7C9A42]/30 text-[#8EA653]">
                   <p className="text-[11px] leading-relaxed">
                     Tu usuario cuenta con permisos de <strong>{currentUserRole}</strong> para operar la plataforma de {activeStore.name}.
                   </p>
@@ -403,9 +443,9 @@ export default async function SettingsPage({
               disabled={!canManageStore}
             />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-zinc-800">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-[#232C26]">
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1.5" htmlFor="currency">
+                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5" htmlFor="currency">
                   Moneda de Operación
                 </label>
                 <div className="relative">
@@ -414,20 +454,20 @@ export default async function SettingsPage({
                     name="currency"
                     defaultValue={activeStore.currency || 'COP'}
                     disabled={!canManageStore}
-                    className="block w-full rounded-xl border border-[#232C26] bg-[#0E1310] px-4 py-3 pl-10 text-sm text-[#F5F5F0] focus:border-[#7C9A42] focus:outline-none focus:ring-2 focus:ring-[#7C9A42]/30 transition-all appearance-none disabled:cursor-not-allowed disabled:text-zinc-500"
+                    className="block w-full rounded-xl border border-[#232C26] bg-[#0E1310] px-4 py-3 pl-10 text-sm text-[#F5F5F0] focus:border-[#7C9A42] focus:outline-none appearance-none disabled:cursor-not-allowed disabled:text-zinc-500"
                   >
                     {CURRENCIES.map(c => (
                       <option key={c.code} value={c.code}>{c.name}</option>
                     ))}
                   </select>
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
-                    <DollarSign className="w-4 h-4 text-[#8EA653]" />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#7C9A42]">
+                    <DollarSign className="w-4 h-4" />
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1.5" htmlFor="timezone">
+                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5" htmlFor="timezone">
                   Zona Horaria
                 </label>
                 <div className="relative">
@@ -436,27 +476,27 @@ export default async function SettingsPage({
                     name="timezone"
                     defaultValue={activeStore.timezone || 'America/Bogota'}
                     disabled={!canManageStore}
-                    className="block w-full rounded-xl border border-[#232C26] bg-[#0E1310] px-4 py-3 pl-10 text-sm text-[#F5F5F0] focus:border-[#7C9A42] focus:outline-none focus:ring-2 focus:ring-[#7C9A42]/30 transition-all appearance-none disabled:cursor-not-allowed disabled:text-zinc-500"
+                    className="block w-full rounded-xl border border-[#232C26] bg-[#0E1310] px-4 py-3 pl-10 text-sm text-[#F5F5F0] focus:border-[#7C9A42] focus:outline-none appearance-none disabled:cursor-not-allowed disabled:text-zinc-500"
                   >
                     {TIMEZONES.map(tz => (
                       <option key={tz.code} value={tz.code}>{tz.name}</option>
                     ))}
                   </select>
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
-                    <Globe className="w-4 h-4 text-[#8EA653]" />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#7C9A42]">
+                    <Globe className="w-4 h-4" />
                   </div>
                 </div>
               </div>
             </div>
 
             {canManageStore ? (
-              <div className="pt-4 border-t border-zinc-800">
+              <div className="pt-4 border-t border-[#232C26]">
                 <SubmitButton fullWidth className="py-3 text-sm font-bold shadow-lg">
                   Guardar Configuración de Comercio
                 </SubmitButton>
               </div>
             ) : (
-              <div className="p-4 bg-[#141A16] border border-[#232C26] rounded-xl text-xs text-zinc-400">
+              <div className="p-4 bg-[#0E1310] border border-[#232C26] rounded-xl text-xs text-zinc-400">
                 Únicamente Propietarios y Administradores poseen permisos para editar la configuración de la empresa.
               </div>
             )}
@@ -464,7 +504,159 @@ export default async function SettingsPage({
         </Card>
       )}
 
-      {/* TAB 3: SEGURIDAD (2FA TOTP OBLIGATORIO) */}
+      {/* TAB 3: MI PLAN SAAS Y LÍMITES */}
+      {activeTab === 'plan' && (
+        <div className="space-y-8 max-w-4xl mx-auto">
+          
+          <Card noPadding className="p-6 sm:p-8 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#232C26] pb-6">
+              <div>
+                <h2 className="text-xl font-bold text-[#F5F5F0] flex items-center gap-2">
+                  <CreditCard className="w-6 h-6 text-[#7C9A42]" /> Mi Plan TEKIRA SaaS
+                </h2>
+                <p className="text-xs text-zinc-400 mt-1">
+                  Suscripción activa y consumo de recursos de tu comercio
+                </p>
+              </div>
+
+              <div>
+                <Badge variant="primary" className="bg-[#556B2F]/20 text-[#8EA653] border-[#7C9A42]/40 gap-1.5 py-1 px-3 text-xs uppercase font-mono">
+                  <Sparkles className="w-3.5 h-3.5 text-[#7C9A42]" /> Plan {planLimits.subscription.plan_tier.toUpperCase()} ({planLimits.subscription.status.toUpperCase()})
+                </Badge>
+              </div>
+            </div>
+
+            {/* Tarjetas de Uso y Límites en Tiempo Real */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              
+              {/* Uso Usuarios */}
+              <div className="p-5 bg-[#0E1310] border border-[#232C26] rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-400">Usuarios Activos</span>
+                  <Users className="w-4 h-4 text-[#7C9A42]" />
+                </div>
+                <div className="flex items-baseline justify-between">
+                  <span className="text-2xl font-black text-[#F5F5F0]">{planLimits.usage.users.current}</span>
+                  <span className="text-xs font-mono text-zinc-500">de {planLimits.usage.users.max} max</span>
+                </div>
+                <div className="w-full bg-[#141A16] h-2 rounded-full overflow-hidden border border-[#232C26]">
+                  <div 
+                    className={`h-full transition-all duration-500 ${planLimits.usage.users.isReached ? 'bg-rose-500' : 'bg-[#7C9A42]'}`}
+                    style={{ width: `${Math.min(100, Math.round((planLimits.usage.users.current / planLimits.usage.users.max) * 100))}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Uso Ubicaciones */}
+              <div className="p-5 bg-[#0E1310] border border-[#232C26] rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-400">Bodegas / Tiendas</span>
+                  <Building className="w-4 h-4 text-[#7C9A42]" />
+                </div>
+                <div className="flex items-baseline justify-between">
+                  <span className="text-2xl font-black text-[#F5F5F0]">{planLimits.usage.locations.current}</span>
+                  <span className="text-xs font-mono text-zinc-500">de {planLimits.usage.locations.max} max</span>
+                </div>
+                <div className="w-full bg-[#141A16] h-2 rounded-full overflow-hidden border border-[#232C26]">
+                  <div 
+                    className={`h-full transition-all duration-500 ${planLimits.usage.locations.isReached ? 'bg-rose-500' : 'bg-[#7C9A42]'}`}
+                    style={{ width: `${Math.min(100, Math.round((planLimits.usage.locations.current / planLimits.usage.locations.max) * 100))}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Uso Productos */}
+              <div className="p-5 bg-[#0E1310] border border-[#232C26] rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-400">Catálogo Productos</span>
+                  <FileText className="w-4 h-4 text-[#7C9A42]" />
+                </div>
+                <div className="flex items-baseline justify-between">
+                  <span className="text-2xl font-black text-[#F5F5F0]">{planLimits.usage.products.current}</span>
+                  <span className="text-xs font-mono text-zinc-500">de {planLimits.usage.products.max} max</span>
+                </div>
+                <div className="w-full bg-[#141A16] h-2 rounded-full overflow-hidden border border-[#232C26]">
+                  <div 
+                    className={`h-full transition-all duration-500 ${planLimits.usage.products.isReached ? 'bg-rose-500' : 'bg-[#7C9A42]'}`}
+                    style={{ width: `${Math.min(100, Math.round((planLimits.usage.products.current / planLimits.usage.products.max) * 100))}%` }}
+                  />
+                </div>
+              </div>
+
+            </div>
+
+            {/* Aviso informativo de pasarela */}
+            <div className="p-4 bg-[#556B2F]/15 border border-[#7C9A42]/30 rounded-2xl text-xs text-[#8EA653] leading-relaxed">
+              <p className="font-bold text-[#F5F5F0] mb-1">Arquitectura SaaS Lista (Fase Piloto):</p>
+              <p>
+                Tu empresa cuenta con una prueba activa de 14 días en el Plan {planLimits.subscription.plan_tier.toUpperCase()}. Las pasarelas de pago automatizadas se encuentran en preparación. Durante la fase piloto puedes solicitar un upgrade comunicándote con nuestro soporte comercial.
+              </p>
+            </div>
+          </Card>
+
+          {/* Comparativa de Planes TEKIRA SaaS */}
+          <div className="space-y-4">
+            <h3 className="text-base font-extrabold text-[#F5F5F0] uppercase font-mono tracking-wider">
+              Planes Comerciales Disponibles
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              
+              {/* Plan Básico */}
+              <Card className="p-6 space-y-4 border-[#232C26] bg-[#141A16]">
+                <div className="space-y-1">
+                  <span className="text-xs font-mono font-bold text-zinc-400 uppercase">Plan Básico</span>
+                  <h4 className="text-2xl font-black text-[#F5F5F0]">$0 <span className="text-xs font-normal text-zinc-500">/ mes piloto</span></h4>
+                  <p className="text-xs text-zinc-400">Ideal para pequeños comercios o tiendas de barrio.</p>
+                </div>
+                <ul className="space-y-2 text-xs text-zinc-300 pt-2 border-t border-[#232C26]">
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> Hasta 3 Usuarios</li>
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> 1 Ubicación / Tienda</li>
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> 50 Productos SKU</li>
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> 2FA TOTP Incluido</li>
+                </ul>
+              </Card>
+
+              {/* Plan Profesional */}
+              <Card className="p-6 space-y-4 border-[#7C9A42]/50 bg-[#141A16] relative overflow-hidden shadow-2xl">
+                <div className="absolute top-0 right-0 bg-[#556B2F] text-white text-[9px] font-mono font-bold px-3 py-1 rounded-bl-xl border-l border-b border-[#7C9A42]/40">
+                  RECOMENDADO
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs font-mono font-bold text-[#8EA653] uppercase">Plan Profesional</span>
+                  <h4 className="text-2xl font-black text-[#F5F5F0]">$49 USD <span className="text-xs font-normal text-zinc-500">/ mes</span></h4>
+                  <p className="text-xs text-zinc-400">Para negocios en expansión con bodegas y equipo.</p>
+                </div>
+                <ul className="space-y-2 text-xs text-zinc-300 pt-2 border-t border-[#232C26]">
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> Hasta 10 Usuarios</li>
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> 3 Bodegas / Ubicaciones</li>
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> 500 Productos SKU</li>
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> Transferencias de Mercancía</li>
+                </ul>
+              </Card>
+
+              {/* Plan Empresarial */}
+              <Card className="p-6 space-y-4 border-[#232C26] bg-[#141A16]">
+                <div className="space-y-1">
+                  <span className="text-xs font-mono font-bold text-zinc-400 uppercase">Plan Empresarial</span>
+                  <h4 className="text-2xl font-black text-[#F5F5F0]">$99 USD <span className="text-xs font-normal text-zinc-500">/ mes</span></h4>
+                  <p className="text-xs text-zinc-400">Para cadenas comerciales con demanda sin límites.</p>
+                </div>
+                <ul className="space-y-2 text-xs text-zinc-300 pt-2 border-t border-[#232C26]">
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> Usuarios Ilimitados</li>
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> Bodegas Ilimitadas</li>
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> Catálogo Ilimitado</li>
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#7C9A42]" /> Soporte Prioritario 24/7</li>
+                </ul>
+              </Card>
+
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {/* TAB 4: SEGURIDAD (2FA TOTP OBLIGATORIO) */}
       {activeTab === 'security' && (
         <div className="space-y-8 max-w-4xl mx-auto">
           
@@ -472,7 +664,7 @@ export default async function SettingsPage({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#232C26] pb-6">
               <div>
                 <h2 className="text-xl font-bold text-[#F5F5F0] flex items-center gap-2">
-                  <ShieldCheck className="w-6 h-6 text-[#8EA653]" /> Autenticación de Dos Factores (2FA Obligatorio)
+                  <ShieldCheck className="w-6 h-6 text-[#7C9A42]" /> Autenticación de Dos Factores (2FA Obligatorio)
                 </h2>
                 <p className="text-xs text-zinc-400 mt-1">
                   Protección TOTP requerida para todos los integrantes del comercio.
@@ -516,7 +708,7 @@ export default async function SettingsPage({
                   
                   <div className="md:col-span-6 space-y-4">
                     <h3 className="text-sm font-bold text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-                      <QrCode className="w-4 h-4 text-[#8EA653]" /> Paso 1: Escanea con tu App
+                      <QrCode className="w-4 h-4 text-[#7C9A42]" /> Paso 1: Escanea con tu App
                     </h3>
                     <p className="text-xs text-zinc-400 leading-relaxed">
                       Usa Google Authenticator, Microsoft Authenticator o Authy para escanear la clave secreta:
@@ -527,15 +719,15 @@ export default async function SettingsPage({
                       <span className="font-mono text-sm font-bold text-[#8EA653] select-all block tracking-widest">{mfaData.secret}</span>
                     </div>
 
-                    <div className="p-3 bg-[#0E1310] rounded-xl border border-[#232C26] text-[11px] text-zinc-400 space-y-1">
+                    <div className="p-3 bg-[#0E1310]/60 rounded-xl border border-[#232C26] text-[11px] text-zinc-400 space-y-1">
                       <span className="font-bold text-zinc-300 block">URI de Vinculación OtpAuth:</span>
                       <p className="font-mono text-[10px] text-zinc-500 truncate">{mfaData.otpAuthUri}</p>
                     </div>
                   </div>
 
-                  <div className="md:col-span-6 bg-[#0E1310] p-6 rounded-2xl border border-[#232C26] space-y-4">
+                  <div className="md:col-span-6 bg-[#0E1310]/60 p-6 rounded-2xl border border-[#232C26] space-y-4">
                     <h3 className="text-sm font-bold text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-                      <KeyRound className="w-4 h-4 text-[#8EA653]" /> Paso 2: Confirma el Código
+                      <KeyRound className="w-4 h-4 text-[#7C9A42]" /> Paso 2: Confirma el Código
                     </h3>
                     <p className="text-xs text-zinc-400 leading-relaxed">
                       Ingresa el código de 6 dígitos para completar el registro de seguridad:
@@ -552,7 +744,7 @@ export default async function SettingsPage({
                         className="font-mono text-lg font-bold text-center tracking-widest"
                       />
 
-                      <SubmitButton fullWidth className="py-3 text-xs font-bold bg-[#556B2F] hover:bg-[#7C9A42] text-[#F5F5F0] shadow-lg">
+                      <SubmitButton fullWidth className="py-3 text-xs font-bold bg-[#556B2F] hover:bg-[#7C9A42] text-white shadow-lg">
                         Activar Protección 2FA Obligatoria
                       </SubmitButton>
                     </form>
@@ -610,7 +802,7 @@ export default async function SettingsPage({
 
                         <form action={rejectMfaReset}>
                           <input type="hidden" name="request_id" value={req.id} />
-                          <SubmitButton variant="ghost" className="bg-zinc-800 hover:bg-[#19201C] text-zinc-400 border border-[#2B372F] text-xs font-bold py-2 px-3">
+                          <SubmitButton variant="ghost" className="bg-zinc-800 hover:bg-zinc-700 text-zinc-400 border border-zinc-700 text-xs font-bold py-2 px-3">
                             <X className="w-3.5 h-3.5 mr-1" /> Rechazar
                           </SubmitButton>
                         </form>
@@ -625,7 +817,7 @@ export default async function SettingsPage({
         </div>
       )}
 
-      {/* TAB 4: GESTIÓN DE EQUIPO (Solo Owner y Admin) */}
+      {/* TAB 5: GESTIÓN DE EQUIPO (Solo Owner y Admin) */}
       {activeTab === 'team' && canManageTeam && (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -635,7 +827,7 @@ export default async function SettingsPage({
             </div>
 
             <Link href="/team/new">
-              <span className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#556B2F] hover:bg-[#7C9A42] text-[#F5F5F0] text-xs font-bold rounded-xl transition-all shadow-lg shadow-[#556B2F]/20">
+              <span className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#556B2F] hover:bg-[#7C9A42] text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-[#556B2F]/20">
                 <Plus className="w-4 h-4" /> Agregar Integrante
               </span>
             </Link>
@@ -654,11 +846,11 @@ export default async function SettingsPage({
                     <th className="py-3 px-3 text-right">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-800/60">
+                <tbody className="divide-y divide-[#232C26]">
                   {teamMembers.map((member) => (
-                    <tr key={member.id} className="hover:bg-[#141A16] transition-colors">
+                    <tr key={member.id} className="hover:bg-[#19201C] transition-colors">
                       <td className="py-4 px-3 font-bold text-[#F5F5F0] flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center font-bold text-xs text-zinc-300 border border-zinc-700">
+                        <div className="w-8 h-8 rounded-full bg-[#0E1310] flex items-center justify-center font-bold text-xs text-zinc-300 border border-[#232C26]">
                           {member.name.charAt(0).toUpperCase()}
                         </div>
                         <span>{member.name}</span>
@@ -705,7 +897,7 @@ export default async function SettingsPage({
                 <div key={member.id} className="p-4 bg-[#0E1310] rounded-xl border border-[#232C26] space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center font-bold text-xs text-zinc-300 border border-zinc-700">
+                      <div className="w-8 h-8 rounded-full bg-[#141A16] flex items-center justify-center font-bold text-xs text-zinc-300 border border-[#232C26]">
                         {member.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
@@ -738,13 +930,13 @@ export default async function SettingsPage({
         </div>
       )}
 
-      {/* TAB 5: INFORMACIÓN LEGAL Y DERECHOS DE AUTOR */}
+      {/* TAB 6: INFORMACIÓN LEGAL Y DERECHOS DE AUTOR */}
       {activeTab === 'legal' && (
         <Card noPadding className="p-6 sm:p-8 max-w-3xl mx-auto space-y-6">
           <div className="flex items-center justify-between border-b border-[#232C26] pb-4">
             <div>
               <h2 className="text-xl font-bold text-[#F5F5F0] flex items-center gap-2">
-                <Scale className="w-5 h-5 text-[#8EA653]" /> Información Legal & Licencia del Software
+                <Scale className="w-5 h-5 text-[#7C9A42]" /> Información Legal & Licencia del Software
               </h2>
               <p className="text-xs text-zinc-400 mt-0.5">Protección de propiedad intelectual y políticas SaaS TEKIRA</p>
             </div>
@@ -771,33 +963,32 @@ export default async function SettingsPage({
               </div>
             </div>
 
-            <div className="p-4 bg-[#556B2F]/10 border border-[#7C9A42]/30 rounded-2xl text-zinc-200 leading-relaxed text-xs">
-              <p className="font-bold text-zinc-300 mb-1">Protección de Software Propietario:</p>
+            <div className="p-4 bg-[#556B2F]/10 border border-[#7C9A42]/20 rounded-2xl text-[#8EA653] leading-relaxed text-xs">
+              <p className="font-bold text-[#F5F5F0] mb-1">Protección de Software Propietario:</p>
               <p>
                 TEKIRA es una plataforma SaaS protegida por las leyes internacionales y nacionales de propiedad intelectual. Queda prohibida la copia, reproducción, ingeniería inversa, distribución o comercialización del código fuente o componentes visuales sin autorización expresa por escrito del titular.
               </p>
             </div>
 
-            {/* Enlaces Legales Oficiales */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-              <Link href="/legal/privacy-policy" target="_blank" className="p-4 bg-[#0E1310] hover:bg-[#141A16] border border-[#232C26] rounded-2xl flex flex-col justify-between space-y-2 transition-colors group">
-                <ShieldCheck className="w-5 h-5 text-[#8EA653] group-hover:scale-110 transition-transform" />
+              <Link href="/legal/privacy-policy" target="_blank" className="p-4 bg-[#0E1310] hover:bg-[#19201C] border border-[#232C26] rounded-2xl flex flex-col justify-between space-y-2 transition-colors group">
+                <ShieldCheck className="w-5 h-5 text-[#7C9A42] group-hover:scale-110 transition-transform" />
                 <div>
                   <span className="font-bold text-[#F5F5F0] block text-xs">Política de Privacidad</span>
                   <span className="text-[10px] text-zinc-500">Ley 1581 Habeas Data</span>
                 </div>
               </Link>
 
-              <Link href="/legal/terms" target="_blank" className="p-4 bg-[#0E1310] hover:bg-[#141A16] border border-[#232C26] rounded-2xl flex flex-col justify-between space-y-2 transition-colors group">
-                <FileText className="w-5 h-5 text-[#8EA653] group-hover:scale-110 transition-transform" />
+              <Link href="/legal/terms" target="_blank" className="p-4 bg-[#0E1310] hover:bg-[#19201C] border border-[#232C26] rounded-2xl flex flex-col justify-between space-y-2 transition-colors group">
+                <FileText className="w-5 h-5 text-[#7C9A42] group-hover:scale-110 transition-transform" />
                 <div>
                   <span className="font-bold text-[#F5F5F0] block text-xs">Términos y Condiciones</span>
                   <span className="text-[10px] text-zinc-500">Uso de la plataforma</span>
                 </div>
               </Link>
 
-              <Link href="/legal/security" target="_blank" className="p-4 bg-[#0E1310] hover:bg-[#141A16] border border-[#232C26] rounded-2xl flex flex-col justify-between space-y-2 transition-colors group">
-                <Lock className="w-5 h-5 text-[#8EA653] group-hover:scale-110 transition-transform" />
+              <Link href="/legal/security" target="_blank" className="p-4 bg-[#0E1310] hover:bg-[#19201C] border border-[#232C26] rounded-2xl flex flex-col justify-between space-y-2 transition-colors group">
+                <Lock className="w-5 h-5 text-[#7C9A42] group-hover:scale-110 transition-transform" />
                 <div>
                   <span className="font-bold text-[#F5F5F0] block text-xs">Política de Seguridad</span>
                   <span className="text-[10px] text-zinc-500">2FA y Multi-tenant</span>
@@ -808,10 +999,87 @@ export default async function SettingsPage({
         </Card>
       )}
 
+      {/* TAB 7: SUPER ADMIN SAAS (Telemetría Global Agregada) */}
+      {activeTab === 'super-admin' && currentUserRole === 'owner' && superAdminMetrics && (
+        <Card noPadding className="p-6 sm:p-8 max-w-4xl mx-auto space-y-6 border-[#7C9A42]/40">
+          <div className="flex items-center justify-between border-b border-[#232C26] pb-4">
+            <div>
+              <h2 className="text-xl font-bold text-[#F5F5F0] flex items-center gap-2">
+                <Server className="w-5 h-5 text-[#7C9A42]" /> Panel Super Admin SaaS
+              </h2>
+              <p className="text-xs text-zinc-400 mt-0.5">Telemetría global agregada de la plataforma comercial TEKIRA</p>
+            </div>
+            <Badge variant="primary" className="bg-[#556B2F]/20 text-[#8EA653] border-[#7C9A42]/30">
+              Super Admin Mode
+            </Badge>
+          </div>
+
+          <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-xs text-amber-300 flex items-start gap-3">
+            <ShieldAlert className="w-5 h-5 shrink-0 text-amber-400 mt-0.5" />
+            <div>
+              <p className="font-bold text-amber-200">Garantía Estricta de Privacidad del Cliente:</p>
+              <p className="mt-0.5 text-amber-400/90 leading-relaxed">
+                PROHIBIDO consultar datos operativos privados, productos, ventas o compras de los comercios. Este panel únicamente expone telemetría técnica agregada de alto nivel.
+              </p>
+            </div>
+          </div>
+
+          {/* Tarjetas de Métricas Agregadas Globales */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-5 bg-[#0E1310] border border-[#232C26] rounded-2xl space-y-1">
+              <span className="text-[10px] font-mono uppercase font-bold text-zinc-500">Total Empresas</span>
+              <p className="text-3xl font-black text-[#F5F5F0]">{superAdminMetrics.totalStores}</p>
+              <span className="text-[10px] text-emerald-400 font-mono">Comercios Registrados</span>
+            </div>
+
+            <div className="p-5 bg-[#0E1310] border border-[#232C26] rounded-2xl space-y-1">
+              <span className="text-[10px] font-mono uppercase font-bold text-zinc-500">Empresas Activas</span>
+              <p className="text-3xl font-black text-emerald-400">{superAdminMetrics.activeStores}</p>
+              <span className="text-[10px] text-zinc-500 font-mono">Operando actualmente</span>
+            </div>
+
+            <div className="p-5 bg-[#0E1310] border border-[#232C26] rounded-2xl space-y-1">
+              <span className="text-[10px] font-mono uppercase font-bold text-zinc-500">Período de Prueba</span>
+              <p className="text-3xl font-black text-[#8EA653]">{superAdminMetrics.trialStores}</p>
+              <span className="text-[10px] text-[#8EA653] font-mono">Prueba 14 Días</span>
+            </div>
+
+            <div className="p-5 bg-[#0E1310] border border-[#232C26] rounded-2xl space-y-1">
+              <span className="text-[10px] font-mono uppercase font-bold text-zinc-500">Usuarios Registrados</span>
+              <p className="text-3xl font-black text-[#F5F5F0]">{superAdminMetrics.totalUsers}</p>
+              <span className="text-[10px] text-zinc-500 font-mono">Cuentas globales</span>
+            </div>
+          </div>
+
+          {/* Distribución por Planes */}
+          <div className="p-5 bg-[#0E1310] border border-[#232C26] rounded-2xl space-y-4">
+            <h4 className="text-xs font-mono font-bold text-zinc-400 uppercase tracking-widest">
+              Distribución de Planes SaaS
+            </h4>
+
+            <div className="grid grid-cols-3 gap-3 text-center text-xs">
+              <div className="p-3 bg-[#141A16] rounded-xl border border-[#232C26]">
+                <span className="text-zinc-500 text-[10px] uppercase font-bold block">Plan Básico</span>
+                <span className="text-xl font-black text-[#F5F5F0]">{superAdminMetrics.basicPlanStores}</span>
+              </div>
+              <div className="p-3 bg-[#141A16] rounded-xl border border-[#232C26]">
+                <span className="text-[#8EA653] text-[10px] uppercase font-bold block">Plan Profesional</span>
+                <span className="text-xl font-black text-[#8EA653]">{superAdminMetrics.professionalPlanStores}</span>
+              </div>
+              <div className="p-3 bg-[#141A16] rounded-xl border border-[#232C26]">
+                <span className="text-purple-400 text-[10px] uppercase font-bold block">Plan Empresarial</span>
+                <span className="text-xl font-black text-purple-400">{superAdminMetrics.enterprisePlanStores}</span>
+              </div>
+            </div>
+          </div>
+
+        </Card>
+      )}
+
       {/* Footer de Versión del Sistema */}
       <div className="pt-6 border-t border-[#232C26] flex items-center justify-between text-xs text-zinc-500 font-mono">
         <span className="flex items-center gap-1.5"><Info className="w-3.5 h-3.5 text-zinc-600" /> TEKIRA Enterprise Universal 2FA System</span>
-        <span className="bg-[#141A16] px-3 py-1 rounded-lg border border-[#232C26] text-zinc-400">
+        <span className="bg-[#0E1310] px-3 py-1 rounded-lg border border-[#232C26] text-zinc-400">
           TEKIRA Versión 0.12.0 — © Todos los derechos reservados
         </span>
       </div>
