@@ -70,14 +70,14 @@ export default async function LoginPage({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
           <Link
             href="/signup?mode=owner"
-            className="p-3 bg-[#141A16] hover:bg-[#19201C] border border-[#232C26] rounded-xl flex items-center justify-center gap-2 text-xs font-bold text-[#8EA653] hover:text-zinc-100 transition-colors"
+            className="p-3 bg-[#141A16] hover:bg-[#19201C] border border-[#232C26] rounded-xl flex items-center justify-center gap-2 text-xs font-bold text-[#8EA653] hover:text-[#F5F5F0] transition-colors"
           >
             <Building className="w-4 h-4" /> Crear Empresa
           </Link>
 
           <Link
             href="/signup?mode=join"
-            className="p-3 bg-[#141A16] hover:bg-[#19201C] border border-[#232C26] rounded-xl flex items-center justify-center gap-2 text-xs font-bold text-purple-400 hover:text-purple-300 transition-colors"
+            className="p-3 bg-[#141A16] hover:bg-[#19201C] border border-[#232C26] rounded-xl flex items-center justify-center gap-2 text-xs font-bold text-[#8EA653] hover:text-zinc-300 transition-colors"
           >
             <KeyRound className="w-4 h-4" /> Unirme con Código
           </Link>

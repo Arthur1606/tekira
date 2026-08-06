@@ -88,11 +88,11 @@ export function PurchaseForm({ suppliers, variants, hasActiveSession }: Purchase
     <form onSubmit={handleSubmit} className="space-y-6">
       
       <div className="flex items-center gap-4 mb-6">
-        <Link href="/dashboard/purchases" className="p-2 bg-zinc-900/50 hover:bg-zinc-800 rounded-xl text-zinc-400 transition-colors">
+        <Link href="/dashboard/purchases" className="p-2 bg-zinc-900/50 hover:bg-[#19201C] rounded-xl text-zinc-400 transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-zinc-100 flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-[#F5F5F0] flex items-center gap-2">
             Registrar Compra
           </h1>
           <p className="text-sm text-zinc-400 mt-1">Abastece tu inventario y registra el gasto</p>
@@ -114,8 +114,8 @@ export function PurchaseForm({ suppliers, variants, hasActiveSession }: Purchase
 
       {/* Datos Generales */}
       <Card>
-        <h3 className="text-lg font-bold text-zinc-100 mb-6 flex items-center gap-2">
-          <Store className="w-5 h-5 text-indigo-500" /> Datos del Proveedor
+        <h3 className="text-lg font-bold text-[#F5F5F0] mb-6 flex items-center gap-2">
+          <Store className="w-5 h-5 text-[#7C9A42]" /> Datos del Proveedor
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -126,7 +126,7 @@ export function PurchaseForm({ suppliers, variants, hasActiveSession }: Purchase
               <select
                 value={supplierId}
                 onChange={(e) => setSupplierId(e.target.value)}
-                className="w-full bg-zinc-950/50 border border-zinc-800/80 rounded-xl pl-12 pr-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all appearance-none"
+                className="w-full bg-zinc-950/50 border border-[#232C26] rounded-xl pl-12 pr-4 py-3 text-[#F5F5F0] placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#7C9A42]/30 focus:border-[#7C9A42] transition-all appearance-none"
                 required
               >
                 <option value="">Selecciona un proveedor</option>
@@ -147,7 +147,7 @@ export function PurchaseForm({ suppliers, variants, hasActiveSession }: Purchase
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full bg-zinc-950/50 border border-zinc-800/80 rounded-xl pl-12 pr-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all appearance-none"
+                className="w-full bg-zinc-950/50 border border-[#232C26] rounded-xl pl-12 pr-4 py-3 text-[#F5F5F0] placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#7C9A42]/30 focus:border-[#7C9A42] transition-all appearance-none"
               >
                 <option value="efectivo">Efectivo</option>
                 <option value="transferencia">Transferencia</option>
@@ -162,8 +162,8 @@ export function PurchaseForm({ suppliers, variants, hasActiveSession }: Purchase
       {/* Detalle de Productos */}
       <Card>
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5 text-indigo-500" /> Productos a Abastecer
+          <h3 className="text-lg font-bold text-[#F5F5F0] flex items-center gap-2">
+            <ShoppingCart className="w-5 h-5 text-[#7C9A42]" /> Productos a Abastecer
           </h3>
           <Button type="button" variant="secondary" onClick={handleAddItem} className="text-xs h-8">
             <Plus className="w-4 h-4 mr-1" /> Añadir Fila
@@ -176,7 +176,7 @@ export function PurchaseForm({ suppliers, variants, hasActiveSession }: Purchase
             const itemStep = getQuantityStep(selectedVar?.unit);
 
             return (
-              <div key={index} className="p-4 bg-zinc-900/40 rounded-xl border border-zinc-800/50 flex flex-col md:flex-row gap-4 relative">
+              <div key={index} className="p-4 bg-[#141A16] rounded-xl border border-[#232C26] flex flex-col md:flex-row gap-4 relative">
                 
                 {items.length > 1 && (
                   <button type="button" onClick={() => handleRemoveItem(index)} className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg z-10">
@@ -189,7 +189,7 @@ export function PurchaseForm({ suppliers, variants, hasActiveSession }: Purchase
                   <select
                     value={item.variant_id}
                     onChange={(e) => handleItemChange(index, 'variant_id', e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full bg-[#0E1310] border border-[#232C26] rounded-lg px-3 py-2.5 text-sm text-[#F5F5F0] focus:outline-none focus:ring-2 focus:ring-[#7C9A42]"
                     required
                   >
                     <option value="">Seleccionar...</option>
@@ -225,7 +225,7 @@ export function PurchaseForm({ suppliers, variants, hasActiveSession }: Purchase
                       step="0.01"
                       value={item.unit_cost === 0 ? '' : item.unit_cost}
                       onChange={(e) => handleItemChange(index, 'unit_cost', Number(e.target.value))}
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-7 pr-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full bg-[#0E1310] border border-[#232C26] rounded-lg pl-7 pr-3 py-2.5 text-sm text-[#F5F5F0] focus:outline-none focus:ring-2 focus:ring-[#7C9A42]"
                       required
                       placeholder="0.00"
                     />
@@ -234,7 +234,7 @@ export function PurchaseForm({ suppliers, variants, hasActiveSession }: Purchase
 
                 <div className="w-full md:w-40">
                   <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-1.5 block">Subtotal</label>
-                  <div className="bg-zinc-900 border border-zinc-800/50 rounded-lg px-3 py-2.5 text-sm text-zinc-300 font-medium text-right">
+                  <div className="bg-[#141A16] border border-[#232C26] rounded-lg px-3 py-2.5 text-sm text-zinc-300 font-medium text-right">
                     ${item.subtotal.toLocaleString('es-CO')}
                   </div>
                 </div>
@@ -255,14 +255,14 @@ export function PurchaseForm({ suppliers, variants, hasActiveSession }: Purchase
         
         <div className="w-full md:w-auto flex gap-3">
           <Link href="/dashboard/purchases" className="flex-1 md:flex-none">
-            <span className="w-full inline-flex items-center justify-center px-6 py-3.5 bg-zinc-900 text-zinc-300 font-medium rounded-xl hover:bg-zinc-800 transition-colors border border-zinc-800">
+            <span className="w-full inline-flex items-center justify-center px-6 py-3.5 bg-[#141A16] text-zinc-300 font-medium rounded-xl hover:bg-[#19201C] transition-colors border border-zinc-800">
               Cancelar
             </span>
           </Link>
           <Button 
             type="submit" 
             variant="primary" 
-            className="flex-1 md:flex-none text-base px-8 py-3.5 h-auto shadow-lg shadow-indigo-500/20"
+            className="flex-1 md:flex-none text-base px-8 py-3.5 h-auto shadow-lg shadow-[#556B2F]/20"
             disabled={loading || !hasActiveSession}
           >
             {loading ? 'Procesando...' : 'Confirmar Compra'}

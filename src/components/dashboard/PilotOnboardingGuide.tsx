@@ -106,7 +106,7 @@ export function PilotOnboardingGuide({
         <button
           type="button"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="p-1.5 text-zinc-400 hover:text-zinc-100 transition-colors rounded-xl hover:bg-[#19201C] self-end sm:self-auto"
+          className="p-1.5 text-zinc-400 hover:text-[#F5F5F0] transition-colors rounded-xl hover:bg-[#19201C] self-end sm:self-auto"
         >
           {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
         </button>

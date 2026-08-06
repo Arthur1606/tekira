@@ -9,11 +9,11 @@ export default function NewSupplierPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-500">
       <div className="flex items-center gap-4">
-        <Link href="/dashboard/suppliers" className="p-2 bg-zinc-900/50 hover:bg-zinc-800 rounded-xl text-zinc-400 transition-colors">
+        <Link href="/dashboard/suppliers" className="p-2 bg-zinc-900/50 hover:bg-[#19201C] rounded-xl text-zinc-400 transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-zinc-100">Nuevo Proveedor</h1>
+          <h1 className="text-2xl font-bold text-[#F5F5F0]">Nuevo Proveedor</h1>
           <p className="text-sm text-zinc-400 mt-1">Registra los datos para futuras compras</p>
         </div>
       </div>
@@ -66,9 +66,9 @@ export default function NewSupplierPage() {
             />
           </div>
 
-          <div className="pt-4 border-t border-zinc-800 flex justify-end gap-3">
+          <div className="pt-4 border-t border-[#232C26] flex justify-end gap-3">
             <Link href="/dashboard/suppliers">
-              <span className="inline-flex items-center justify-center px-4 py-2 bg-zinc-900 text-zinc-300 font-medium rounded-xl hover:bg-zinc-800 transition-colors border border-zinc-800">
+              <span className="inline-flex items-center justify-center px-4 py-2 bg-[#141A16] text-zinc-300 font-medium rounded-xl hover:bg-[#19201C] transition-colors border border-zinc-800">
                 Cancelar
               </span>
             </Link>

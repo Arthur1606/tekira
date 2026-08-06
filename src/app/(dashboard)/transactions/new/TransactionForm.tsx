@@ -61,7 +61,7 @@ export function TransactionForm({ products }: TransactionFormProps) {
       <input type="hidden" name="link_product" value={linkProduct ? 'yes' : 'no'} />
 
       {/* Selector de Tipo (Ingreso / Venta vs Egreso / Gasto) */}
-      <div className="grid grid-cols-2 gap-3 p-1.5 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl w-full">
+      <div className="grid grid-cols-2 gap-3 p-1.5 bg-[#0E1310] border border-[#232C26] rounded-2xl w-full">
         <button
           type="button"
           onClick={() => setType('income')}
@@ -88,7 +88,7 @@ export function TransactionForm({ products }: TransactionFormProps) {
       </div>
 
       {/* Switch Vinculación a Producto */}
-      <div className="flex items-center justify-between p-4 bg-zinc-950/40 rounded-xl border border-zinc-800/60">
+      <div className="flex items-center justify-between p-4 bg-[#141A16] rounded-xl border border-[#232C26]">
         <div className="space-y-0.5">
           <label className="text-sm font-bold text-zinc-200 cursor-pointer" htmlFor="linkProductSwitch">
             Vincular a Producto del Inventario
@@ -100,13 +100,13 @@ export function TransactionForm({ products }: TransactionFormProps) {
           type="checkbox"
           checked={linkProduct}
           onChange={(e) => setLinkProduct(e.target.checked)}
-          className="w-5 h-5 rounded border-zinc-800 bg-zinc-900 text-indigo-600 focus:ring-indigo-500/20 accent-indigo-600 cursor-pointer"
+          className="w-5 h-5 rounded border-[#232C26] bg-[#141A16] text-[#7C9A42] focus:ring-[#7C9A42]/20 accent-[#556B2F] cursor-pointer"
         />
       </div>
 
       {/* Opciones de Variante y Cantidad si está vinculado */}
       {linkProduct && allVariants.length > 0 && (
-        <div className="p-4 bg-zinc-950/60 border border-indigo-500/20 rounded-xl space-y-4">
+        <div className="p-4 bg-[#0E1310] border border-[#7C9A42]/30 rounded-xl space-y-4">
           <div className="w-full">
             <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5" htmlFor="variant_id">
               Seleccionar Producto / Variante
@@ -118,7 +118,7 @@ export function TransactionForm({ products }: TransactionFormProps) {
                 value={selectedVariantId}
                 onChange={(e) => handleVariantChange(e.target.value)}
                 required
-                className="block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 pl-10 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none"
+                className="block w-full rounded-xl border border-[#232C26] bg-[#0E1310] px-4 py-3 pl-10 text-sm text-[#F5F5F0] focus:border-[#7C9A42] focus:outline-none focus:ring-2 focus:ring-[#7C9A42]/30 transition-all appearance-none"
               >
                 {allVariants.map(v => (
                   <option key={v.id} value={v.id}>
@@ -127,7 +127,7 @@ export function TransactionForm({ products }: TransactionFormProps) {
                 ))}
               </select>
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
-                <Layers className="w-4 h-4 text-indigo-400" />
+                <Layers className="w-4 h-4 text-[#8EA653]" />
               </div>
             </div>
           </div>
@@ -160,7 +160,7 @@ export function TransactionForm({ products }: TransactionFormProps) {
           defaultValue={amountOverride > 0 ? amountOverride : ''}
           onValueChange={(val) => setAmountOverride(val)}
           required
-          className="text-xl font-bold text-zinc-100"
+          className="text-xl font-bold text-[#F5F5F0]"
         />
       </div>
 
@@ -176,7 +176,7 @@ export function TransactionForm({ products }: TransactionFormProps) {
               name="category"
               defaultValue="Venta"
               required
-              className="block w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-4 py-3 pl-10 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none"
+              className="block w-full rounded-xl border border-[#232C26] bg-[#0E1310] px-4 py-3 pl-10 text-sm text-[#F5F5F0] focus:border-[#7C9A42] focus:outline-none focus:ring-2 focus:ring-[#7C9A42]/30 transition-all appearance-none"
             >
               {CATEGORIES.map(c => (
                 <option key={c} value={c}>{c}</option>
@@ -198,7 +198,7 @@ export function TransactionForm({ products }: TransactionFormProps) {
               name="payment_method"
               defaultValue="Efectivo"
               required
-              className="block w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-4 py-3 pl-10 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none"
+              className="block w-full rounded-xl border border-[#232C26] bg-[#0E1310] px-4 py-3 pl-10 text-sm text-[#F5F5F0] focus:border-[#7C9A42] focus:outline-none focus:ring-2 focus:ring-[#7C9A42]/30 transition-all appearance-none"
             >
               {PAYMENT_METHODS.map(pm => (
                 <option key={pm} value={pm}>{pm}</option>
@@ -221,7 +221,7 @@ export function TransactionForm({ products }: TransactionFormProps) {
         icon={Edit3}
       />
 
-      <div className="pt-2 border-t border-zinc-800/80 w-full">
+      <div className="pt-2 border-t border-[#232C26] w-full">
         <SubmitButton fullWidth className="py-3.5 text-base font-bold shadow-lg">
           {type === 'income' ? 'Registrar Ingreso / Venta' : 'Registrar Egreso / Gasto'}
         </SubmitButton>

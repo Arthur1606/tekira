@@ -11,23 +11,23 @@ export default function DashboardLoading() {
       </div>
 
       {/* Control de Caja Skeleton */}
-      <div className="h-32 w-full bg-zinc-900/60 border border-zinc-800/80 rounded-2xl"></div>
+      <div className="h-32 w-full bg-[#141A16] border border-[#232C26] rounded-2xl"></div>
 
       {/* Grid Métricas Skeleton */}
       <div className="space-y-4">
-        <div className="h-36 w-full bg-zinc-900/60 border border-zinc-800/80 rounded-2xl"></div>
+        <div className="h-36 w-full bg-[#141A16] border border-[#232C26] rounded-2xl"></div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="h-28 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl"></div>
-          <div className="h-28 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl"></div>
-          <div className="h-28 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl"></div>
+          <div className="h-28 bg-[#141A16] border border-[#232C26] rounded-2xl"></div>
+          <div className="h-28 bg-[#141A16] border border-[#232C26] rounded-2xl"></div>
+          <div className="h-28 bg-[#141A16] border border-[#232C26] rounded-2xl"></div>
         </div>
       </div>
 
       {/* Insights Skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-        <div className="h-32 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl"></div>
-        <div className="h-32 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl"></div>
-        <div className="h-32 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl"></div>
+        <div className="h-32 bg-[#141A16] border border-[#232C26] rounded-2xl"></div>
+        <div className="h-32 bg-[#141A16] border border-[#232C26] rounded-2xl"></div>
+        <div className="h-32 bg-[#141A16] border border-[#232C26] rounded-2xl"></div>
       </div>
     </div>
   );

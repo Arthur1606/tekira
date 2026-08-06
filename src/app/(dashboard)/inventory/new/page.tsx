@@ -29,13 +29,13 @@ export default function NewProductPage() {
     <div className="w-full space-y-8 animate-in fade-in duration-500 pb-16">
       
       {/* Encabezado */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-zinc-950/40 backdrop-blur-2xl rounded-2xl border border-white/[0.03]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-[#141A16] backdrop-blur-2xl rounded-2xl border border-white/[0.03]">
         <div className="flex items-center gap-4">
-          <Link href="/inventory" className="p-3 bg-zinc-900/80 hover:bg-zinc-800 rounded-xl text-zinc-400 hover:text-zinc-100 transition-colors border border-zinc-800 shrink-0">
+          <Link href="/inventory" className="p-3 bg-[#141A16] hover:bg-[#19201C] rounded-xl text-zinc-400 hover:text-[#F5F5F0] transition-colors border border-[#232C26] shrink-0">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-zinc-100 tracking-tight">Nuevo Producto</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#F5F5F0] tracking-tight">Nuevo Producto</h1>
             <p className="text-sm font-medium text-zinc-400 mt-1">Registra un nuevo artículo en tu catálogo</p>
           </div>
         </div>
@@ -52,7 +52,7 @@ export default function NewProductPage() {
         <form action={createProduct} className="space-y-6">
           
           <div className="space-y-6">
-            <h3 className="text-sm font-bold text-zinc-100 mb-4">Información Básica</h3>
+            <h3 className="text-sm font-bold text-[#F5F5F0] mb-4">Información Básica</h3>
             
             <Input
               id="name"
@@ -74,14 +74,14 @@ export default function NewProductPage() {
                     id="category"
                     name="category"
                     defaultValue="General"
-                    className="block w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-4 py-3 pl-10 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none"
+                    className="block w-full rounded-xl border border-[#232C26] bg-[#0E1310] px-4 py-3 pl-10 text-sm text-[#F5F5F0] focus:border-[#7C9A42] focus:outline-none focus:ring-2 focus:ring-[#7C9A42]/30 transition-all appearance-none"
                   >
                     {CATEGORIES.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
-                    <Tag className="w-4 h-4 text-indigo-400" />
+                    <Tag className="w-4 h-4 text-[#8EA653]" />
                   </div>
                 </div>
               </div>
@@ -98,7 +98,7 @@ export default function NewProductPage() {
           </div>
 
           <div className="pt-4 border-t border-zinc-800">
-            <h3 className="text-sm font-bold text-zinc-100 mb-4">Inventario e Insumos</h3>
+            <h3 className="text-sm font-bold text-[#F5F5F0] mb-4">Inventario e Insumos</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               
               <div>
@@ -111,14 +111,14 @@ export default function NewProductPage() {
                     name="unit"
                     value={selectedUnit}
                     onChange={(e) => setSelectedUnit(e.target.value)}
-                    className="block w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-4 py-3 pl-10 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none capitalize"
+                    className="block w-full rounded-xl border border-[#232C26] bg-[#0E1310] px-4 py-3 pl-10 text-sm text-[#F5F5F0] focus:border-[#7C9A42] focus:outline-none focus:ring-2 focus:ring-[#7C9A42]/30 transition-all appearance-none capitalize"
                   >
                     {UNITS.map(u => (
                       <option key={u} value={u}>{u}</option>
                     ))}
                   </select>
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
-                    <Layers className="w-4 h-4 text-indigo-400" />
+                    <Layers className="w-4 h-4 text-[#8EA653]" />
                   </div>
                 </div>
               </div>
@@ -150,7 +150,7 @@ export default function NewProductPage() {
           </div>
 
           <div className="pt-4 border-t border-zinc-800">
-            <h3 className="text-sm font-bold text-zinc-100 mb-4">Finanzas</h3>
+            <h3 className="text-sm font-bold text-[#F5F5F0] mb-4">Finanzas</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <CurrencyInput
                 id="cost"
@@ -168,13 +168,13 @@ export default function NewProductPage() {
                 placeholder="0"
                 iconName="dollar"
                 required
-                className="font-bold text-indigo-400"
+                className="font-bold text-[#8EA653]"
               />
             </div>
           </div>
 
-          <div className="pt-6 border-t border-zinc-800 flex justify-end gap-3">
-            <Link href="/inventory" className="px-5 py-2.5 text-sm font-semibold text-zinc-400 hover:text-zinc-200 bg-zinc-900 hover:bg-zinc-800 rounded-xl border border-zinc-800 transition-colors">
+          <div className="pt-6 border-t border-[#232C26] flex justify-end gap-3">
+            <Link href="/inventory" className="px-5 py-2.5 text-sm font-semibold text-zinc-400 hover:text-zinc-200 bg-[#141A16] hover:bg-[#19201C] rounded-xl border border-[#232C26] transition-colors">
               Cancelar
             </Link>
             <SubmitButton className="px-6 py-2.5 text-sm font-bold">

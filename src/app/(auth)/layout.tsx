@@ -3,17 +3,18 @@ import Link from 'next/link';
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen flex bg-[#09090B] font-sans">
+    <div className="min-h-screen flex bg-[#0B0F0D] font-sans">
       
       {/* Lado Izquierdo: Formulario */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-12 lg:px-24 xl:px-32 relative">
         
         {/* Logo superior */}
         <div className="absolute top-8 left-8 sm:left-12 lg:left-24">
-          <Link href="/" className="inline-block">
-            <span className="text-2xl font-black tracking-tighter text-zinc-100">
-              TEKIRA<span className="text-indigo-600">●</span>
-            </span>
+          <Link href="/" className="inline-flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-gradient-to-br from-[#556B2F] to-[#3B4B20] rounded-lg flex items-center justify-center border border-[#7C9A42]/30 shadow-lg shadow-[#556B2F]/10">
+              <span className="text-[#F5F5F0] font-black text-lg leading-none tracking-tighter">T</span>
+            </div>
+            <span className="text-xl font-extrabold tracking-tight text-[#F5F5F0]">TEKIRA</span>
           </Link>
         </div>
 
@@ -22,22 +23,21 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      {/* Lado Derecho: Imagen / Patrón (Solo visible en Desktop) */}
-      <div className="hidden lg:flex w-1/2 bg-[#09090B] relative overflow-hidden items-center justify-center border-l border-zinc-800">
+      {/* Lado Derecho: Patrón visual (Solo visible en Desktop) */}
+      <div className="hidden lg:flex w-1/2 bg-[#0E1310] relative overflow-hidden items-center justify-center border-l border-[#1E2621]">
         
-        {/* Patrón de malla (Mesh Gradient) o fondo abstracto tecnológico */}
-        <div className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-zinc-900 to-indigo-950 opacity-95"></div>
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
+        {/* Mesh gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0B0F0D] via-[#141A16] to-[#1A2318] opacity-95"></div>
         
-        {/* Elemento decorativo "Cerebro Digital" / Blur */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
+        {/* Decorative blur orbs */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#556B2F] rounded-full mix-blend-screen filter blur-[120px] opacity-20 animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#7C9A42] rounded-full mix-blend-screen filter blur-[120px] opacity-15"></div>
 
         <div className="relative z-10 text-center px-12 max-w-lg">
-          <h2 className="text-4xl font-bold text-white mb-6 tracking-tight">
+          <h2 className="text-4xl font-extrabold text-[#F5F5F0] mb-6 tracking-tight">
             El cerebro digital de tu empresa.
           </h2>
-          <p className="text-lg text-indigo-100 leading-relaxed font-light">
+          <p className="text-base text-zinc-300 leading-relaxed font-light">
             Centraliza tus operaciones, analiza tus datos en tiempo real y toma decisiones basadas en inteligencia, todo desde un único lugar seguro y escalable.
           </p>
         </div>

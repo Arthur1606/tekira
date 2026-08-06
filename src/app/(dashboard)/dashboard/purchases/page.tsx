@@ -64,8 +64,8 @@ export default async function PurchasesPage({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-100 tracking-tight flex items-center gap-3">
-            <ShoppingCart className="w-8 h-8 text-indigo-500" /> Compras
+          <h1 className="text-3xl font-bold text-[#F5F5F0] tracking-tight flex items-center gap-3">
+            <ShoppingCart className="w-8 h-8 text-[#7C9A42]" /> Compras
           </h1>
           <p className="text-sm font-medium text-zinc-400 mt-1">
             Abastecimiento e historial de facturas
@@ -108,16 +108,16 @@ export default async function PurchasesPage({
 
       {/* List */}
       <div>
-        <h3 className="text-lg font-bold text-zinc-100 mb-4 flex items-center gap-2">
-          <Clock className="w-5 h-5 text-indigo-500" /> Últimas Compras Registradas
+        <h3 className="text-lg font-bold text-[#F5F5F0] mb-4 flex items-center gap-2">
+          <Clock className="w-5 h-5 text-[#7C9A42]" /> Últimas Compras Registradas
         </h3>
-        <Card className="p-0 sm:p-0 bg-zinc-900/40 border-zinc-800 overflow-hidden">
+        <Card className="p-0 sm:p-0 bg-[#141A16] border-[#232C26] overflow-hidden">
           {purchases.length === 0 ? (
             <div className="py-16 flex flex-col items-center justify-center text-center">
               <div className="w-16 h-16 bg-zinc-800/50 text-zinc-500 rounded-full flex items-center justify-center mb-4">
                 <ShoppingCart className="w-6 h-6" />
               </div>
-              <h4 className="text-lg font-semibold text-zinc-100 mb-2">No hay compras registradas</h4>
+              <h4 className="text-lg font-semibold text-[#F5F5F0] mb-2">No hay compras registradas</h4>
               <p className="text-sm text-zinc-400 max-w-sm">
                 Registra tu primera compra para abastecer el inventario y mantener tus costos actualizados.
               </p>
@@ -128,13 +128,13 @@ export default async function PurchasesPage({
           ) : (
             <div className="divide-y divide-zinc-800/50">
               {purchases.map((purchase) => (
-                <div key={purchase.id} className="flex items-center justify-between p-4 sm:p-5 hover:bg-zinc-800/40 transition-colors group">
+                <div key={purchase.id} className="flex items-center justify-between p-4 sm:p-5 hover:bg-[#19201C] transition-colors group">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                    <div className="w-12 h-12 rounded-2xl bg-[#556B2F]/10 text-[#8EA653] border border-[#7C9A42]/30 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
                       <ShoppingCart className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-zinc-100">{purchase.supplier?.name || 'Proveedor Desconocido'}</p>
+                      <p className="text-sm font-bold text-[#F5F5F0]">{purchase.supplier?.name || 'Proveedor Desconocido'}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-xs font-medium text-zinc-400">{formatDate(purchase.created_at)}</span>
                         <Badge variant={purchase.status === 'completed' ? 'success' : 'neutral'} className="text-[10px]">
@@ -146,7 +146,7 @@ export default async function PurchasesPage({
                       </div>
                     </div>
                   </div>
-                  <div className="text-base font-black text-zinc-100">
+                  <div className="text-base font-black text-[#F5F5F0]">
                     {formatCurrency(Number(purchase.total_amount))}
                   </div>
                 </div>

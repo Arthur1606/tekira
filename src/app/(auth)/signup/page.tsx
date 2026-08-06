@@ -13,7 +13,7 @@ export default async function SignupPage({
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-md mx-auto">
       <div className="mb-6 text-center">
-        <h2 className="text-3xl font-bold text-zinc-100 tracking-tight">Registro TEKIRA</h2>
+        <h2 className="text-3xl font-bold text-[#F5F5F0] tracking-tight">Registro TEKIRA</h2>
         <p className="text-zinc-400 mt-1 text-sm">Crea una nueva empresa o únete con un código existente</p>
       </div>
 
@@ -28,7 +28,7 @@ export default async function SignupPage({
 
       <p className="mt-8 text-center text-xs text-zinc-400">
         ¿Ya tienes tu cuenta lista?{' '}
-        <Link href="/login" className="font-bold text-indigo-400 hover:text-indigo-300 transition-colors">
+        <Link href="/login" className="font-bold text-[#8EA653] hover:text-[#8EA653] transition-colors">
           Inicia sesión aquí
         </Link>
       </p>

@@ -3,17 +3,50 @@
 @theme inline {
   --color-background: #0B0F0D;
   --color-foreground: #F5F5F0;
-  --color-olive-dark: #3B4B20;
-  --color-olive-main: #556B2F;
-  --color-olive-accent: #7C9A42;
-  --color-olive-glow: #8EA653;
-  --color-surface-dark: #141A16;
+
+  /* TEKIRA Design System v1.0 — Olive & Charcoal Premium Tokens */
+  --color-primary: #556B2F;
+  --color-primary-hover: #7C9A42;
+  --color-primary-glow: #8EA653;
+  --color-primary-dark: #3B4B20;
+
+  --color-surface: #141A16;
   --color-surface-hover: #19201C;
-  --color-border-dark: #232C26;
+  --color-surface-dark: #0E1310;
+
+  --color-border: #232C26;
+  --color-border-hover: #2B372F;
+  --color-border-active: #7C9A42;
+
+  --color-text-primary: #F5F5F0;
+  --color-text-secondary: #a1a1aa;
+  --color-text-muted: #71717a;
+
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 1.875rem;
+  --radius-full: 9999px;
 }
 
 :root {
   color-scheme: dark;
+  --font-sans: var(--font-plus-jakarta), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+* {
+  scrollbar-color: #232C26 transparent;
+}
+
+html {
+  font-family: var(--font-sans);
 }
 
 body {
@@ -24,7 +57,7 @@ body {
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
-/* Custom Scrollbar Premium */
+/* Premium Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -40,8 +73,42 @@ body {
   background: #556B2F;
 }
 
-/* Selection Color */
+/* Selection */
 ::selection {
   background-color: rgba(124, 154, 66, 0.3);
   color: #F5F5F0;
+}
+
+/* Focus outline for keyboard navigation */
+:focus-visible {
+  outline: 2px solid #7C9A42;
+  outline-offset: 2px;
+}
+
+/* Smooth transitions globally */
+a, button, input, select, textarea {
+  transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Consistent select styling */
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%237C9A42' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+/* Disable autofill background color override */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #F5F5F0;
+  -webkit-box-shadow: 0 0 0px 1000px #141A16 inset;
+  transition: background-color 5000s ease-in-out 0s;
 }

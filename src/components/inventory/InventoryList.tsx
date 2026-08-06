@@ -76,7 +76,7 @@ export function InventoryList({ initialProducts, currentFilter, currentUserRole 
             <div className="w-16 h-16 bg-zinc-800/50 text-zinc-500 rounded-full flex items-center justify-center mb-4">
               <PackageSearch className="w-8 h-8" />
             </div>
-            <h4 className="text-lg font-semibold text-zinc-100 mb-2">No tienes productos registrados</h4>
+            <h4 className="text-lg font-semibold text-[#F5F5F0] mb-2">No tienes productos registrados</h4>
             <p className="text-sm text-zinc-400 max-w-sm leading-relaxed mb-6">
               {currentFilter === 'deleted' 
                 ? 'No hay productos retirados en el historial de auditoría.' 
@@ -104,13 +104,13 @@ export function InventoryList({ initialProducts, currentFilter, currentUserRole 
             </div>
             
             {filteredProducts.map((product) => (
-              <div key={product.id} className="p-4 grid grid-cols-12 gap-4 items-center hover:bg-zinc-800/30 transition-colors">
+              <div key={product.id} className="p-4 grid grid-cols-12 gap-4 items-center hover:bg-[#19201C] transition-colors">
                 
                 <div className="col-span-12 sm:col-span-5 flex flex-col">
-                  <span className="font-bold text-zinc-100">{product.name}</span>
+                  <span className="font-bold text-[#F5F5F0]">{product.name}</span>
                   <div className="flex items-center gap-2 mt-1">
                     <Badge variant="neutral" className="px-1.5 py-0 text-[10px] bg-zinc-800/80">{product.category}</Badge>
-                    {product.sku && <span className="text-[11px] font-mono font-bold text-indigo-400 flex items-center gap-1"><Hash className="w-3 h-3" /> {product.sku}</span>}
+                    {product.sku && <span className="text-[11px] font-mono font-bold text-[#8EA653] flex items-center gap-1"><Hash className="w-3 h-3" /> {product.sku}</span>}
                   </div>
                   <div className="mt-2 sm:hidden">
                     {getStatusBadge(product.status)}
@@ -119,17 +119,17 @@ export function InventoryList({ initialProducts, currentFilter, currentUserRole 
                 
                 <div className="col-span-12 sm:col-span-2 flex flex-col sm:items-end justify-center">
                   <div className="sm:hidden text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-0.5">Stock Total</div>
-                  <span className="font-bold text-zinc-100">{product.quantity} <span className="text-[10px] text-zinc-500 ml-1">{product.unit}</span></span>
+                  <span className="font-bold text-[#F5F5F0]">{product.quantity} <span className="text-[10px] text-zinc-500 ml-1">{product.unit}</span></span>
                 </div>
                 
                 <div className="hidden sm:flex sm:col-span-2 flex-col items-end justify-center">
-                  <span className="font-bold text-zinc-100">{formatCurrency(product.variants?.[0]?.sale_price || 0)}</span>
+                  <span className="font-bold text-[#F5F5F0]">{formatCurrency(product.variants?.[0]?.sale_price || 0)}</span>
                   <div className="mt-1">
                     {getStatusBadge(product.status)}
                   </div>
                 </div>
                 
-                <div className="col-span-12 sm:col-span-3 flex justify-start sm:justify-end items-center gap-2 mt-2 sm:mt-0 pt-3 sm:pt-0 border-t border-zinc-800 sm:border-0">
+                <div className="col-span-12 sm:col-span-3 flex justify-start sm:justify-end items-center gap-2 mt-2 sm:mt-0 pt-3 sm:pt-0 border-t border-[#232C26] sm:border-0">
                   <Link href={`/inventory/${product.id}/movement`} className="flex-1 sm:flex-none">
                     <Button variant="secondary" className="px-3 py-2 w-full sm:w-auto h-auto text-xs">
                       <ArrowRightLeft className="w-4 h-4 mr-1.5" />
@@ -150,12 +150,12 @@ export function InventoryList({ initialProducts, currentFilter, currentUserRole 
                       <Layers className="w-3.5 h-3.5 text-zinc-500" />
                       <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-500">Variantes & SKU Obligatorio</span>
                     </div>
-                    <div className="flex flex-col gap-1.5 pl-3 border-l-2 border-indigo-500/20 ml-2">
+                    <div className="flex flex-col gap-1.5 pl-3 border-l-2 border-[#7C9A42]/30 ml-2">
                       {product.variants.map((variant) => (
-                        <div key={variant.id} className="flex items-center justify-between text-xs bg-zinc-900/40 px-3 py-2 rounded-xl border border-zinc-800/60 flex-wrap gap-2">
+                        <div key={variant.id} className="flex items-center justify-between text-xs bg-[#141A16] px-3 py-2 rounded-xl border border-[#232C26] flex-wrap gap-2">
                           <div className="flex flex-col">
                             <span className="text-zinc-200 font-bold">{variant.name}</span>
-                            <span className="text-indigo-400 font-mono text-[10px] font-bold">SKU: {variant.sku || 'SKU-PENDIENTE'}</span>
+                            <span className="text-[#8EA653] font-mono text-[10px] font-bold">SKU: {variant.sku || 'SKU-PENDIENTE'}</span>
                           </div>
                           <div className="flex items-center gap-3">
                             <div className="flex flex-col items-end">

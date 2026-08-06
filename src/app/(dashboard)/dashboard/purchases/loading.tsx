@@ -10,12 +10,12 @@ export default function PurchasesLoading() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div className="h-28 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl"></div>
-        <div className="h-28 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl"></div>
-        <div className="h-28 bg-zinc-900/60 border border-zinc-800/80 rounded-2xl"></div>
+        <div className="h-28 bg-[#141A16] border border-[#232C26] rounded-2xl"></div>
+        <div className="h-28 bg-[#141A16] border border-[#232C26] rounded-2xl"></div>
+        <div className="h-28 bg-[#141A16] border border-[#232C26] rounded-2xl"></div>
       </div>
 
-      <div className="h-72 w-full bg-zinc-900/60 border border-zinc-800/80 rounded-2xl"></div>
+      <div className="h-72 w-full bg-[#141A16] border border-[#232C26] rounded-2xl"></div>
     </div>
   );
 }

@@ -35,20 +35,20 @@ export default async function OnboardingPage({
   const { error } = await searchParams;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#09090B] font-sans p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-[#0B0F0D] font-sans p-4 relative overflow-hidden">
       
       {/* Background decoration */}
-      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-900/20 blur-[100px] pointer-events-none"></div>
+      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[#556B2F]/15 blur-[100px] pointer-events-none"></div>
       <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-900/20 blur-[100px] pointer-events-none"></div>
 
-      <div className="w-full max-w-lg bg-zinc-900/40 backdrop-blur-md rounded-3xl shadow-xl border border-zinc-800 p-8 sm:p-12 relative z-10 animate-in slide-in-from-bottom-8 fade-in duration-700">
+      <div className="w-full max-w-lg bg-[#141A16] backdrop-blur-md rounded-3xl shadow-xl border border-[#232C26] p-8 sm:p-12 relative z-10 animate-in slide-in-from-bottom-8 fade-in duration-700">
         
         {/* Header Setup Card */}
         <div className="text-center mb-10">
-          <div className="w-16 h-16 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-indigo-500/20">
-            <Building2 className="w-8 h-8 text-indigo-500" />
+          <div className="w-16 h-16 bg-[#556B2F]/10 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-[#7C9A42]/30">
+            <Building2 className="w-8 h-8 text-[#7C9A42]" />
           </div>
-          <h1 className="text-3xl font-extrabold text-zinc-100 tracking-tight mb-2">Dale un hogar a tu negocio</h1>
+          <h1 className="text-3xl font-extrabold text-[#F5F5F0] tracking-tight mb-2">Dale un hogar a tu negocio</h1>
           <p className="text-zinc-400 font-medium">Configura tu comercio en segundos para acceder a tu panel de control.</p>
         </div>
 
@@ -80,7 +80,7 @@ export default async function OnboardingPage({
                 name="category"
                 required
                 defaultValue=""
-                className="block w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-4 py-2.5 text-sm text-zinc-100 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all focus:bg-zinc-950 appearance-none"
+                className="block w-full rounded-lg border border-[#232C26] bg-zinc-950/50 px-4 py-2.5 text-sm text-[#F5F5F0] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#7C9A42]/30 transition-all focus:bg-[#0E1310] appearance-none"
               >
                 <option value="" disabled>Selecciona una categoría...</option>
                 {CATEGORIES.map(cat => (

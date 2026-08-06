@@ -140,15 +140,15 @@ export function SignupFormTabs({ initialMode = 'owner' }: SignupFormTabsProps) {
                 checked={acceptedTerms}
                 onChange={(e) => setAcceptedTerms(e.target.checked)}
                 required
-                className="mt-0.5 rounded border-zinc-700 bg-zinc-950 text-[#7C9A42] focus:ring-[#7C9A42] shrink-0"
+                className="mt-0.5 rounded border-[#2B372F] bg-[#0E1310] text-[#7C9A42] focus:ring-[#7C9A42] shrink-0"
               />
               <span className="leading-snug">
                 Acepto los{' '}
-                <Link href="/legal/terms" target="_blank" className="text-[#8EA653] underline hover:text-zinc-100 font-bold">
+                <Link href="/legal/terms" target="_blank" className="text-[#8EA653] underline hover:text-[#F5F5F0] font-bold">
                   Términos y Condiciones
                 </Link>{' '}
                 y la{' '}
-                <Link href="/legal/privacy-policy" target="_blank" className="text-[#8EA653] underline hover:text-zinc-100 font-bold">
+                <Link href="/legal/privacy-policy" target="_blank" className="text-[#8EA653] underline hover:text-[#F5F5F0] font-bold">
                   Política de Privacidad
                 </Link>{' '}
                 de TEKIRA (v0.12.0).
@@ -220,15 +220,15 @@ export function SignupFormTabs({ initialMode = 'owner' }: SignupFormTabsProps) {
                 checked={acceptedTerms}
                 onChange={(e) => setAcceptedTerms(e.target.checked)}
                 required
-                className="mt-0.5 rounded border-zinc-700 bg-zinc-950 text-[#7C9A42] focus:ring-[#7C9A42] shrink-0"
+                className="mt-0.5 rounded border-[#2B372F] bg-[#0E1310] text-[#7C9A42] focus:ring-[#7C9A42] shrink-0"
               />
               <span className="leading-snug">
                 Acepto los{' '}
-                <Link href="/legal/terms" target="_blank" className="text-[#8EA653] underline hover:text-zinc-100 font-bold">
+                <Link href="/legal/terms" target="_blank" className="text-[#8EA653] underline hover:text-[#F5F5F0] font-bold">
                   Términos y Condiciones
                 </Link>{' '}
                 y la{' '}
-                <Link href="/legal/privacy-policy" target="_blank" className="text-[#8EA653] underline hover:text-zinc-100 font-bold">
+                <Link href="/legal/privacy-policy" target="_blank" className="text-[#8EA653] underline hover:text-[#F5F5F0] font-bold">
                   Política de Privacidad
                 </Link>{' '}
                 de TEKIRA (v0.12.0).

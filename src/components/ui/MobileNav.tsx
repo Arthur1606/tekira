@@ -39,7 +39,7 @@ export function MobileNav() {
                 </div>
                 <span className="font-extrabold text-xl text-[#F5F5F0] tracking-tight">TEKIRA</span>
               </Link>
-              <button onClick={() => setIsOpen(false)} className="p-2 text-zinc-400 hover:text-zinc-100 transition-colors">
+              <button onClick={() => setIsOpen(false)} className="p-2 text-zinc-400 hover:text-[#F5F5F0] transition-colors">
                 <X className="w-6 h-6" />
               </button>
             </div>

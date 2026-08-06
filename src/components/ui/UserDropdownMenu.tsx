@@ -52,7 +52,7 @@ export function UserDropdownMenu({
       case 'owner':
         return <Badge variant="primary" className="text-[10px] py-0.5 px-2 bg-[#556B2F]/20 text-[#8EA653] border-[#7C9A42]/30 font-bold">Propietario</Badge>;
       case 'admin':
-        return <Badge variant="neutral" className="text-[10px] py-0.5 px-2 bg-purple-500/20 text-purple-300 border-purple-500/30 font-bold">Administrador</Badge>;
+        return <Badge variant="neutral" className="text-[10px] py-0.5 px-2 bg-[#556B2F]/20 text-zinc-300 border-[#7C9A42]/30 font-bold">Administrador</Badge>;
       default:
         return <Badge variant="neutral" className="text-[10px] py-0.5 px-2 bg-[#19201C] text-zinc-300 font-bold">Empleado</Badge>;
     }
@@ -152,7 +152,7 @@ export function UserDropdownMenu({
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-zinc-300 hover:bg-[#19201C] hover:text-[#F5F5F0] transition-colors"
                 >
-                  <Building className="w-4 h-4 text-purple-400 shrink-0" />
+                  <Building className="w-4 h-4 text-[#8EA653] shrink-0" />
                   <span>Información de la Empresa</span>
                 </Link>
 
@@ -170,7 +170,7 @@ export function UserDropdownMenu({
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-zinc-300 hover:bg-[#19201C] hover:text-[#F5F5F0] transition-colors"
                 >
-                  <Scale className="w-4 h-4 text-indigo-400 shrink-0" />
+                  <Scale className="w-4 h-4 text-[#8EA653] shrink-0" />
                   <span>Información Legal</span>
                 </Link>
               </>

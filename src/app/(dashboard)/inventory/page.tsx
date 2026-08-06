@@ -73,9 +73,9 @@ export default async function InventoryPage({
   const getLocationTypeBadge = (type: string) => {
     switch (type) {
       case 'store':
-        return <Badge variant="primary" className="bg-indigo-500/20 text-indigo-300 text-[10px]"><Store className="w-3 h-3 mr-1" /> Tienda / Punto de Venta</Badge>;
+        return <Badge variant="primary" className="bg-[#556B2F]/20 text-[#8EA653] text-[10px]"><Store className="w-3 h-3 mr-1" /> Tienda / Punto de Venta</Badge>;
       case 'warehouse':
-        return <Badge variant="neutral" className="bg-purple-500/20 text-purple-300 text-[10px]"><Warehouse className="w-3 h-3 mr-1" /> Bodega Principal</Badge>;
+        return <Badge variant="neutral" className="bg-[#556B2F]/20 text-zinc-300 text-[10px]"><Warehouse className="w-3 h-3 mr-1" /> Bodega Principal</Badge>;
       default:
         return <Badge variant="neutral" className="text-[10px]"><MapPin className="w-3 h-3 mr-1" /> Depósito</Badge>;
     }
@@ -99,7 +99,7 @@ export default async function InventoryPage({
       {/* Header Acción */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-100 tracking-tight">
+          <h1 className="text-3xl font-bold text-[#F5F5F0] tracking-tight">
             Inventario & Bodegas
           </h1>
           <p className="text-sm font-medium text-zinc-400 mt-1">
@@ -118,9 +118,9 @@ export default async function InventoryPage({
       </div>
 
       {/* TARJETA DE BODEGAS Y UBICACIONES FÍSICAS */}
-      <Card noPadding className="p-6 bg-zinc-950/80 border-zinc-800 space-y-4">
-        <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-2">
+      <Card noPadding className="p-6 bg-[#0E1310] border-[#232C26] space-y-4">
+        <div className="flex items-center justify-between border-b border-[#232C26] pb-3">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-[#8EA653] flex items-center gap-2">
             <Warehouse className="w-4 h-4" /> Ubicaciones Físicas de Almacenamiento ({locations.length})
           </h3>
           <span className="text-[11px] text-zinc-500 font-mono">Control de Bodega Activo</span>
@@ -128,13 +128,13 @@ export default async function InventoryPage({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {locations.map((loc) => (
-            <div key={loc.id} className="p-4 bg-zinc-900/60 rounded-2xl border border-zinc-800/80 flex items-center justify-between gap-3">
+            <div key={loc.id} className="p-4 bg-[#141A16] rounded-2xl border border-[#232C26] flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-indigo-500/10 rounded-xl flex items-center justify-center border border-indigo-500/20 text-indigo-400">
+                <div className="w-10 h-10 bg-[#556B2F]/10 rounded-xl flex items-center justify-center border border-[#7C9A42]/30 text-[#8EA653]">
                   {loc.type === 'warehouse' ? <Warehouse className="w-5 h-5" /> : <Store className="w-5 h-5" />}
                 </div>
                 <div>
-                  <span className="font-bold text-sm text-zinc-100 block">{loc.name}</span>
+                  <span className="font-bold text-sm text-[#F5F5F0] block">{loc.name}</span>
                   <div className="mt-0.5">
                     {getLocationTypeBadge(loc.type)}
                   </div>
@@ -150,13 +150,13 @@ export default async function InventoryPage({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="justify-between">
             <div className="flex items-start justify-between mb-4">
-              <div className="w-12 h-12 bg-indigo-500/10 text-indigo-400 rounded-2xl flex items-center justify-center border border-indigo-500/20">
+              <div className="w-12 h-12 bg-[#556B2F]/10 text-[#8EA653] rounded-2xl flex items-center justify-center border border-[#7C9A42]/30">
                 <Box className="w-6 h-6" />
               </div>
             </div>
             <div>
               <p className="text-sm font-semibold text-zinc-400 mb-1">Total Productos</p>
-              <h3 className="text-3xl font-black text-zinc-100">{summary.total}</h3>
+              <h3 className="text-3xl font-black text-[#F5F5F0]">{summary.total}</h3>
             </div>
           </Card>
 
@@ -168,7 +168,7 @@ export default async function InventoryPage({
             </div>
             <div>
               <p className="text-sm font-semibold text-zinc-400 mb-1">Bajo Stock</p>
-              <h3 className="text-3xl font-black text-zinc-100">{summary.lowStock}</h3>
+              <h3 className="text-3xl font-black text-[#F5F5F0]">{summary.lowStock}</h3>
             </div>
           </Card>
 
@@ -180,13 +180,13 @@ export default async function InventoryPage({
             </div>
             <div>
               <p className="text-sm font-semibold text-zinc-400 mb-1">Agotados</p>
-              <h3 className="text-3xl font-black text-zinc-100">{summary.outOfStock}</h3>
+              <h3 className="text-3xl font-black text-[#F5F5F0]">{summary.outOfStock}</h3>
             </div>
           </Card>
         </div>
 
         {/* FILTROS DE INVENTARIO */}
-        <div className="flex items-center gap-2 border-b border-zinc-800 pb-3 pt-2 flex-wrap">
+        <div className="flex items-center gap-2 border-b border-[#232C26] pb-3 pt-2 flex-wrap">
           <span className="text-xs font-bold uppercase tracking-wider text-zinc-500 flex items-center gap-1.5 mr-2">
             <Filter className="w-3.5 h-3.5" /> Filtrar:
           </span>
@@ -195,8 +195,8 @@ export default async function InventoryPage({
             href="/inventory?filter=active"
             className={`py-1.5 px-3.5 text-xs font-bold rounded-xl transition-all ${
               currentFilter === 'active'
-                ? 'bg-indigo-600 text-white shadow-md'
-                : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+                ? 'bg-[#556B2F] text-white shadow-md'
+                : 'bg-[#141A16] text-zinc-400 hover:text-zinc-200 border border-zinc-800'
             }`}
           >
             Productos Activos
@@ -207,7 +207,7 @@ export default async function InventoryPage({
             className={`py-1.5 px-3.5 text-xs font-bold rounded-xl transition-all ${
               currentFilter === 'out_of_stock'
                 ? 'bg-amber-600 text-white shadow-md'
-                : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+                : 'bg-[#141A16] text-zinc-400 hover:text-zinc-200 border border-zinc-800'
             }`}
           >
             Productos Sin Stock
@@ -219,7 +219,7 @@ export default async function InventoryPage({
               className={`py-1.5 px-3.5 text-xs font-bold rounded-xl transition-all ${
                 currentFilter === 'deleted'
                   ? 'bg-rose-600 text-white shadow-md'
-                  : 'bg-zinc-900 text-rose-400 hover:bg-rose-500/10 border border-rose-500/20'
+                  : 'bg-[#141A16] text-rose-400 hover:bg-rose-500/10 border border-rose-500/20'
               }`}
             >
               🗑️ Productos Retirados (Owner)

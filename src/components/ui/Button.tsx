@@ -22,7 +22,7 @@ export function Button({
     primary: 'bg-[#556B2F] text-[#F5F5F0] hover:bg-[#7C9A42] shadow-lg shadow-[#556B2F]/20 hover:shadow-[#7C9A42]/30 hover:-translate-y-0.5 focus:ring-[#7C9A42]/50 border border-[#7C9A42]/30',
     secondary: 'bg-[#141A16] text-[#F5F5F0] border border-[#232C26] hover:bg-[#19201C] hover:border-[#7C9A42]/40 hover:-translate-y-0.5 focus:ring-zinc-700/50 shadow-sm',
     danger: 'bg-rose-600/90 text-white hover:bg-rose-500 hover:shadow-[0_0_15px_rgba(225,29,72,0.3)] hover:-translate-y-0.5 focus:ring-rose-500/50 border border-rose-500/20',
-    ghost: 'text-zinc-400 hover:text-zinc-100 hover:bg-[#141A16] focus:ring-[#141A16]'
+    ghost: 'text-zinc-400 hover:text-[#F5F5F0] hover:bg-[#141A16] focus:ring-[#141A16]'
   };
 
   const width = fullWidth ? 'w-full' : '';

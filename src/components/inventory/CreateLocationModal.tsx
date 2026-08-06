@@ -33,7 +33,7 @@ export function CreateLocationModal() {
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            className="p-1.5 text-zinc-400 hover:text-zinc-100 transition-colors rounded-xl hover:bg-[#19201C]"
+            className="p-1.5 text-zinc-400 hover:text-[#F5F5F0] transition-colors rounded-xl hover:bg-[#19201C]"
           >
             <X className="w-5 h-5" />
           </button>

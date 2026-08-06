@@ -12,20 +12,20 @@ export default async function MfaRecoveryPage({
   const { error, success } = await searchParams;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#09090B] font-sans p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-[#0B0F0D] font-sans p-4 relative overflow-hidden">
       
       {/* Background decoration */}
-      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-900/20 blur-[120px] pointer-events-none"></div>
+      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[#556B2F]/15 blur-[120px] pointer-events-none"></div>
 
-      <div className="w-full max-w-lg bg-zinc-900/40 backdrop-blur-md rounded-3xl shadow-2xl border border-zinc-800 p-8 sm:p-10 relative z-10 animate-in zoom-in-95 duration-300">
+      <div className="w-full max-w-lg bg-[#141A16] backdrop-blur-md rounded-3xl shadow-2xl border border-[#232C26] p-8 sm:p-10 relative z-10 animate-in zoom-in-95 duration-300">
         
         {/* Header Setup */}
         <div className="flex items-center gap-3 mb-6">
-          <Link href="/login" className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl transition-colors border border-zinc-700">
+          <Link href="/login" className="p-2 bg-zinc-800 hover:bg-[#19201C] text-zinc-300 rounded-xl transition-colors border border-zinc-700">
             <ArrowLeft className="w-4 h-4" />
           </Link>
           <div>
-            <h1 className="text-2xl font-extrabold text-zinc-100 tracking-tight">Recuperación de 2FA</h1>
+            <h1 className="text-2xl font-extrabold text-[#F5F5F0] tracking-tight">Recuperación de 2FA</h1>
             <p className="text-xs text-zinc-400 mt-0.5">Solicita el restablecimiento de tu autenticador a tu empresa</p>
           </div>
         </div>
@@ -76,13 +76,13 @@ export default async function MfaRecoveryPage({
                 rows={3}
                 required
                 placeholder="Ej. Cambié de teléfono celular y no respaldé los códigos de autenticación."
-                className="block w-full rounded-xl border border-zinc-800 bg-zinc-950/70 p-3.5 text-sm text-zinc-100 placeholder-zinc-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all resize-none"
+                className="block w-full rounded-xl border border-[#232C26] bg-[#0E1310] p-3.5 text-sm text-[#F5F5F0] placeholder-zinc-500 focus:border-[#7C9A42] focus:outline-none focus:ring-2 focus:ring-[#7C9A42]/30 transition-all resize-none"
               ></textarea>
             </div>
           </div>
 
           <div className="pt-2">
-            <SubmitButton fullWidth className="py-3 text-sm font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg">
+            <SubmitButton fullWidth className="py-3 text-sm font-bold bg-[#556B2F] hover:bg-[#7C9A42] text-[#F5F5F0] shadow-lg">
               Enviar Solicitud a Administración
             </SubmitButton>
           </div>

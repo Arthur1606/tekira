@@ -21,11 +21,11 @@ export default async function NewTransactionPage({
     <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-500 pb-12">
       
       <div className="flex items-center gap-4">
-        <Link href="/dashboard" className="p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-full transition-colors">
+        <Link href="/dashboard" className="p-2 text-zinc-400 hover:text-zinc-200 hover:bg-[#19201C] rounded-full transition-colors">
           <ArrowLeft className="w-6 h-6" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-zinc-100">Nuevo Movimiento</h1>
+          <h1 className="text-2xl font-bold text-[#F5F5F0]">Nuevo Movimiento</h1>
           <p className="text-sm text-zinc-400">Registra un ingreso o gasto de caja</p>
         </div>
       </div>

@@ -44,10 +44,10 @@ export function QrCodeDisplay({ qrDataUrl, secret, size = 240 }: QrCodeDisplayPr
       </p>
 
       {/* Caja de Clave Manual Amplia con Botón Copiar 1-Click */}
-      <div className="w-full max-w-md bg-zinc-950 p-4 rounded-2xl border border-zinc-800 flex items-center justify-between gap-3 shadow-inner">
+      <div className="w-full max-w-md bg-[#0E1310] p-4 rounded-2xl border border-[#232C26] flex items-center justify-between gap-3 shadow-inner">
         <div className="space-y-0.5 overflow-hidden flex-1 min-w-0">
           <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block">Clave Secreta Manual</span>
-          <span className="font-mono text-xs sm:text-sm font-bold text-indigo-300 select-all block tracking-widest truncate">
+          <span className="font-mono text-xs sm:text-sm font-bold text-[#8EA653] select-all block tracking-widest truncate">
             {secret}
           </span>
         </div>
@@ -58,7 +58,7 @@ export function QrCodeDisplay({ qrDataUrl, secret, size = 240 }: QrCodeDisplayPr
           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
             copied
               ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-              : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 shadow-sm'
+              : 'bg-zinc-800 hover:bg-[#19201C] text-zinc-200 border border-[#2B372F] shadow-sm'
           }`}
           title="Copiar Clave Secreta"
         >

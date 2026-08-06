@@ -132,8 +132,8 @@ export default async function DashboardPage({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-bold text-zinc-100 tracking-tight">
-              Hola, <span className="text-indigo-500">{displayName}</span> 👋
+            <h1 className="text-3xl font-bold text-[#F5F5F0] tracking-tight">
+              Hola, <span className="text-[#7C9A42]">{displayName}</span> 👋
             </h1>
             <Badge variant="neutral" className="bg-zinc-800 text-zinc-400 capitalize text-xs">
               {userRole}
@@ -163,9 +163,9 @@ export default async function DashboardPage({
 
       {/* TARJETA DINÁMICA DE ESTADO DE CAJA (OPEN / CLOSED) */}
       <div className="space-y-4 animate-in fade-in duration-700">
-        <div className="flex items-center justify-between flex-wrap gap-3 border-b border-zinc-800/80 pb-3">
+        <div className="flex items-center justify-between flex-wrap gap-3 border-b border-[#232C26] pb-3">
           <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-            <Wallet className="w-4 h-4 text-indigo-400" /> Control de Caja Operativa
+            <Wallet className="w-4 h-4 text-[#8EA653]" /> Control de Caja Operativa
           </h3>
 
           {/* BADGE Y BOTÓN DE ACCIÓN SEGÚN ESTADO */}
@@ -186,7 +186,7 @@ export default async function DashboardPage({
                 )}
               </>
             ) : (
-              <Badge variant="neutral" className="bg-zinc-800 text-zinc-400 border-zinc-700 gap-1.5">
+              <Badge variant="neutral" className="bg-zinc-800 text-zinc-400 border-[#2B372F] gap-1.5">
                 ⚪ Caja Cerrada
               </Badge>
             )}
@@ -195,29 +195,29 @@ export default async function DashboardPage({
 
         {/* ESTADO 1: CAJA CERRADA -> FORMULARIO DE APERTURA */}
         {!activeSession && (
-          <Card className="p-6 sm:p-8 bg-zinc-950 border-zinc-800 space-y-6">
+          <Card className="p-6 sm:p-8 bg-[#0E1310] border-[#232C26] space-y-6">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
               
               <div className="space-y-3 max-w-lg">
                 <div className="flex items-center gap-2">
-                  <div className="w-9 h-9 bg-zinc-900 rounded-xl flex items-center justify-center border border-zinc-800 text-zinc-400">
+                  <div className="w-9 h-9 bg-[#141A16] rounded-xl flex items-center justify-center border border-[#232C26] text-zinc-400">
                     <Lock className="w-5 h-5 text-amber-400" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-zinc-100">Abrir Nueva Caja</h2>
+                    <h2 className="text-xl font-bold text-[#F5F5F0]">Abrir Nueva Caja</h2>
                     <p className="text-xs text-zinc-400">Inicia la jornada ingresando el saldo de apertura</p>
                   </div>
                 </div>
 
                 {lastClosedSession && (
-                  <div className="p-3 bg-zinc-900/60 rounded-xl border border-zinc-800/80 text-xs space-y-1">
+                  <div className="p-3 bg-[#141A16] rounded-xl border border-[#232C26] text-xs space-y-1">
                     <div className="flex items-center justify-between text-zinc-400">
                       <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-zinc-500" /> Último Cierre:</span>
                       <span className="font-mono text-zinc-300">{formatDate(lastClosedSession.closed_at || lastClosedSession.opening?.created_at)}</span>
                     </div>
-                    <div className="flex items-center justify-between font-semibold pt-1 border-t border-zinc-800/60">
+                    <div className="flex items-center justify-between font-semibold pt-1 border-t border-[#232C26]">
                       <span className="text-zinc-400">Efectivo Contado:</span>
-                      <span className="text-zinc-100 font-mono font-bold">{formatCurrency(Number(lastClosedSession.counted_amount))}</span>
+                      <span className="text-[#F5F5F0] font-mono font-bold">{formatCurrency(Number(lastClosedSession.counted_amount))}</span>
                     </div>
                   </div>
                 )}
@@ -236,12 +236,12 @@ export default async function DashboardPage({
                       className="text-lg font-bold"
                     />
                   </div>
-                  <SubmitButton className="w-full sm:w-auto py-3 px-6 bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg">
+                  <SubmitButton className="w-full sm:w-auto py-3 px-6 bg-[#556B2F] hover:bg-[#7C9A42] text-[#F5F5F0] font-bold shadow-lg">
                     🔓 Abrir Nueva Caja
                   </SubmitButton>
                 </form>
               ) : (
-                <div className="p-4 bg-zinc-900/80 border border-zinc-800 rounded-xl text-xs text-zinc-400">
+                <div className="p-4 bg-[#141A16] border border-[#232C26] rounded-xl text-xs text-zinc-400">
                   La caja se encuentra cerrada. Solicita al Administrador o Propietario realizar la apertura.
                 </div>
               )}
@@ -299,7 +299,7 @@ export default async function DashboardPage({
             ))}
           </div>
         ) : (
-          <div className="p-4 border border-zinc-800/50 bg-zinc-900/30 rounded-xl">
+          <div className="p-4 border border-[#232C26] bg-zinc-900/30 rounded-xl">
             <p className="text-sm text-zinc-400 font-medium">TEKIRA no encuentra riesgos importantes actualmente.</p>
           </div>
         )}
@@ -359,24 +359,24 @@ export default async function DashboardPage({
         <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">
           <Activity className="w-4 h-4 text-zinc-500" /> Movimientos Recientes
         </h3>
-        <Card className="p-0 sm:p-0 bg-zinc-900/40 border-zinc-800 overflow-hidden">
+        <Card className="p-0 sm:p-0 bg-[#141A16] border-[#232C26] overflow-hidden">
           {recentTransactions.length === 0 ? (
             <div className="py-16 flex flex-col items-center justify-center text-center">
               <div className="w-16 h-16 bg-zinc-800/50 text-zinc-500 rounded-full flex items-center justify-center mb-4">
                 <Activity className="w-6 h-6" />
               </div>
-              <h4 className="text-lg font-semibold text-zinc-100 mb-2">No hay movimientos</h4>
+              <h4 className="text-lg font-semibold text-[#F5F5F0] mb-2">No hay movimientos</h4>
               <p className="text-sm text-zinc-400 max-w-sm">
                 Registra tu primera venta o compra para empezar a ver el flujo de dinero aquí.
               </p>
               <Link href="/transactions/new" className="mt-6">
-                <Button variant="secondary" className="bg-zinc-800 text-zinc-100 border-zinc-700 hover:bg-zinc-700">Registrar Movimiento</Button>
+                <Button variant="secondary" className="bg-zinc-800 text-[#F5F5F0] border-[#2B372F] hover:bg-zinc-700">Registrar Movimiento</Button>
               </Link>
             </div>
           ) : (
             <div className="divide-y divide-zinc-800/50">
               {recentTransactions.map((tx) => (
-                <div key={tx.id} className="flex items-center justify-between p-4 sm:p-5 hover:bg-zinc-800/40 transition-colors group">
+                <div key={tx.id} className="flex items-center justify-between p-4 sm:p-5 hover:bg-[#19201C] transition-colors group">
                   <div className="flex items-center gap-4">
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shadow-sm ${
                       tx.type === 'income' 
@@ -386,7 +386,7 @@ export default async function DashboardPage({
                       {tx.type === 'income' ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownRight className="w-5 h-5" />}
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-zinc-100">{tx.category}</p>
+                      <p className="text-sm font-bold text-[#F5F5F0]">{tx.category}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-xs font-medium text-zinc-400">{formatDate(tx.created_at)}</span>
                         <span className="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300">

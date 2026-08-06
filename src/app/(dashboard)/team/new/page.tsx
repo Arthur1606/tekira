@@ -19,11 +19,11 @@ export default function NewTeamMemberPage() {
     <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-500 pb-12">
       
       <div className="flex items-center gap-4">
-        <Link href="/team" className="p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-full transition-colors">
+        <Link href="/team" className="p-2 text-zinc-400 hover:text-zinc-200 hover:bg-[#19201C] rounded-full transition-colors">
           <ArrowLeft className="w-6 h-6" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-zinc-100">Nuevo Miembro</h1>
+          <h1 className="text-2xl font-bold text-[#F5F5F0]">Nuevo Miembro</h1>
           <p className="text-sm text-zinc-400">Agrega una persona a la operación de tu negocio</p>
         </div>
       </div>
@@ -67,7 +67,7 @@ export default function NewTeamMemberPage() {
                 required
                 value={selectedRole}
                 onChange={(e) => setSelectedRole(e.target.value)}
-                className="block w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-4 py-2.5 pl-10 text-sm text-zinc-100 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-sm appearance-none capitalize"
+                className="block w-full rounded-lg border border-[#232C26] bg-zinc-950/50 px-4 py-2.5 pl-10 text-sm text-[#F5F5F0] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#7C9A42]/30 transition-all shadow-sm appearance-none capitalize"
               >
                 {TEAM_ROLES.filter(r => r !== 'owner').map(role => (
                   <option key={role} value={role} className="capitalize">

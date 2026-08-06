@@ -6,9 +6,9 @@ export default function SettingsLoading() {
         <div className="h-4 w-64 bg-zinc-800/40 rounded-lg"></div>
       </div>
 
-      <div className="h-12 w-full max-w-md bg-zinc-900/60 border border-zinc-800/80 rounded-xl"></div>
+      <div className="h-12 w-full max-w-md bg-[#141A16] border border-[#232C26] rounded-xl"></div>
 
-      <div className="h-96 w-full bg-zinc-900/60 border border-zinc-800/80 rounded-2xl"></div>
+      <div className="h-96 w-full bg-[#141A16] border border-[#232C26] rounded-2xl"></div>
     </div>
   );
 }

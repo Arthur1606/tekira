@@ -61,29 +61,29 @@ export default async function NewMovementPage({
     <div className="w-full space-y-8 animate-in fade-in duration-500 pb-16">
       
       {/* Encabezado Principal */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-zinc-950/40 backdrop-blur-2xl rounded-2xl border border-white/[0.03]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-[#141A16] backdrop-blur-2xl rounded-2xl border border-white/[0.03]">
         <div className="flex items-center gap-4">
-          <Link href="/inventory" className="p-3 bg-zinc-900/80 hover:bg-zinc-800 rounded-xl text-zinc-400 hover:text-zinc-100 transition-colors border border-zinc-800 shrink-0">
+          <Link href="/inventory" className="p-3 bg-[#141A16] hover:bg-[#19201C] rounded-xl text-zinc-400 hover:text-[#F5F5F0] transition-colors border border-[#232C26] shrink-0">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-2xl sm:text-3xl font-bold text-zinc-100 tracking-tight">{product.name}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-[#F5F5F0] tracking-tight">{product.name}</h1>
               <Badge variant="neutral" className="bg-zinc-800/80 text-xs px-2.5 py-0.5">{product.category}</Badge>
               {product.sku && (
-                <span className="text-xs font-mono text-zinc-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-800">
+                <span className="text-xs font-mono text-zinc-400 bg-[#141A16] px-2.5 py-0.5 rounded-lg border border-zinc-800">
                   SKU: {product.sku}
                 </span>
               )}
             </div>
             <p className="text-sm font-medium text-zinc-400 mt-1">
-              Stock Total Actual: <strong className="text-indigo-400 font-bold">{product.quantity} {product.unit}</strong>
+              Stock Total Actual: <strong className="text-[#8EA653] font-bold">{product.quantity} {product.unit}</strong>
             </p>
           </div>
         </div>
 
         <Link href="/inventory" className="shrink-0">
-          <span className="inline-flex items-center justify-center px-4 py-2.5 bg-zinc-900 text-zinc-300 text-xs font-semibold rounded-xl hover:bg-zinc-800 transition-colors border border-zinc-800">
+          <span className="inline-flex items-center justify-center px-4 py-2.5 bg-[#141A16] text-zinc-300 text-xs font-semibold rounded-xl hover:bg-[#19201C] transition-colors border border-zinc-800">
             Volver a Inventario
           </span>
         </Link>
@@ -95,8 +95,8 @@ export default async function NewMovementPage({
         {/* Columna Izquierda: Formulario "Control de Stock" */}
         <div className="w-full">
           <Card noPadding className="p-6 sm:p-8">
-            <h2 className="text-xl font-bold text-zinc-100 mb-6 flex items-center gap-2 border-b border-zinc-800/80 pb-4">
-              <Package className="w-5 h-5 text-indigo-500" /> Control de Stock
+            <h2 className="text-xl font-bold text-[#F5F5F0] mb-6 flex items-center gap-2 border-b border-[#232C26] pb-4">
+              <Package className="w-5 h-5 text-[#7C9A42]" /> Control de Stock
             </h2>
 
             {resolvedSearchParams.error && (
@@ -121,8 +121,8 @@ export default async function NewMovementPage({
         {/* Columna Derecha: Historial de Movimientos */}
         <div className="w-full">
           <Card noPadding className="p-6 sm:p-8">
-            <h2 className="text-xl font-bold text-zinc-100 mb-6 flex items-center gap-2 border-b border-zinc-800/80 pb-4">
-              <History className="w-5 h-5 text-indigo-500" /> Historial de Movimientos
+            <h2 className="text-xl font-bold text-[#F5F5F0] mb-6 flex items-center gap-2 border-b border-[#232C26] pb-4">
+              <History className="w-5 h-5 text-[#7C9A42]" /> Historial de Movimientos
             </h2>
 
             {history.length === 0 ? (
@@ -136,7 +136,7 @@ export default async function NewMovementPage({
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-zinc-800/80 text-zinc-400 font-bold uppercase tracking-wider">
+                      <tr className="border-b border-[#232C26] text-zinc-400 font-bold uppercase tracking-wider">
                         <th className="py-3 px-3">Fecha</th>
                         <th className="py-3 px-3">Tipo</th>
                         <th className="py-3 px-3">Variante</th>
@@ -146,7 +146,7 @@ export default async function NewMovementPage({
                     </thead>
                     <tbody className="divide-y divide-zinc-800/50">
                       {history.map((item) => (
-                        <tr key={item.id} className="hover:bg-zinc-900/40 transition-colors">
+                        <tr key={item.id} className="hover:bg-[#141A16] transition-colors">
                           <td className="py-3.5 px-3 text-zinc-400 font-mono whitespace-nowrap">{formatDate(item.created_at)}</td>
                           <td className="py-3.5 px-3 whitespace-nowrap">{getMovementBadge(item.type)}</td>
                           <td className="py-3.5 px-3 font-semibold text-zinc-200">{item.variant?.name || 'Principal'}</td>
@@ -165,7 +165,7 @@ export default async function NewMovementPage({
                 {/* VISTA MÓVIL: Tarjetas Compactas */}
                 <div className="md:hidden space-y-3 max-h-[500px] overflow-y-auto pr-1">
                   {history.map((item) => (
-                    <div key={item.id} className="p-4 bg-zinc-950/60 rounded-xl border border-zinc-800/60 flex items-center justify-between group">
+                    <div key={item.id} className="p-4 bg-[#0E1310] rounded-xl border border-[#232C26] flex items-center justify-between group">
                       <div className="flex flex-col gap-1.5">
                         <div className="flex items-center gap-2 flex-wrap">
                           {getMovementBadge(item.type)}

@@ -66,34 +66,37 @@ export default async function DashboardLayout({
   const avatarLetter = userName.charAt(0).toUpperCase();
 
   return (
-    <div className="h-screen bg-[#09090B] flex flex-col font-sans text-zinc-100 overflow-hidden">
+    <div className="h-screen bg-[#0B0F0D] flex flex-col font-sans text-[#F5F5F0] overflow-hidden">
       
       {/* Header Fijo */}
-      <header className="bg-[#09090B]/80 backdrop-blur-md border-b border-zinc-800 h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 flex-shrink-0 z-20 w-full">
+      <header className="bg-[#0B0F0D]/80 backdrop-blur-md border-b border-[#1E2621] h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 flex-shrink-0 z-20 w-full">
         
         <div className="flex items-center gap-4 sm:gap-6 lg:gap-8">
           <MobileNav />
           
-          <Link href="/dashboard" className="flex items-center">
-            <span className="text-xl sm:text-2xl font-black tracking-tighter text-zinc-100">
-              TEKIRA<span className="text-indigo-600">●</span>
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-gradient-to-br from-[#556B2F] to-[#3B4B20] rounded-lg flex items-center justify-center border border-[#7C9A42]/30 shadow-sm shadow-[#556B2F]/10 lg:hidden">
+              <span className="text-[#F5F5F0] font-black text-sm leading-none tracking-tighter">T</span>
+            </div>
+            <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#F5F5F0] lg:hidden">
+              TEKIRA
             </span>
           </Link>
 
           {/* Selector de Comercio Visual */}
-          <div className="hidden md:flex items-center gap-2 bg-zinc-900/70 px-3 py-1.5 rounded-lg border border-zinc-800">
-            <Store className="w-4 h-4 text-zinc-400" />
-            <span className="text-sm font-semibold text-zinc-300 truncate max-w-[200px]">{activeStore.name}</span>
+          <div className="hidden md:flex items-center gap-2.5 bg-[#141A16] px-3.5 py-2 rounded-xl border border-[#232C26]">
+            <Store className="w-4 h-4 text-[#7C9A42]" />
+            <span className="text-xs font-bold text-zinc-300 truncate max-w-[200px]">{activeStore.name}</span>
           </div>
         </div>
 
         {/* Perfil & Acciones */}
         <div className="flex items-center gap-2 sm:gap-4">
-          <button className="text-zinc-400 hover:text-zinc-200 transition-colors p-2 rounded-full hover:bg-zinc-800 hidden sm:block">
+          <button className="text-zinc-400 hover:text-[#F5F5F0] transition-colors p-2 rounded-xl hover:bg-[#141A16] hidden sm:block">
             <Bell className="w-5 h-5" />
           </button>
           
-          <div className="h-6 w-px bg-zinc-800 hidden sm:block"></div>
+          <div className="h-6 w-px bg-[#232C26] hidden sm:block"></div>
 
           {/* Menú de Usuario con Props 100% Serializables */}
           <UserDropdownMenu

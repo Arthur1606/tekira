@@ -29,42 +29,42 @@ export function DeleteProductModal({ product, userRole }: DeleteProductModalProp
 
   const modalContent = isOpen ? (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
-      <div className="bg-zinc-950 border border-rose-500/30 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-6 animate-in zoom-in-95 duration-200 relative text-left my-auto">
+      <div className="bg-[#0E1310] border border-rose-500/30 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-6 animate-in zoom-in-95 duration-200 relative text-left my-auto">
         
-        <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+        <div className="flex items-center justify-between border-b border-[#232C26] pb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-rose-500/10 rounded-2xl flex items-center justify-center border border-rose-500/20 text-rose-400 shrink-0">
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-zinc-100">Retirar Producto del Catálogo</h3>
+              <h3 className="text-lg font-bold text-[#F5F5F0]">Retirar Producto del Catálogo</h3>
               <p className="text-xs text-rose-400 font-mono font-semibold">Acción Exclusiva de Propietario (Soft Delete)</p>
             </div>
           </div>
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            className="p-1.5 text-zinc-400 hover:text-zinc-100 transition-colors rounded-xl hover:bg-zinc-800"
+            className="p-1.5 text-zinc-400 hover:text-[#F5F5F0] transition-colors rounded-xl hover:bg-zinc-800"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Resumen del Producto */}
-        <div className="bg-zinc-900/60 p-4 rounded-2xl border border-zinc-800 space-y-2.5 text-xs">
+        <div className="bg-[#141A16] p-4 rounded-2xl border border-[#232C26] space-y-2.5 text-xs">
           <div className="flex items-center justify-between gap-2">
             <span className="text-zinc-400">Producto:</span>
-            <span className="font-bold text-zinc-100 text-sm truncate">{product.name}</span>
+            <span className="font-bold text-[#F5F5F0] text-sm truncate">{product.name}</span>
           </div>
           <div className="flex items-center justify-between font-mono">
-            <span className="text-zinc-400 flex items-center gap-1"><Hash className="w-3.5 h-3.5 text-indigo-400" /> SKU Principal:</span>
-            <span className="font-bold text-indigo-300">{product.sku || 'N/A'}</span>
+            <span className="text-zinc-400 flex items-center gap-1"><Hash className="w-3.5 h-3.5 text-[#8EA653]" /> SKU Principal:</span>
+            <span className="font-bold text-[#8EA653]">{product.sku || 'N/A'}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-zinc-400">Variantes Registradas:</span>
             <span className="font-mono font-bold text-zinc-200">{product.variants?.length || 1} variantes</span>
           </div>
-          <div className="flex items-center justify-between pt-2 border-t border-zinc-800/80">
+          <div className="flex items-center justify-between pt-2 border-t border-[#232C26]">
             <span className="text-zinc-400">Stock Actual:</span>
             <span className="font-mono font-black text-amber-400">{product.quantity} unidades</span>
           </div>

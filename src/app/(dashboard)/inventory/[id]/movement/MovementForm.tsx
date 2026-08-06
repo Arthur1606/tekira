@@ -51,13 +51,13 @@ export function MovementForm({ productId, productUnit, variants }: MovementFormP
       <input type="hidden" name="mode" value={mode} />
       
       {/* Selector de Modo */}
-      <div className="flex flex-col sm:flex-row items-stretch p-1.5 bg-zinc-900 border border-zinc-800/80 rounded-xl gap-1.5 w-full">
+      <div className="flex flex-col sm:flex-row items-stretch p-1.5 bg-[#141A16] border border-[#232C26] rounded-xl gap-1.5 w-full">
         <button
           type="button"
           onClick={() => setMode('manual')}
           className={`flex-1 py-2.5 px-4 text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
             mode === 'manual'
-              ? 'bg-zinc-800 text-indigo-400 border border-zinc-700/60 shadow-sm'
+              ? 'bg-zinc-800 text-[#8EA653] border border-zinc-700/60 shadow-sm'
               : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
@@ -90,7 +90,7 @@ export function MovementForm({ productId, productUnit, variants }: MovementFormP
               value={selectedVariantId}
               onChange={(e) => setSelectedVariantId(e.target.value)}
               required
-              className="block w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-4 py-3 pl-10 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none"
+              className="block w-full rounded-xl border border-[#232C26] bg-[#0E1310] px-4 py-3 pl-10 text-sm text-[#F5F5F0] focus:border-[#7C9A42] focus:outline-none focus:ring-2 focus:ring-[#7C9A42]/30 transition-all appearance-none"
             >
               {variants.map(v => (
                 <option key={v.id} value={v.id}>
@@ -99,7 +99,7 @@ export function MovementForm({ productId, productUnit, variants }: MovementFormP
               ))}
             </select>
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
-              <Layers className="w-4 h-4 text-indigo-400" />
+              <Layers className="w-4 h-4 text-[#8EA653]" />
             </div>
           </div>
         </div>
@@ -112,7 +112,7 @@ export function MovementForm({ productId, productUnit, variants }: MovementFormP
             <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">
               Tipo de Movimiento
             </label>
-            <div className="grid grid-cols-2 gap-2.5 bg-zinc-950/80 p-2 border border-zinc-800/80 rounded-xl w-full">
+            <div className="grid grid-cols-2 gap-2.5 bg-[#0E1310] p-2 border border-[#232C26] rounded-xl w-full">
               <label className="cursor-pointer">
                 <input 
                   type="radio" 
@@ -164,7 +164,7 @@ export function MovementForm({ productId, productUnit, variants }: MovementFormP
                   checked={type === 'discontinued'}
                   onChange={() => setType('discontinued')}
                 />
-                <div className="py-2.5 px-3 text-xs sm:text-sm font-bold rounded-lg transition-all peer-checked:bg-zinc-800 peer-checked:text-zinc-300 peer-checked:border peer-checked:border-zinc-700 text-zinc-500 hover:text-zinc-300 flex items-center justify-center gap-2">
+                <div className="py-2.5 px-3 text-xs sm:text-sm font-bold rounded-lg transition-all peer-checked:bg-zinc-800 peer-checked:text-zinc-300 peer-checked:border peer-checked:border-[#2B372F] text-zinc-500 hover:text-zinc-300 flex items-center justify-center gap-2">
                   <ArrowDownRight className="w-4 h-4 shrink-0" /> Descont.
                 </div>
               </label>
@@ -195,7 +195,7 @@ export function MovementForm({ productId, productUnit, variants }: MovementFormP
                   id="reason"
                   name="reason"
                   required
-                  className="block w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-4 py-3 pl-10 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none"
+                  className="block w-full rounded-xl border border-[#232C26] bg-[#0E1310] px-4 py-3 pl-10 text-sm text-[#F5F5F0] focus:border-[#7C9A42] focus:outline-none focus:ring-2 focus:ring-[#7C9A42]/30 transition-all appearance-none"
                 >
                   {reasons.map(r => (
                     <option key={r} value={r}>{r}</option>
@@ -237,7 +237,7 @@ export function MovementForm({ productId, productUnit, variants }: MovementFormP
               />
             </div>
 
-            <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-800 flex flex-col justify-center h-[54px] w-full">
+            <div className="p-3 bg-[#0E1310] rounded-xl border border-[#232C26] flex flex-col justify-center h-[54px] w-full">
               <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Diferencia Calculada</span>
               <div className="flex items-baseline gap-2 mt-0.5">
                 <span className={`text-lg font-black ${
@@ -254,7 +254,7 @@ export function MovementForm({ productId, productUnit, variants }: MovementFormP
         </div>
       )}
 
-      <div className="pt-2 border-t border-zinc-800/80 w-full">
+      <div className="pt-2 border-t border-[#232C26] w-full">
         <SubmitButton fullWidth className="py-3.5 text-base font-bold shadow-lg">
           {mode === 'adjustment' ? 'Aplicar Ajuste Físico' : 'Guardar Movimiento'}
         </SubmitButton>
