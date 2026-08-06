@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Settings, Store, Users, Activity, ShoppingCart, Truck } from 'lucide-react';
+import { LayoutDashboard, Settings, Store, Users, Activity, ShoppingCart, Truck, TrendingUp } from 'lucide-react';
 
 export function DesktopNav() {
   const pathname = usePathname();
@@ -10,10 +10,11 @@ export function DesktopNav() {
   const links = [
     { href: '/dashboard', label: 'Centro de Comando', icon: LayoutDashboard },
     { href: '/transactions/new', label: 'Movimientos', icon: Activity },
+    { href: '/sales/team-performance', label: 'Ventas Empleados', icon: TrendingUp },
     { href: '/inventory', label: 'Inventario', icon: Store },
     { href: '/dashboard/purchases', label: 'Compras', icon: ShoppingCart },
     { href: '/dashboard/suppliers', label: 'Proveedores', icon: Truck },
-    { href: '/settings?tab=team', label: 'Equipo', icon: Users },
+    { href: '/team', label: 'Equipo', icon: Users },
   ];
 
   const isSettingsActive = pathname.startsWith('/settings');
@@ -31,7 +32,7 @@ export function DesktopNav() {
         <nav className="space-y-1.5">
           {links.map((link) => {
             const Icon = link.icon;
-            const isActive = pathname === link.href || (link.href.includes('tab=team') && pathname === '/settings' && pathname.includes('tab=team'));
+            const isActive = pathname === link.href;
 
             return (
               <Link

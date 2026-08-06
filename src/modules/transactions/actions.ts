@@ -24,15 +24,16 @@ export async function createTransaction(formData: FormData) {
     redirect(`/dashboard/transactions/new?error=${encodeURIComponent(err.message || 'Sin permisos para registrar transacciones.')}`);
   }
 
-  // 3. Obtener id de vendedor de la tabla team_members si existe
+  // 3. Obtener id de vendedor y código de empleado de la tabla team_members si existe
   const { data: teamMember } = await supabase
     .from('team_members')
-    .select('id')
+    .select('id, employee_code')
     .eq('store_id', activeStore.id)
     .eq('user_id', securityCtx.user.id)
-    .single();
+    .maybeSingle();
 
   const sellerId = teamMember?.id || null;
+  const employeeCode = teamMember?.employee_code || 'TKR-EMP-000001';
 
   // 4. Extraer y sanitizar datos
   const type = (formData.get('type') as string || '').trim();
@@ -104,7 +105,7 @@ export async function createTransaction(formData: FormData) {
     targetProductId = variantCheck.product_id || null;
   }
 
-  // 7. Insertar Transacción en BD
+  // 7. Insertar Transacción en BD asociando user_id y employee_code
   const { data: newTx, error } = await supabase.from('transactions').insert({
     store_id: activeStore.id,
     type,
@@ -115,7 +116,9 @@ export async function createTransaction(formData: FormData) {
     variant_id: variantId,
     quantity: variantId ? quantity : null,
     cash_session_id: activeSession.id,
-    seller_id: sellerId
+    seller_id: sellerId,
+    user_id: securityCtx.user.id,
+    employee_code: employeeCode
   }).select().single();
 
   if (error) {

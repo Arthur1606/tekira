@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, LayoutDashboard, Users, Store, Settings, Activity, ShoppingCart, Truck } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Users, Store, Settings, Activity, ShoppingCart, Truck, TrendingUp } from 'lucide-react';
 
 export function MobileNav() {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,10 +12,11 @@ export function MobileNav() {
   const links = [
     { href: '/dashboard', label: 'Centro de Comando', icon: LayoutDashboard },
     { href: '/transactions/new', label: 'Movimientos', icon: Activity },
+    { href: '/sales/team-performance', label: 'Ventas Empleados', icon: TrendingUp },
     { href: '/inventory', label: 'Inventario', icon: Store },
     { href: '/dashboard/purchases', label: 'Compras', icon: ShoppingCart },
     { href: '/dashboard/suppliers', label: 'Proveedores', icon: Truck },
-    { href: '/settings?tab=team', label: 'Equipo', icon: Users },
+    { href: '/team', label: 'Equipo', icon: Users },
   ];
 
   const isSettingsActive = pathname.startsWith('/settings');
