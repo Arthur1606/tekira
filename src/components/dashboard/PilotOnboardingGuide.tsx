@@ -81,41 +81,41 @@ export function PilotOnboardingGuide({
   }
 
   return (
-    <div className="bg-zinc-950/90 border border-indigo-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden animate-in fade-in zoom-in-95 duration-500">
+    <div className="bg-[#141A16]/95 border border-[#7C9A42]/30 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden animate-in fade-in zoom-in-95 duration-500">
       
       {/* Decorative Glow */}
-      <div className="absolute top-[-30%] right-[-10%] w-60 h-60 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute top-[-30%] right-[-10%] w-60 h-60 bg-[#556B2F]/15 rounded-full blur-3xl pointer-events-none"></div>
 
       {/* Header Widget */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800/80 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#232C26] pb-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-indigo-600/20 text-indigo-400 rounded-2xl flex items-center justify-center border border-indigo-500/30 shrink-0">
+          <div className="w-10 h-10 bg-[#556B2F]/20 text-[#8EA653] rounded-2xl flex items-center justify-center border border-[#7C9A42]/30 shrink-0">
             <Sparkles className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-extrabold text-zinc-100">Guía Rápida para Configurar tu Negocio</h3>
-              <span className="bg-indigo-500/20 text-indigo-300 text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border border-indigo-500/30">
+              <h3 className="text-base font-extrabold text-[#F5F5F0]">Guía Rápida para Configurar tu Negocio</h3>
+              <span className="bg-[#556B2F]/20 text-[#8EA653] text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border border-[#7C9A42]/30">
                 {progressPercentage}% Listo
               </span>
             </div>
-            <p className="text-xs text-zinc-400 mt-0.5">Sigue estos 5 pasos para iniciar tu operación comercial en TEKIRA.</p>
+            <p className="text-xs text-zinc-400 mt-0.5">Sigue estos 5 pasos para dejar tu comercio listo para operar en TEKIRA.</p>
           </div>
         </div>
 
         <button
           type="button"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="p-1.5 text-zinc-400 hover:text-zinc-100 transition-colors rounded-xl hover:bg-zinc-900 self-end sm:self-auto"
+          className="p-1.5 text-zinc-400 hover:text-zinc-100 transition-colors rounded-xl hover:bg-[#19201C] self-end sm:self-auto"
         >
           {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
         </button>
       </div>
 
       {/* Progress Bar */}
-      <div className="w-full bg-zinc-900 h-2.5 rounded-full overflow-hidden border border-zinc-800">
+      <div className="w-full bg-[#0E1310] h-2.5 rounded-full overflow-hidden border border-[#232C26]">
         <div 
-          className="bg-gradient-to-r from-indigo-600 to-emerald-500 h-full transition-all duration-700 ease-out rounded-full"
+          className="bg-gradient-to-r from-[#556B2F] to-[#7C9A42] h-full transition-all duration-700 ease-out rounded-full shadow-sm shadow-[#7C9A42]"
           style={{ width: `${progressPercentage}%` }}
         />
       </div>
@@ -133,14 +133,14 @@ export function PilotOnboardingGuide({
                 className={`p-5 rounded-2xl border transition-all duration-300 flex flex-col justify-between space-y-4 group min-h-[160px] ${
                   step.isCompleted
                     ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                    : 'bg-zinc-900/60 border-zinc-800/80 hover:border-indigo-500/40 text-zinc-300 hover:bg-zinc-900'
+                    : 'bg-[#0E1310]/70 border-[#232C26] hover:border-[#7C9A42]/40 text-zinc-300 hover:bg-[#19201C]'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div className={`p-2.5 rounded-xl border ${
                     step.isCompleted
                       ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
-                      : 'bg-zinc-800 border-zinc-700 text-zinc-400 group-hover:text-indigo-400'
+                      : 'bg-[#141A16] border-[#232C26] text-zinc-400 group-hover:text-[#7C9A42]'
                   }`}>
                     <Icon className="w-4 h-4" />
                   </div>
@@ -148,16 +148,16 @@ export function PilotOnboardingGuide({
                   {step.isCompleted ? (
                     <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
                   ) : (
-                    <Circle className="w-5 h-5 text-zinc-600 group-hover:text-indigo-400 shrink-0" />
+                    <Circle className="w-5 h-5 text-zinc-600 group-hover:text-[#7C9A42] shrink-0" />
                   )}
                 </div>
 
                 <div>
-                  <h4 className="text-xs font-bold leading-tight text-zinc-100">{step.title}</h4>
+                  <h4 className="text-xs font-bold leading-tight text-[#F5F5F0]">{step.title}</h4>
                   <p className="text-[11px] text-zinc-400 mt-1.5 leading-snug line-clamp-2">{step.description}</p>
                 </div>
 
-                <div className="flex items-center text-[10px] font-bold text-indigo-400 group-hover:text-indigo-300 pt-1 uppercase tracking-wider">
+                <div className="flex items-center text-[10px] font-bold text-[#8EA653] group-hover:text-[#7C9A42] pt-1 uppercase tracking-wider">
                   <span>{step.isCompleted ? 'Completado' : 'Configurar'}</span>
                   <ArrowRight className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />
                 </div>

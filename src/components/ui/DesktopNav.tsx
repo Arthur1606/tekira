@@ -11,7 +11,7 @@ export function DesktopNav() {
     { href: '/dashboard', label: 'Centro de Comando', icon: LayoutDashboard },
     { href: '/transactions/new', label: 'Movimientos', icon: Activity },
     { href: '/sales/team-performance', label: 'Ventas Empleados', icon: TrendingUp },
-    { href: '/inventory', label: 'Inventario', icon: Store },
+    { href: '/inventory', label: 'Inventario & Bodega', icon: Store },
     { href: '/dashboard/purchases', label: 'Compras', icon: ShoppingCart },
     { href: '/dashboard/suppliers', label: 'Proveedores', icon: Truck },
     { href: '/team', label: 'Equipo', icon: Users },
@@ -20,13 +20,16 @@ export function DesktopNav() {
   const isSettingsActive = pathname.startsWith('/settings');
 
   return (
-    <aside className="w-64 bg-[#18181B] border-r border-zinc-800 hidden lg:flex flex-col flex-shrink-0 z-10 h-full">
+    <aside className="w-64 bg-[#0E1310] border-r border-[#1E2621] hidden lg:flex flex-col flex-shrink-0 z-10 h-full shadow-2xl">
       <div className="p-6">
-        <Link href="/dashboard" prefetch={true} className="flex items-center gap-2 mb-8">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
-            <span className="text-white font-black text-xl leading-none tracking-tighter">T</span>
+        <Link href="/dashboard" prefetch={true} className="flex items-center gap-3 mb-8 group">
+          <div className="w-9 h-9 bg-gradient-to-br from-[#556B2F] to-[#3B4B20] rounded-xl flex items-center justify-center shadow-lg shadow-[#556B2F]/20 border border-[#7C9A42]/30 group-hover:scale-105 transition-transform">
+            <span className="text-[#F5F5F0] font-black text-xl leading-none tracking-tighter">T</span>
           </div>
-          <span className="font-bold text-xl text-zinc-100 tracking-tight">TEKIRA</span>
+          <div className="flex flex-col">
+            <span className="font-extrabold text-xl text-[#F5F5F0] tracking-tight">TEKIRA</span>
+            <span className="text-[10px] font-mono font-semibold text-[#8EA653]">Enterprise SaaS</span>
+          </div>
         </Link>
 
         <nav className="space-y-1.5">
@@ -39,14 +42,17 @@ export function DesktopNav() {
                 key={link.href}
                 href={link.href}
                 prefetch={true}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group
+                className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold transition-all duration-200 group relative
                   ${isActive 
-                    ? 'bg-zinc-800/80 text-zinc-100 shadow-sm border border-zinc-700/50' 
-                    : 'text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 border border-transparent'
+                    ? 'bg-[#161D19] text-[#F5F5F0] shadow-sm border border-[#2B372F]' 
+                    : 'text-zinc-400 hover:bg-[#141A16] hover:text-[#F5F5F0] border border-transparent'
                   }
                 `}
               >
-                <Icon className={`w-5 h-5 transition-colors duration-200 ${isActive ? 'text-indigo-400' : 'text-zinc-500 group-hover:text-zinc-400'}`} />
+                {isActive && (
+                  <div className="absolute left-0 top-2 bottom-2 w-1 bg-[#7C9A42] rounded-r-full shadow-sm shadow-[#7C9A42]" />
+                )}
+                <Icon className={`w-4 h-4 transition-colors duration-200 ${isActive ? 'text-[#7C9A42]' : 'text-zinc-500 group-hover:text-[#7C9A42]'}`} />
                 {link.label}
               </Link>
             );
@@ -54,17 +60,17 @@ export function DesktopNav() {
         </nav>
       </div>
       
-      <div className="mt-auto p-4 border-t border-zinc-800">
+      <div className="mt-auto p-4 border-t border-[#1E2621]">
         <Link 
           href="/settings"
           prefetch={true} 
-          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold transition-colors ${
             isSettingsActive
-              ? 'bg-zinc-800/80 text-zinc-100 shadow-sm border border-zinc-700/50'
-              : 'text-zinc-400 hover:bg-zinc-800/30 hover:text-zinc-200'
+              ? 'bg-[#161D19] text-[#F5F5F0] border border-[#2B372F]'
+              : 'text-zinc-400 hover:bg-[#141A16] hover:text-[#F5F5F0]'
           }`}
         >
-          <Settings className={`w-5 h-5 ${isSettingsActive ? 'text-indigo-400' : ''}`} />
+          <Settings className={`w-4 h-4 ${isSettingsActive ? 'text-[#7C9A42]' : 'text-zinc-500'}`} />
           Configuraciones
         </Link>
       </div>
