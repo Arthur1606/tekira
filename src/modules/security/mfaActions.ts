@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import QRCode from 'qrcode';
 import { generateBase32Secret, buildOtpAuthUri, verifyTotpCode } from './totp';
 import { logSecurityEvent, verifyPermission } from './services';
 import { getUserStores } from '@/modules/stores/services';
@@ -40,9 +41,25 @@ export async function generateMfaSecret() {
 
   const otpAuthUri = buildOtpAuthUri('TEKIRA', user.email || 'usuario', secret);
 
+  let qrDataUrl = '';
+  try {
+    qrDataUrl = await QRCode.toDataURL(otpAuthUri, {
+      errorCorrectionLevel: 'M',
+      margin: 2,
+      width: 256,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      }
+    });
+  } catch (qrErr) {
+    console.error('Error generating QR Data URL:', qrErr);
+  }
+
   return {
     secret,
     otpAuthUri,
+    qrDataUrl,
     isEnabled: existing?.is_enabled || false
   };
 }
