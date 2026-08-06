@@ -2,6 +2,9 @@ export type TeamRole = 'owner' | 'admin' | 'employee';
 
 export type AuditAction = 
   | 'LOGIN'
+  | 'LOGIN_SUCCESSFUL'
+  | 'LOGIN_FAILED'
+  | 'LOGOUT_SUCCESSFUL'
   | 'USER_CREATED'
   | 'USER_UPDATED'
   | 'USER_BLOCKED'
@@ -28,6 +31,8 @@ export interface SecurityLog {
   action: AuditAction | string;
   entity: string;
   entity_id: string | null;
+  ip_address?: string | null;
+  user_agent?: string | null;
   metadata: Record<string, any>;
   created_at: string;
 }

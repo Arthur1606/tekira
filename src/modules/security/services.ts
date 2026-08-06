@@ -127,6 +127,8 @@ export async function logSecurityEvent({
   action,
   entity,
   entityId,
+  ipAddress,
+  userAgent,
   metadata = {}
 }: {
   storeId: string;
@@ -134,6 +136,8 @@ export async function logSecurityEvent({
   action: AuditAction | string;
   entity: string;
   entityId?: string | null;
+  ipAddress?: string | null;
+  userAgent?: string | null;
   metadata?: Record<string, any>;
 }): Promise<void> {
   try {
@@ -151,6 +155,8 @@ export async function logSecurityEvent({
       action,
       entity,
       entity_id: entityId || null,
+      ip_address: ipAddress || null,
+      user_agent: userAgent || null,
       metadata: metadata || {}
     });
 
