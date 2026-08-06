@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Users, Mail, CheckCircle2, Clock, Settings, ShieldAlert, Shield } from 'lucide-react';
+import { Users, Mail, CheckCircle2, Clock, Settings, ShieldAlert, Shield, Hash } from 'lucide-react';
 import Link from 'next/link';
 import { getUserStores } from '@/modules/stores/services';
 import { getTeamMembers } from '@/modules/team/services';
@@ -27,7 +27,7 @@ export default async function TeamPage() {
       .eq('store_id', activeStore.id)
       .eq('user_id', user.id)
       .eq('status', 'active')
-      .single();
+      .maybeSingle();
     if (member?.role) {
       currentUserRole = member.role as 'owner' | 'admin' | 'employee';
     }
@@ -45,11 +45,11 @@ export default async function TeamPage() {
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'owner':
-        return <Badge variant="primary" className="gap-1 bg-indigo-500/20 text-indigo-300 border-indigo-500/40"><ShieldAlert className="w-3 h-3" /> Propietario</Badge>;
+        return <Badge variant="primary" className="gap-1 bg-indigo-500/20 text-indigo-300 border-indigo-500/40 font-bold"><ShieldAlert className="w-3 h-3" /> Propietario</Badge>;
       case 'admin':
-        return <Badge variant="neutral" className="gap-1 bg-purple-500/20 text-purple-300 border-purple-500/40"><Shield className="w-3 h-3" /> Administrador</Badge>;
+        return <Badge variant="neutral" className="gap-1 bg-purple-500/20 text-purple-300 border-purple-500/40 font-bold"><Shield className="w-3 h-3" /> Administrador</Badge>;
       case 'employee':
-        return <Badge variant="neutral" className="gap-1 bg-zinc-800 text-zinc-300 border-zinc-700"><Users className="w-3 h-3" /> Empleado</Badge>;
+        return <Badge variant="neutral" className="gap-1 bg-zinc-800 text-zinc-300 border-zinc-700 font-bold"><Users className="w-3 h-3" /> Empleado</Badge>;
       default:
         return <Badge variant="neutral">{role}</Badge>;
     }
@@ -62,23 +62,23 @@ export default async function TeamPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-zinc-100 tracking-tight flex items-center gap-3">
-            <Users className="w-7 h-7 text-indigo-500" /> Directorio de Equipo
+            <Users className="w-7 h-7 text-indigo-500" /> Directorio del Equipo
           </h1>
           <p className="text-sm font-medium text-zinc-400 mt-1">
-            Conoce a los integrantes y colaboradores activos de {activeStore.name}
+            Visualización de integrantes y colaboradores de {activeStore.name}
           </p>
         </div>
 
         {canManageTeam && (
           <Link href="/settings?tab=team">
             <span className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-bold rounded-xl transition-all border border-zinc-800 shadow-sm">
-              <Settings className="w-4 h-4 text-indigo-400" /> Administrar Permisos y Roles
+              <Settings className="w-4 h-4 text-indigo-400" /> Administración de Usuarios y Permisos
             </span>
           </Link>
         )}
       </div>
 
-      {/* Grid de Tarjetas de Equipo (Vista Informativa) */}
+      {/* Grid de Tarjetas de Equipo (Vista Exclusivamente Informativa) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {teamMembers.map((member) => (
           <Card key={member.id} noPadding className="p-6 space-y-5 hover:border-zinc-700/80 transition-all duration-300">
@@ -107,13 +107,18 @@ export default async function TeamPage() {
             </div>
 
             <div className="pt-4 border-t border-zinc-800/80 space-y-2 text-xs">
+              <div className="flex items-center justify-between font-mono text-xs">
+                <span className="text-zinc-500 flex items-center gap-1"><Hash className="w-3.5 h-3.5 text-indigo-400" /> Código:</span>
+                <span className="font-bold text-indigo-300">{member.employee_code || 'TKR-EMP-000001'}</span>
+              </div>
+
               <div className="flex items-center gap-2 text-zinc-400 font-mono truncate">
                 <Mail className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
                 <span className="truncate">{member.email || 'Sin correo registrado'}</span>
               </div>
 
               <div className="flex items-center justify-between text-[11px] text-zinc-500 pt-1">
-                <span>Miembro desde:</span>
+                <span>Fecha de ingreso:</span>
                 <span className="font-mono text-zinc-400">{formatDate(member.created_at)}</span>
               </div>
             </div>
