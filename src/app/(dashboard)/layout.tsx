@@ -19,6 +19,17 @@ export default async function DashboardLayout({
     redirect('/login');
   }
 
+  // VERIFICACIÓN OBLIGATORIA DE 2FA TOTP: Ningún usuario puede operar el Dashboard sin 2FA activo
+  const { data: mfaSetting } = await supabase
+    .from('user_mfa_settings')
+    .select('is_enabled')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (!mfaSetting || !mfaSetting.is_enabled) {
+    redirect('/setup-mfa');
+  }
+
   // Verificar si el usuario tiene comercios
   const stores = await getUserStores();
   if (stores.length === 0) {

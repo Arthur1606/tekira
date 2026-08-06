@@ -98,6 +98,57 @@ export async function enableMfa(formData: FormData) {
   redirect(`/settings?tab=security&success=${encodeURIComponent('¡Autenticación de Dos Factores (2FA) activada correctamente!')}`);
 }
 
+export async function enableMfaMandatoryAction(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) redirect('/login');
+
+  const code = (formData.get('code') as string || '').trim();
+
+  const { data: mfaSetting } = await supabase
+    .from('user_mfa_settings')
+    .select('secret, is_enabled')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (!mfaSetting || !mfaSetting.secret) {
+    redirect(`/setup-mfa?error=${encodeURIComponent('No se encontró secreto 2FA. Intenta de nuevo.')}`);
+  }
+
+  const isValid = verifyTotpCode(mfaSetting.secret, code);
+
+  if (!isValid) {
+    redirect(`/setup-mfa?error=${encodeURIComponent('Código de 6 dígitos incorrecto. Revisa tu aplicación e intenta de nuevo.')}`);
+  }
+
+  const { error: updateErr } = await supabase
+    .from('user_mfa_settings')
+    .update({
+      is_enabled: true,
+      enabled_at: new Date().toISOString()
+    })
+    .eq('user_id', user.id);
+
+  if (updateErr) {
+    redirect(`/setup-mfa?error=${encodeURIComponent('Error al activar 2FA.')}`);
+  }
+
+  const stores = await getUserStores();
+  if (stores.length > 0) {
+    await logSecurityEvent({
+      storeId: stores[0].id,
+      userId: user.id,
+      action: 'MFA_ENABLED',
+      entity: 'user_mfa_settings',
+      metadata: { enabled_at: new Date().toISOString(), mandatory: true }
+    });
+  }
+
+  revalidatePath('/', 'layout');
+  redirect('/dashboard');
+}
+
 export async function disableMfa() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

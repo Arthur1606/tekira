@@ -11,7 +11,7 @@ import { updateStoreSettings } from '@/modules/stores/actions';
 import { generateMfaSecret, enableMfa, disableMfa, approveMfaReset, rejectMfaReset } from '@/modules/security/mfaActions';
 import { EditMemberModal } from '@/components/team/EditMemberModal';
 import { DeleteMemberModal } from '@/components/team/DeleteMemberModal';
-import { User, Users, Lock, Plus, Building, CheckCircle2, Clock, Info, Globe, Phone, Mail, DollarSign, ShieldAlert, ShieldCheck, KeyRound, QrCode, Check, X, AlertTriangle } from 'lucide-react';
+import { User, Users, Lock, Plus, Building, CheckCircle2, Clock, Info, Globe, Phone, Mail, DollarSign, ShieldAlert, ShieldCheck, KeyRound, QrCode, Check, X, Hash } from 'lucide-react';
 import Link from 'next/link';
 
 const CURRENCIES = [
@@ -59,19 +59,24 @@ export default async function SettingsPage({
 
   // Determinar rol del usuario actual en el comercio activo
   let currentUserRole: 'owner' | 'admin' | 'employee' = 'employee';
+  let currentEmployeeCode: string = 'EMP-0001';
+
+  const { data: member } = await supabase
+    .from('team_members')
+    .select('role, employee_code')
+    .eq('store_id', activeStore.id)
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .maybeSingle();
+
   if (activeStore.owner_id === user.id) {
     currentUserRole = 'owner';
-  } else {
-    const { data: member } = await supabase
-      .from('team_members')
-      .select('role')
-      .eq('store_id', activeStore.id)
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .single();
-    if (member?.role) {
-      currentUserRole = member.role as 'owner' | 'admin' | 'employee';
-    }
+  } else if (member?.role) {
+    currentUserRole = member.role as 'owner' | 'admin' | 'employee';
+  }
+
+  if (member?.employee_code) {
+    currentEmployeeCode = member.employee_code;
   }
 
   const canManageStore = currentUserRole === 'owner' || currentUserRole === 'admin';
@@ -139,7 +144,7 @@ export default async function SettingsPage({
       {/* Encabezado */}
       <div>
         <h1 className="text-3xl font-bold text-zinc-100 tracking-tight">Configuraciones</h1>
-        <p className="text-sm text-zinc-400 mt-1">Gestiona tu perfil, datos empresariales, seguridad 2FA y equipo</p>
+        <p className="text-sm text-zinc-400 mt-1">Gestiona tu perfil, datos empresariales, seguridad 2FA obligatoria y equipo</p>
       </div>
 
       {/* Retroalimentación */}
@@ -234,6 +239,26 @@ export default async function SettingsPage({
 
                 <div className="w-full">
                   <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                    Código Único de Empleado (Inmutable)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={currentEmployeeCode}
+                      disabled
+                      className="block w-full rounded-xl border border-indigo-500/30 bg-indigo-950/30 px-4 py-3 pl-10 text-sm font-mono font-bold text-indigo-300 cursor-not-allowed"
+                    />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-indigo-400">
+                      <Hash className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-zinc-500 mt-1">
+                    Tu código de identificación interna en {activeStore.name}.
+                  </p>
+                </div>
+
+                <div className="w-full">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
                     Correo Electrónico Principal (Autenticación)
                   </label>
                   <div className="relative">
@@ -247,9 +272,6 @@ export default async function SettingsPage({
                       <Lock className="w-4 h-4" />
                     </div>
                   </div>
-                  <p className="text-[11px] text-zinc-500 mt-1">
-                    El correo principal de la cuenta se administra mediante la capa de seguridad Supabase Auth.
-                  </p>
                 </div>
 
                 <div className="pt-2 border-t border-zinc-800">
@@ -429,19 +451,18 @@ export default async function SettingsPage({
         </Card>
       )}
 
-      {/* TAB 3: SEGURIDAD (2FA TOTP) */}
+      {/* TAB 3: SEGURIDAD (2FA TOTP OBLIGATORIO) */}
       {activeTab === 'security' && (
         <div className="space-y-8 max-w-4xl mx-auto">
           
-          {/* Tarjeta Activación 2FA */}
           <Card noPadding className="p-6 sm:p-8 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-6">
               <div>
                 <h2 className="text-xl font-bold text-zinc-100 flex items-center gap-2">
-                  <ShieldCheck className="w-6 h-6 text-indigo-400" /> Autenticación de Dos Factores (2FA TOTP)
+                  <ShieldCheck className="w-6 h-6 text-indigo-400" /> Autenticación de Dos Factores (2FA Obligatorio)
                 </h2>
                 <p className="text-xs text-zinc-400 mt-1">
-                  Protege tu cuenta requiriendo un código dinámico de 6 dígitos desde Google Authenticator, Microsoft Authenticator o Authy.
+                  Protección TOTP requerida para todos los integrantes del comercio.
                 </p>
               </div>
 
@@ -451,8 +472,8 @@ export default async function SettingsPage({
                     <CheckCircle2 className="w-3.5 h-3.5" /> 2FA Activado
                   </Badge>
                 ) : (
-                  <Badge variant="neutral" className="gap-1.5 bg-zinc-800 text-zinc-400 border-zinc-700">
-                    ⚪ 2FA Desactivado
+                  <Badge variant="danger" className="gap-1.5 bg-rose-500/20 text-rose-400 border-rose-500/30">
+                    🔴 2FA Pendiente (Requerido)
                   </Badge>
                 )}
               </div>
@@ -463,16 +484,16 @@ export default async function SettingsPage({
                 <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-start gap-3 text-sm text-emerald-300">
                   <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5 text-emerald-400" />
                   <div>
-                    <p className="font-bold">Tu cuenta está protegida con 2FA TOTP</p>
+                    <p className="font-bold">Tu cuenta cumple con la política de 2FA Obligatorio</p>
                     <p className="text-xs text-emerald-400/80 mt-0.5 leading-relaxed">
-                      Cada inicio de sesión requerirá tu contraseña y el código de seguridad dinámico de tu aplicación autenticadora.
+                      Tu dispositivo autenticador está vinculado. Se solicitará el código de 6 dígitos en cada inicio de sesión.
                     </p>
                   </div>
                 </div>
 
                 <form action={disableMfa} className="pt-2">
                   <SubmitButton variant="ghost" className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-xs py-2.5 px-5">
-                    Desactivar Protección 2FA
+                    Reconfigurar Dispositivo 2FA
                   </SubmitButton>
                 </form>
               </div>
@@ -480,13 +501,12 @@ export default async function SettingsPage({
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
                   
-                  {/* Visualización de Secreto Key y URI */}
                   <div className="md:col-span-6 space-y-4">
                     <h3 className="text-sm font-bold text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-                      <QrCode className="w-4 h-4 text-indigo-400" /> Paso 1: Configura tu App
+                      <QrCode className="w-4 h-4 text-indigo-400" /> Paso 1: Escanea con tu App
                     </h3>
                     <p className="text-xs text-zinc-400 leading-relaxed">
-                      Abre tu aplicación (Google Authenticator, Authy o Microsoft Authenticator) e ingresa la clave secreta o escanea el URI:
+                      Usa Google Authenticator, Microsoft Authenticator o Authy para escanear la clave secreta:
                     </p>
 
                     <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-800 space-y-1">
@@ -500,13 +520,12 @@ export default async function SettingsPage({
                     </div>
                   </div>
 
-                  {/* Formulario de Confirmación 6 Dígitos */}
                   <div className="md:col-span-6 bg-zinc-950/60 p-6 rounded-2xl border border-zinc-800 space-y-4">
                     <h3 className="text-sm font-bold text-zinc-200 uppercase tracking-wider flex items-center gap-2">
                       <KeyRound className="w-4 h-4 text-indigo-400" /> Paso 2: Confirma el Código
                     </h3>
                     <p className="text-xs text-zinc-400 leading-relaxed">
-                      Ingresa el código de 6 dígitos que muestra tu app para confirmar la sincronización:
+                      Ingresa el código de 6 dígitos para completar el registro de seguridad:
                     </p>
 
                     <form action={enableMfa} className="space-y-4">
@@ -521,7 +540,7 @@ export default async function SettingsPage({
                       />
 
                       <SubmitButton fullWidth className="py-3 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg">
-                        Activar Protección 2FA
+                        Activar Protección 2FA Obligatoria
                       </SubmitButton>
                     </form>
                   </div>
@@ -531,7 +550,6 @@ export default async function SettingsPage({
             )}
           </Card>
 
-          {/* Tarjeta de Solicitudes Pendientes de Recuperación (OWNER y ADMIN) */}
           {canManageTeam && (
             <Card noPadding className="p-6 sm:p-8 space-y-6">
               <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
@@ -540,7 +558,7 @@ export default async function SettingsPage({
                     <Lock className="w-5 h-5 text-amber-400" /> Solicitudes Pendientes de Recuperación 2FA
                   </h3>
                   <p className="text-xs text-zinc-400 mt-0.5">
-                    Colaboradores de tu empresa que perdieron su dispositivo autenticador y solicitaron restablecimiento
+                    Colaboradores de tu empresa que solicitaron restablecimiento por pérdida de dispositivo
                   </p>
                 </div>
 
@@ -600,7 +618,7 @@ export default async function SettingsPage({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="text-xl font-bold text-zinc-100">Integrantes del Equipo</h2>
-              <p className="text-xs text-zinc-400 mt-0.5">Administra los accesos, roles y estado operativo de tus colaboradores</p>
+              <p className="text-xs text-zinc-400 mt-0.5">Administra los accesos, códigos de empleado y estado de 2FA de tus colaboradores</p>
             </div>
 
             <Link href="/team/new">
@@ -616,10 +634,10 @@ export default async function SettingsPage({
                 <thead>
                   <tr className="border-b border-zinc-800 text-zinc-400 font-bold uppercase tracking-wider">
                     <th className="py-3 px-3">Nombre</th>
+                    <th className="py-3 px-3">Código Empleado</th>
                     <th className="py-3 px-3">Correo</th>
                     <th className="py-3 px-3">Rol</th>
-                    <th className="py-3 px-3">Estado</th>
-                    <th className="py-3 px-3">Fecha de Ingreso</th>
+                    <th className="py-3 px-3">Estado 2FA</th>
                     <th className="py-3 px-3 text-right">Acciones</th>
                   </tr>
                 </thead>
@@ -633,6 +651,10 @@ export default async function SettingsPage({
                         <span>{member.name}</span>
                       </td>
 
+                      <td className="py-4 px-3 font-mono font-bold text-indigo-400 whitespace-nowrap">
+                        {member.employee_code || 'EMP-0001'}
+                      </td>
+
                       <td className="py-4 px-3 text-zinc-400 font-mono">
                         {member.email || <span className="text-zinc-600 italic">Sin correo</span>}
                       </td>
@@ -642,15 +664,15 @@ export default async function SettingsPage({
                       </td>
 
                       <td className="py-4 px-3">
-                        {member.status === 'active' ? (
-                          <Badge variant="success" className="gap-1"><CheckCircle2 className="w-3 h-3" /> Activo</Badge>
+                        {member.mfa_enabled ? (
+                          <Badge variant="success" className="gap-1 bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                            <CheckCircle2 className="w-3 h-3" /> 2FA Activo
+                          </Badge>
                         ) : (
-                          <Badge variant="danger" className="gap-1"><Clock className="w-3 h-3" /> Inactivo</Badge>
+                          <Badge variant="danger" className="gap-1 bg-rose-500/20 text-rose-400 border-rose-500/30">
+                            <Clock className="w-3 h-3" /> 2FA Pendiente
+                          </Badge>
                         )}
-                      </td>
-
-                      <td className="py-4 px-3 text-zinc-400 font-mono whitespace-nowrap">
-                        {formatDate(member.created_at)}
                       </td>
 
                       <td className="py-4 px-3 text-right">
@@ -675,7 +697,7 @@ export default async function SettingsPage({
                       </div>
                       <div>
                         <span className="font-bold text-sm text-zinc-100 block">{member.name}</span>
-                        <span className="text-xs font-mono text-zinc-500">{member.email || 'Sin correo'}</span>
+                        <span className="text-xs font-mono font-bold text-indigo-400">{member.employee_code || 'EMP-0001'}</span>
                       </div>
                     </div>
                     
@@ -688,13 +710,13 @@ export default async function SettingsPage({
                   <div className="flex items-center justify-between text-xs pt-2 border-t border-zinc-800/60">
                     <div className="flex items-center gap-2">
                       {getRoleBadge(member.role)}
-                      {member.status === 'active' ? (
-                        <Badge variant="success" className="text-[10px] py-0.5">Activo</Badge>
+                      {member.mfa_enabled ? (
+                        <Badge variant="success" className="text-[10px] py-0.5">2FA Activo</Badge>
                       ) : (
-                        <Badge variant="danger" className="text-[10px] py-0.5">Inactivo</Badge>
+                        <Badge variant="danger" className="text-[10px] py-0.5">2FA Pendiente</Badge>
                       )}
                     </div>
-                    <span className="text-[10px] font-mono text-zinc-500">{formatDate(member.created_at)}</span>
+                    <span className="text-[10px] font-mono text-zinc-500">{member.email || 'Sin correo'}</span>
                   </div>
                 </div>
               ))}
@@ -705,9 +727,9 @@ export default async function SettingsPage({
 
       {/* Footer de Versión del Sistema */}
       <div className="pt-6 border-t border-zinc-800/60 flex items-center justify-between text-xs text-zinc-500 font-mono">
-        <span className="flex items-center gap-1.5"><Info className="w-3.5 h-3.5 text-zinc-600" /> TEKIRA Multi-Tenant Enterprise System</span>
+        <span className="flex items-center gap-1.5"><Info className="w-3.5 h-3.5 text-zinc-600" /> TEKIRA Enterprise Universal 2FA System</span>
         <span className="bg-zinc-900 px-3 py-1 rounded-lg border border-zinc-800 text-zinc-400">
-          TEKIRA Versión 0.11.2
+          TEKIRA Versión 0.11.3
         </span>
       </div>
 

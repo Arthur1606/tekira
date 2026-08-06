@@ -7,8 +7,10 @@ export interface TeamMember {
   user_id: string | null;
   name: string;
   email: string | null;
+  employee_code?: string | null;
   role: TeamRole;
   status: TeamStatus;
+  mfa_enabled?: boolean;
   created_at: string;
 }
 
