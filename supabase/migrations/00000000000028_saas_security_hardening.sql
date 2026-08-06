@@ -33,7 +33,7 @@ CREATE INDEX IF NOT EXISTS idx_inventory_transfers_store_id ON public.inventory_
 CREATE INDEX IF NOT EXISTS idx_suppliers_store_id ON public.suppliers(store_id);
 CREATE INDEX IF NOT EXISTS idx_purchases_store_id ON public.purchases(store_id);
 CREATE INDEX IF NOT EXISTS idx_cash_openings_store_id ON public.cash_openings(store_id);
-CREATE INDEX IF NOT EXISTS idx_cash_closings_store_id ON public.cash_closings(store_id);
+CREATE INDEX IF NOT EXISTS idx_cash_closings_opening_id ON public.cash_closings(opening_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_store_id ON public.transactions(store_id);
 CREATE INDEX IF NOT EXISTS idx_team_members_store_user ON public.team_members(store_id, user_id);
 
