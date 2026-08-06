@@ -2,10 +2,15 @@ import crypto from 'crypto';
 
 const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 
-export function generateBase32Secret(length = 20): string {
+/**
+ * Genera un secreto aleatorio individual en formato Base32.
+ * Por defecto genera 32 caracteres Base32 (160 bits = 20 bytes exactos),
+ * garantizando compatibilidad perfecta con Google Authenticator, Authy y Microsoft Authenticator.
+ */
+export function generateBase32Secret(length = 32): string {
   const bytes = crypto.randomBytes(length);
   let secret = '';
-  for (let i = 0; i < bytes.length; i++) {
+  for (let i = 0; i < length; i++) {
     secret += BASE32_ALPHABET[bytes[i] % 32];
   }
   return secret;
@@ -16,7 +21,9 @@ function base32ToBuffer(base32: string): Buffer {
   let bits = '';
   for (let i = 0; i < cleanBase32.length; i++) {
     const val = BASE32_ALPHABET.indexOf(cleanBase32[i]);
-    bits += val.toString(2).padStart(5, '0');
+    if (val !== -1) {
+      bits += val.toString(2).padStart(5, '0');
+    }
   }
 
   const bytes: number[] = [];
@@ -48,7 +55,11 @@ export function generateTotpCode(secret: string, timeStep = Math.floor(Date.now(
   return otp;
 }
 
-export function verifyTotpCode(secret: string, code: string, window = 1): boolean {
+/**
+ * Valida un código TOTP de 6 dígitos contra el secreto individual del usuario.
+ * Utiliza una ventana de tolerancia de ±2 pasos de tiempo (±60 segundos) para compensar desfases de reloj.
+ */
+export function verifyTotpCode(secret: string, code: string, window = 2): boolean {
   const cleanCode = code.trim();
   if (cleanCode.length !== 6 || !/^\d{6}$/.test(cleanCode)) {
     return false;

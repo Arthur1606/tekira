@@ -17,25 +17,38 @@ export async function generateMfaSecret() {
     return { error: 'No autenticado.' };
   }
 
-  // Verificar si ya existe una configuración previa
+  // Consultar si ya existe configuración individual previa para este usuario
   const { data: existing } = await supabase
     .from('user_mfa_settings')
     .select('secret, is_enabled')
     .eq('user_id', user.id)
     .maybeSingle();
 
-  let secret = existing?.secret;
-  if (!secret) {
-    secret = generateBase32Secret(20);
-    const { error: insertErr } = await supabase.from('user_mfa_settings').insert({
-      user_id: user.id,
-      secret,
-      is_enabled: false
-    });
+  let secret: string;
 
-    if (insertErr) {
-      console.error('[MFA GENERATE SECRET ERROR]:', insertErr);
-      return { error: 'Error al generar secreto 2FA.' };
+  if (existing?.is_enabled) {
+    // Si la protección 2FA ya está habilitada, mantener su secreto individual intacto
+    secret = existing.secret;
+  } else {
+    // Si aún no está activado, generar un secreto individual único fresco de 32 caracteres Base32 (20 bytes / 160 bits exactos)
+    secret = generateBase32Secret(32);
+
+    if (existing) {
+      await supabase
+        .from('user_mfa_settings')
+        .update({ secret, is_enabled: false })
+        .eq('user_id', user.id);
+    } else {
+      const { error: insertErr } = await supabase.from('user_mfa_settings').insert({
+        user_id: user.id,
+        secret,
+        is_enabled: false
+      });
+
+      if (insertErr) {
+        console.error('[MFA GENERATE SECRET ERROR]:', insertErr);
+        return { error: 'Error al generar secreto 2FA individual.' };
+      }
     }
   }
 
