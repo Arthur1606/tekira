@@ -51,7 +51,7 @@ export async function signupOwner(formData: FormData) {
 
   const emailRedirectTo = await getAuthRedirectUrl();
 
-  // 1. Registro de usuario en Auth con emailRedirectTo dinámico público
+  // 1. Registro de usuario en Auth con emailRedirectTo dinámico
   const { data: authData, error: authErr } = await supabase.auth.signUp({
     email,
     password,
@@ -141,7 +141,7 @@ export async function joinCompany(formData: FormData) {
   if (rpcStores && rpcStores.length > 0) {
     targetStore = rpcStores[0];
   } else {
-    // Fallback: consulta directa ilike
+    // Fallback: consulta directa ilike por si la función aún se está propagando
     const { data: storeFallback } = await supabase
       .from('stores')
       .select('id, name, company_code')
@@ -183,18 +183,28 @@ export async function joinCompany(formData: FormData) {
 
   const userId = authData.user.id;
 
-  // 3. Registrar al colaborador en team_members con rol 'employee' y status 'active'
-  const { error: memberErr } = await supabase.from('team_members').insert({
-    store_id: targetStore.id,
-    user_id: userId,
-    name,
-    email,
-    role: 'employee',
-    status: 'active'
+  // 3. Registrar al colaborador en team_members mediante la función RPC 'register_team_member_by_code'
+  // Esta función SECURITY DEFINER evita que RLS bloquee la inserción de la membresía del nuevo usuario
+  const { data: regResult, error: regErr } = await supabase.rpc('register_team_member_by_code', {
+    p_company_code: cleanCode,
+    p_user_id: userId,
+    p_name: name,
+    p_email: email
   });
 
-  if (memberErr) {
-    console.error('[JOIN MEMBER INSERT ERROR]:', memberErr);
+  if (regErr) {
+    console.error('[JOIN RPC MEMBER INSERT ERROR]:', regErr);
+    // Fallback: intento de inserción directa por si la RPC no estuviese desplegada
+    await supabase.from('team_members').insert({
+      store_id: targetStore.id,
+      user_id: userId,
+      name,
+      email,
+      role: 'employee',
+      status: 'active'
+    });
+  } else {
+    console.log('[JOIN SUCCESSFUL MEMBER RECORD]:', regResult);
   }
 
   // 4. Auditoría de seguridad
