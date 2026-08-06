@@ -2,8 +2,16 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { logSecurityEvent } from '@/modules/security/services';
+
+async function getAuthRedirectUrl() {
+  const headersList = await headers();
+  const host = headersList.get('host') || 'localhost:3000';
+  const protocol = headersList.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
+  return `${protocol}://${host}/auth/callback`;
+}
 
 export async function login(formData: FormData) {
   const supabase = await createClient();
@@ -41,11 +49,14 @@ export async function signupOwner(formData: FormData) {
     redirect(`/signup?mode=owner&error=${encodeURIComponent('Todos los campos son obligatorios.')}`);
   }
 
-  // 1. Registro de usuario en Auth
+  const emailRedirectTo = await getAuthRedirectUrl();
+
+  // 1. Registro de usuario en Auth con emailRedirectTo dinámico público
   const { data: authData, error: authErr } = await supabase.auth.signUp({
     email,
     password,
     options: {
+      emailRedirectTo,
       data: {
         full_name: name,
       }
@@ -122,7 +133,7 @@ export async function joinCompany(formData: FormData) {
   const cleanCode = rawCode.toUpperCase();
 
   // 1. Buscar comercio mediante RPC get_store_by_company_code (bypass RLS para usuarios no autenticados)
-  const { data: rpcStores, error: rpcErr } = await supabase
+  const { data: rpcStores } = await supabase
     .rpc('get_store_by_company_code', { p_code: cleanCode });
 
   let targetStore: { id: string; name: string; company_code: string } | null = null;
@@ -130,7 +141,7 @@ export async function joinCompany(formData: FormData) {
   if (rpcStores && rpcStores.length > 0) {
     targetStore = rpcStores[0];
   } else {
-    // Fallback: consulta directa ilike por si la función aún se está propagando
+    // Fallback: consulta directa ilike
     const { data: storeFallback } = await supabase
       .from('stores')
       .select('id, name, company_code')
@@ -144,11 +155,14 @@ export async function joinCompany(formData: FormData) {
     redirect(`/signup?mode=join&error=${encodeURIComponent('El código de empresa no existe. Por favor verifica el código ingresado con el propietario de tu comercio.')}`);
   }
 
-  // 2. Intentar registrar el usuario en Supabase Auth
+  const emailRedirectTo = await getAuthRedirectUrl();
+
+  // 2. Intentar registrar el usuario en Supabase Auth con emailRedirectTo dinámico
   const { data: authData, error: authErr } = await supabase.auth.signUp({
     email,
     password,
     options: {
+      emailRedirectTo,
       data: {
         full_name: name,
       }
