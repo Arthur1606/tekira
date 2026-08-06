@@ -1,11 +1,11 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { createStore } from '@/modules/stores/actions';
+import { getUserStores } from '@/modules/stores/services';
 import { SubmitButton } from '@/components/ui/SubmitButton';
 import { Input } from '@/components/ui/Input';
 import { Store, MapPin, AlertCircle, Building2 } from 'lucide-react';
 
-// Constante para facilitar la lectura del select
 const CATEGORIES = [
   'Restaurante', 'Comidas rápidas', 'Panadería', 'Cafetería', 'Tienda de barrio', 
   'Minimercado', 'Supermercado', 'Ferretería', 'Licorería', 'Droguería', 
@@ -26,7 +26,8 @@ export default async function OnboardingPage({
     redirect('/login');
   }
 
-  const { data: stores } = await supabase.from('stores').select('id').limit(1);
+  // Usar la función centralizada que busca tanto comercios propios (owner) como por membresía (team_members)
+  const stores = await getUserStores();
   if (stores && stores.length > 0) {
     redirect('/dashboard');
   }
