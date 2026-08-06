@@ -51,14 +51,21 @@ DECLARE
     r RECORD;
     v_seq INT;
 BEGIN
-    FOR r IN (SELECT id, store_id FROM public.team_members WHERE employee_code IS NULL OR employee_code = '') LOOP
-        SELECT COUNT(*) + 1 INTO v_seq FROM public.team_members WHERE store_id = r.store_id AND employee_code IS NOT NULL AND employee_code != '';
+    FOR r IN 
+        SELECT id, store_id 
+        FROM public.team_members 
+        WHERE employee_code IS NULL OR employee_code = ''
+    LOOP
+        SELECT COUNT(*) + 1 INTO v_seq 
+        FROM public.team_members 
+        WHERE store_id = r.store_id AND employee_code IS NOT NULL AND employee_code != '';
+
         UPDATE public.team_members
         SET employee_code = 'EMP-' || LPAD(v_seq::TEXT, 4, '0')
         WHERE id = r.id;
-    END FOR;
-END;
-$$;
+    END LOOP;
+END $$;
 
 -- 5. Crear índice de unicidad por comercio para employee_code
-CREATE UNIQUE INDEX IF NOT EXISTS idx_team_members_store_emp_code ON public.team_members(store_id, employee_code);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_team_members_store_employee_code 
+ON public.team_members(store_id, employee_code);
