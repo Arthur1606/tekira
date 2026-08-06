@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getUserStores } from '@/modules/stores/services';
 import { verifyPermission, logSecurityEvent } from '@/modules/security/services';
+import { extractRepresentativeLetters } from '@/modules/inventory/sku';
 
 export async function createProduct(formData: FormData) {
   const supabase = await createClient();
@@ -41,19 +42,33 @@ export async function createProduct(formData: FormData) {
     redirect(`/dashboard/inventory/new?error=${encodeURIComponent('Por favor, revisa todos los campos obligatorios.')}`);
   }
 
-  // Generación automática de SKU sanitizado obligatorio en formato ROPA-PROD-VAR-0001
+  // Generación Inteligente de SKU (Formato XXXX-0000)
   let finalSku = (formData.get('sku') as string || '').trim().toUpperCase();
   if (!finalSku) {
-    const catCode = category ? category.replace(/[^a-zA-Z0-9]/g, '').substring(0, 4).toUpperCase() : 'ROPA';
-    const prodCode = name.replace(/[^a-zA-Z0-9]/g, '').substring(0, 4).toUpperCase() || 'PROD';
-    
-    const { count } = await supabase
+    // 1. Verificar si ya existe un producto con el mismo nombre en este comercio para reutilizar SKU
+    const { data: existingProduct } = await supabase
       .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('store_id', activeStore.id);
+      .select('sku')
+      .eq('store_id', activeStore.id)
+      .ilike('name', name)
+      .is('deleted_at', null)
+      .maybeSingle();
+
+    if (existingProduct?.sku) {
+      finalSku = existingProduct.sku;
+    } else {
+      // 2. Extraer prefijo de 4 letras representativo del nombre (ej. Sudadera Nike -> SUDN)
+      const prefix = extractRepresentativeLetters(name);
       
-    const nextSeq = ((count || 0) + 1).toString().padStart(4, '0');
-    finalSku = `${catCode}-${prodCode}-VAR-${nextSeq}`;
+      const { count } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true })
+        .eq('store_id', activeStore.id)
+        .like('sku', `${prefix}-%`);
+        
+      const nextSeq = ((count || 0) + 1).toString().padStart(4, '0');
+      finalSku = `${prefix}-${nextSeq}`;
+    }
   }
 
   // 4. Insertar Producto (Inicialmente quantity 0)
