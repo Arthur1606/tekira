@@ -30,5 +30,11 @@ export interface Store {
   company_code: string;
   category: StoreCategory;
   city: string;
+  status: 'active' | 'suspended' | 'blocked';
+  logo_url?: string | null;
+  contact_phone?: string | null;
+  contact_email?: string | null;
+  currency: string;
+  timezone: string;
   created_at: string;
 }

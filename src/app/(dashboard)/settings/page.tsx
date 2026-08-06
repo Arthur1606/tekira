@@ -7,10 +7,28 @@ import { Input } from '@/components/ui/Input';
 import { getUserStores } from '@/modules/stores/services';
 import { getTeamMembers } from '@/modules/team/services';
 import { updateProfile } from '@/modules/team/actions';
+import { updateStoreSettings } from '@/modules/stores/actions';
 import { EditMemberModal } from '@/components/team/EditMemberModal';
 import { DeleteMemberModal } from '@/components/team/DeleteMemberModal';
-import { User, Users, Lock, Plus, Building, CheckCircle2, Clock, Info } from 'lucide-react';
+import { User, Users, Lock, Plus, Building, CheckCircle2, Clock, Info, Globe, Phone, Mail, DollarSign, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
+
+const CURRENCIES = [
+  { code: 'COP', name: 'Peso Colombiano ($ COP)' },
+  { code: 'USD', name: 'Dólar Estadounidense ($ USD)' },
+  { code: 'EUR', name: 'Euro (€ EUR)' },
+  { code: 'MXN', name: 'Peso Mexicano ($ MXN)' },
+  { code: 'PEN', name: 'Sol Peruano (S/ PEN)' },
+  { code: 'CLP', name: 'Peso Chileno ($ CLP)' },
+];
+
+const TIMEZONES = [
+  { code: 'America/Bogota', name: 'América / Bogotá (GMT-5)' },
+  { code: 'America/Mexico_City', name: 'América / Ciudad de México (GMT-6)' },
+  { code: 'America/Lima', name: 'América / Lima (GMT-5)' },
+  { code: 'America/Santiago', name: 'América / Santiago (GMT-3)' },
+  { code: 'UTC', name: 'Tiempo Universal Coordinado (UTC)' },
+];
 
 export default async function SettingsPage({
   searchParams,
@@ -18,7 +36,7 @@ export default async function SettingsPage({
   searchParams: Promise<{ tab?: string; error?: string; success?: string }>;
 }) {
   const resolvedSearchParams = await searchParams;
-  const activeTab = resolvedSearchParams.tab === 'team' ? 'team' : 'profile';
+  const activeTab = resolvedSearchParams.tab === 'company' ? 'company' : (resolvedSearchParams.tab === 'team' ? 'team' : 'profile');
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -51,6 +69,7 @@ export default async function SettingsPage({
     }
   }
 
+  const canManageStore = currentUserRole === 'owner' || currentUserRole === 'admin';
   const canManageTeam = currentUserRole === 'owner' || currentUserRole === 'admin';
   const teamMembers = canManageTeam ? await getTeamMembers(activeStore.id) : [];
 
@@ -74,13 +93,26 @@ export default async function SettingsPage({
     }
   };
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <Badge variant="success" className="gap-1.5 bg-emerald-500/20 text-emerald-400 border-emerald-500/30"><CheckCircle2 className="w-3.5 h-3.5" /> Comercio Activo</Badge>;
+      case 'suspended':
+        return <Badge variant="warning" className="gap-1.5 bg-amber-500/20 text-amber-400 border-amber-500/30"><Clock className="w-3.5 h-3.5" /> Suspendido</Badge>;
+      case 'blocked':
+        return <Badge variant="danger" className="gap-1.5 bg-rose-500/20 text-rose-400 border-rose-500/30"><ShieldAlert className="w-3.5 h-3.5" /> Bloqueado</Badge>;
+      default:
+        return <Badge variant="neutral">{status}</Badge>;
+    }
+  };
+
   return (
     <div className="w-full max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500 pb-16">
       
       {/* Encabezado */}
       <div>
         <h1 className="text-3xl font-bold text-zinc-100 tracking-tight">Configuraciones</h1>
-        <p className="text-sm text-zinc-400 mt-1">Gestiona tu perfil de usuario y la administración de tu equipo</p>
+        <p className="text-sm text-zinc-400 mt-1">Gestiona tu perfil, los datos empresariales de tu comercio y la administración de tu equipo</p>
       </div>
 
       {/* Retroalimentación */}
@@ -96,7 +128,7 @@ export default async function SettingsPage({
       )}
 
       {/* Tabs Naves */}
-      <div className="flex items-center gap-2 border-b border-zinc-800 pb-2">
+      <div className="flex items-center gap-2 border-b border-zinc-800 pb-2 flex-wrap">
         <Link
           href="/settings?tab=profile"
           className={`flex items-center gap-2 py-2.5 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all ${
@@ -106,6 +138,17 @@ export default async function SettingsPage({
           }`}
         >
           <User className="w-4 h-4" /> Mi Perfil
+        </Link>
+
+        <Link
+          href="/settings?tab=company"
+          className={`flex items-center gap-2 py-2.5 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all ${
+            activeTab === 'company'
+              ? 'bg-zinc-800 text-indigo-400 border border-zinc-700 shadow-sm'
+              : 'text-zinc-400 hover:text-zinc-200'
+          }`}
+        >
+          <Building className="w-4 h-4" /> Empresa / Comercio
         </Link>
 
         {canManageTeam && (
@@ -126,7 +169,6 @@ export default async function SettingsPage({
       {activeTab === 'profile' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* Card Perfil Principal */}
           <div className="lg:col-span-7">
             <Card noPadding className="p-6 sm:p-8 space-y-6">
               <div className="flex items-center gap-4 pb-6 border-b border-zinc-800">
@@ -182,11 +224,10 @@ export default async function SettingsPage({
             </Card>
           </div>
 
-          {/* Card Datos del Comercio Activo */}
           <div className="lg:col-span-5">
             <Card noPadding className="p-6 sm:p-8 space-y-6">
               <h3 className="text-lg font-bold text-zinc-100 flex items-center gap-2 border-b border-zinc-800 pb-4">
-                <Building className="w-5 h-5 text-indigo-500" /> Comercio Activo
+                <Building className="w-5 h-5 text-indigo-500" /> Resumen de Empresa
               </h3>
 
               <div className="space-y-4 text-xs">
@@ -196,13 +237,13 @@ export default async function SettingsPage({
                 </div>
 
                 <div className="p-3 bg-zinc-950/60 rounded-xl border border-zinc-800/60 flex items-center justify-between">
-                  <span className="text-zinc-400">Categoría</span>
-                  <span className="font-semibold text-zinc-200 capitalize">{activeStore.category || 'General'}</span>
+                  <span className="text-zinc-400">Código de Empresa</span>
+                  <span className="font-mono font-bold text-indigo-400">{activeStore.company_code}</span>
                 </div>
 
                 <div className="p-3 bg-zinc-950/60 rounded-xl border border-zinc-800/60 flex items-center justify-between">
-                  <span className="text-zinc-400">Ciudad</span>
-                  <span className="font-semibold text-zinc-200">{activeStore.city || 'No especificada'}</span>
+                  <span className="text-zinc-400">Estado</span>
+                  {getStatusBadge(activeStore.status || 'active')}
                 </div>
 
                 <div className="p-3 bg-indigo-500/10 rounded-xl border border-indigo-500/20 text-indigo-300">
@@ -217,7 +258,146 @@ export default async function SettingsPage({
         </div>
       )}
 
-      {/* TAB 2: GESTIÓN DE EQUIPO (Solo Owner y Admin) */}
+      {/* TAB 2: EMPRESA / COMERCIO */}
+      {activeTab === 'company' && (
+        <Card noPadding className="p-6 sm:p-8 max-w-3xl mx-auto space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-6">
+            <div>
+              <h2 className="text-xl font-bold text-zinc-100 flex items-center gap-2">
+                <Building className="w-5 h-5 text-indigo-500" /> Perfil Empresarial del Comercio
+              </h2>
+              <p className="text-xs text-zinc-400 mt-1">Configuración general y datos organizacionales de la empresa</p>
+            </div>
+            <div>
+              {getStatusBadge(activeStore.status || 'active')}
+            </div>
+          </div>
+
+          <form action={updateStoreSettings} className="space-y-6">
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <Input
+                id="name"
+                name="name"
+                type="text"
+                label="Nombre Comercial *"
+                defaultValue={activeStore.name}
+                icon={Building}
+                disabled={!canManageStore}
+                required
+              />
+
+              <Input
+                id="city"
+                name="city"
+                type="text"
+                label="Ciudad de Operación"
+                defaultValue={activeStore.city}
+                icon={Globe}
+                disabled={!canManageStore}
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <Input
+                id="contact_phone"
+                name="contact_phone"
+                type="text"
+                label="Teléfono de Contacto"
+                placeholder="Ej. +57 300 123 4567"
+                defaultValue={activeStore.contact_phone || ''}
+                icon={Phone}
+                disabled={!canManageStore}
+              />
+
+              <Input
+                id="contact_email"
+                name="contact_email"
+                type="email"
+                label="Correo Institucional"
+                placeholder="ejemplo@empresa.com"
+                defaultValue={activeStore.contact_email || ''}
+                icon={Mail}
+                disabled={!canManageStore}
+              />
+            </div>
+
+            <Input
+              id="logo_url"
+              name="logo_url"
+              type="text"
+              label="URL del Logo (Opcional)"
+              placeholder="https://misitio.com/logo.png"
+              defaultValue={activeStore.logo_url || ''}
+              disabled={!canManageStore}
+            />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-zinc-800">
+              
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-1.5" htmlFor="currency">
+                  Moneda de Operación
+                </label>
+                <div className="relative">
+                  <select
+                    id="currency"
+                    name="currency"
+                    defaultValue={activeStore.currency || 'COP'}
+                    disabled={!canManageStore}
+                    className="block w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-4 py-3 pl-10 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none disabled:cursor-not-allowed disabled:text-zinc-500"
+                  >
+                    {CURRENCIES.map(c => (
+                      <option key={c.code} value={c.code}>{c.name}</option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
+                    <DollarSign className="w-4 h-4 text-indigo-400" />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-1.5" htmlFor="timezone">
+                  Zona Horaria
+                </label>
+                <div className="relative">
+                  <select
+                    id="timezone"
+                    name="timezone"
+                    defaultValue={activeStore.timezone || 'America/Bogota'}
+                    disabled={!canManageStore}
+                    className="block w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-4 py-3 pl-10 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none disabled:cursor-not-allowed disabled:text-zinc-500"
+                  >
+                    {TIMEZONES.map(tz => (
+                      <option key={tz.code} value={tz.code}>{tz.name}</option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
+                    <Globe className="w-4 h-4 text-indigo-400" />
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {canManageStore ? (
+              <div className="pt-4 border-t border-zinc-800">
+                <SubmitButton fullWidth className="py-3 text-sm font-bold shadow-lg">
+                  Guardar Configuración de Comercio
+                </SubmitButton>
+              </div>
+            ) : (
+              <div className="p-4 bg-zinc-900/80 border border-zinc-800 rounded-xl text-xs text-zinc-400">
+                Únicamente Propietarios y Administradores poseen permisos para editar la configuración de la empresa.
+              </div>
+            )}
+
+          </form>
+        </Card>
+      )}
+
+      {/* TAB 3: GESTIÓN DE EQUIPO (Solo Owner y Admin) */}
       {activeTab === 'team' && canManageTeam && (
         <div className="space-y-6">
           
@@ -333,9 +513,9 @@ export default async function SettingsPage({
 
       {/* Footer de Versión del Sistema */}
       <div className="pt-6 border-t border-zinc-800/60 flex items-center justify-between text-xs text-zinc-500 font-mono">
-        <span className="flex items-center gap-1.5"><Info className="w-3.5 h-3.5 text-zinc-600" /> TEKIRA Platform System</span>
+        <span className="flex items-center gap-1.5"><Info className="w-3.5 h-3.5 text-zinc-600" /> TEKIRA Multi-Tenant Enterprise System</span>
         <span className="bg-zinc-900 px-3 py-1 rounded-lg border border-zinc-800 text-zinc-400">
-          TEKIRA Versión 0.10.5
+          TEKIRA Versión 0.11.1
         </span>
       </div>
 
