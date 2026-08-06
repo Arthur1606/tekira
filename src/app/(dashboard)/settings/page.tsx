@@ -8,9 +8,10 @@ import { getUserStores } from '@/modules/stores/services';
 import { getTeamMembers } from '@/modules/team/services';
 import { updateProfile } from '@/modules/team/actions';
 import { updateStoreSettings } from '@/modules/stores/actions';
+import { generateMfaSecret, enableMfa, disableMfa, approveMfaReset, rejectMfaReset } from '@/modules/security/mfaActions';
 import { EditMemberModal } from '@/components/team/EditMemberModal';
 import { DeleteMemberModal } from '@/components/team/DeleteMemberModal';
-import { User, Users, Lock, Plus, Building, CheckCircle2, Clock, Info, Globe, Phone, Mail, DollarSign, ShieldAlert } from 'lucide-react';
+import { User, Users, Lock, Plus, Building, CheckCircle2, Clock, Info, Globe, Phone, Mail, DollarSign, ShieldAlert, ShieldCheck, KeyRound, QrCode, Check, X, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 
 const CURRENCIES = [
@@ -36,7 +37,11 @@ export default async function SettingsPage({
   searchParams: Promise<{ tab?: string; error?: string; success?: string }>;
 }) {
   const resolvedSearchParams = await searchParams;
-  const activeTab = resolvedSearchParams.tab === 'company' ? 'company' : (resolvedSearchParams.tab === 'team' ? 'team' : 'profile');
+  const activeTab = resolvedSearchParams.tab === 'company' 
+    ? 'company' 
+    : (resolvedSearchParams.tab === 'security' 
+      ? 'security' 
+      : (resolvedSearchParams.tab === 'team' ? 'team' : 'profile'));
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -73,10 +78,32 @@ export default async function SettingsPage({
   const canManageTeam = currentUserRole === 'owner' || currentUserRole === 'admin';
   const teamMembers = canManageTeam ? await getTeamMembers(activeStore.id) : [];
 
+  // Datos de 2FA TOTP si la pestaña activa es security
+  let mfaData = { secret: '', otpAuthUri: '', isEnabled: false };
+  let pendingResetRequests: any[] = [];
+
+  if (activeTab === 'security') {
+    const mfaRes = await generateMfaSecret();
+    if (!('error' in mfaRes)) {
+      mfaData = mfaRes as any;
+    }
+
+    if (canManageTeam) {
+      const { data: resetReqs } = await supabase
+        .from('mfa_reset_requests')
+        .select('*')
+        .eq('store_id', activeStore.id)
+        .eq('status', 'pending')
+        .order('requested_at', { ascending: false });
+
+      pendingResetRequests = resetReqs || [];
+    }
+  }
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return new Intl.DateTimeFormat('es-ES', { 
-      day: 'numeric', month: 'short', year: 'numeric' 
+      day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
     }).format(date);
   };
 
@@ -112,7 +139,7 @@ export default async function SettingsPage({
       {/* Encabezado */}
       <div>
         <h1 className="text-3xl font-bold text-zinc-100 tracking-tight">Configuraciones</h1>
-        <p className="text-sm text-zinc-400 mt-1">Gestiona tu perfil, los datos empresariales de tu comercio y la administración de tu equipo</p>
+        <p className="text-sm text-zinc-400 mt-1">Gestiona tu perfil, datos empresariales, seguridad 2FA y equipo</p>
       </div>
 
       {/* Retroalimentación */}
@@ -151,6 +178,17 @@ export default async function SettingsPage({
           <Building className="w-4 h-4" /> Empresa / Comercio
         </Link>
 
+        <Link
+          href="/settings?tab=security"
+          className={`flex items-center gap-2 py-2.5 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all ${
+            activeTab === 'security'
+              ? 'bg-zinc-800 text-indigo-400 border border-zinc-700 shadow-sm'
+              : 'text-zinc-400 hover:text-zinc-200'
+          }`}
+        >
+          <ShieldCheck className="w-4 h-4" /> Seguridad (2FA)
+        </Link>
+
         {canManageTeam && (
           <Link
             href="/settings?tab=team"
@@ -168,7 +206,6 @@ export default async function SettingsPage({
       {/* TAB 1: MI PERFIL */}
       {activeTab === 'profile' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
           <div className="lg:col-span-7">
             <Card noPadding className="p-6 sm:p-8 space-y-6">
               <div className="flex items-center gap-4 pb-6 border-b border-zinc-800">
@@ -254,7 +291,6 @@ export default async function SettingsPage({
               </div>
             </Card>
           </div>
-
         </div>
       )}
 
@@ -274,7 +310,6 @@ export default async function SettingsPage({
           </div>
 
           <form action={updateStoreSettings} className="space-y-6">
-            
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <Input
                 id="name"
@@ -334,7 +369,6 @@ export default async function SettingsPage({
             />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-zinc-800">
-              
               <div>
                 <label className="block text-sm font-medium text-zinc-300 mb-1.5" htmlFor="currency">
                   Moneda de Operación
@@ -378,7 +412,6 @@ export default async function SettingsPage({
                   </div>
                 </div>
               </div>
-
             </div>
 
             {canManageStore ? (
@@ -392,15 +425,178 @@ export default async function SettingsPage({
                 Únicamente Propietarios y Administradores poseen permisos para editar la configuración de la empresa.
               </div>
             )}
-
           </form>
         </Card>
       )}
 
-      {/* TAB 3: GESTIÓN DE EQUIPO (Solo Owner y Admin) */}
+      {/* TAB 3: SEGURIDAD (2FA TOTP) */}
+      {activeTab === 'security' && (
+        <div className="space-y-8 max-w-4xl mx-auto">
+          
+          {/* Tarjeta Activación 2FA */}
+          <Card noPadding className="p-6 sm:p-8 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-6">
+              <div>
+                <h2 className="text-xl font-bold text-zinc-100 flex items-center gap-2">
+                  <ShieldCheck className="w-6 h-6 text-indigo-400" /> Autenticación de Dos Factores (2FA TOTP)
+                </h2>
+                <p className="text-xs text-zinc-400 mt-1">
+                  Protege tu cuenta requiriendo un código dinámico de 6 dígitos desde Google Authenticator, Microsoft Authenticator o Authy.
+                </p>
+              </div>
+
+              <div>
+                {mfaData.isEnabled ? (
+                  <Badge variant="success" className="gap-1.5 bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> 2FA Activado
+                  </Badge>
+                ) : (
+                  <Badge variant="neutral" className="gap-1.5 bg-zinc-800 text-zinc-400 border-zinc-700">
+                    ⚪ 2FA Desactivado
+                  </Badge>
+                )}
+              </div>
+            </div>
+
+            {mfaData.isEnabled ? (
+              <div className="space-y-6">
+                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-start gap-3 text-sm text-emerald-300">
+                  <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5 text-emerald-400" />
+                  <div>
+                    <p className="font-bold">Tu cuenta está protegida con 2FA TOTP</p>
+                    <p className="text-xs text-emerald-400/80 mt-0.5 leading-relaxed">
+                      Cada inicio de sesión requerirá tu contraseña y el código de seguridad dinámico de tu aplicación autenticadora.
+                    </p>
+                  </div>
+                </div>
+
+                <form action={disableMfa} className="pt-2">
+                  <SubmitButton variant="ghost" className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-xs py-2.5 px-5">
+                    Desactivar Protección 2FA
+                  </SubmitButton>
+                </form>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                  
+                  {/* Visualización de Secreto Key y URI */}
+                  <div className="md:col-span-6 space-y-4">
+                    <h3 className="text-sm font-bold text-zinc-200 uppercase tracking-wider flex items-center gap-2">
+                      <QrCode className="w-4 h-4 text-indigo-400" /> Paso 1: Configura tu App
+                    </h3>
+                    <p className="text-xs text-zinc-400 leading-relaxed">
+                      Abre tu aplicación (Google Authenticator, Authy o Microsoft Authenticator) e ingresa la clave secreta o escanea el URI:
+                    </p>
+
+                    <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-800 space-y-1">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block">Clave Secreta TOTP</span>
+                      <span className="font-mono text-sm font-bold text-indigo-300 select-all block tracking-widest">{mfaData.secret}</span>
+                    </div>
+
+                    <div className="p-3 bg-zinc-950/60 rounded-xl border border-zinc-800/80 text-[11px] text-zinc-400 space-y-1">
+                      <span className="font-bold text-zinc-300 block">URI de Vinculación OtpAuth:</span>
+                      <p className="font-mono text-[10px] text-zinc-500 truncate">{mfaData.otpAuthUri}</p>
+                    </div>
+                  </div>
+
+                  {/* Formulario de Confirmación 6 Dígitos */}
+                  <div className="md:col-span-6 bg-zinc-950/60 p-6 rounded-2xl border border-zinc-800 space-y-4">
+                    <h3 className="text-sm font-bold text-zinc-200 uppercase tracking-wider flex items-center gap-2">
+                      <KeyRound className="w-4 h-4 text-indigo-400" /> Paso 2: Confirma el Código
+                    </h3>
+                    <p className="text-xs text-zinc-400 leading-relaxed">
+                      Ingresa el código de 6 dígitos que muestra tu app para confirmar la sincronización:
+                    </p>
+
+                    <form action={enableMfa} className="space-y-4">
+                      <Input
+                        id="code"
+                        name="code"
+                        type="text"
+                        placeholder="Ej. 123456"
+                        maxLength={6}
+                        required
+                        className="font-mono text-lg font-bold text-center tracking-widest"
+                      />
+
+                      <SubmitButton fullWidth className="py-3 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg">
+                        Activar Protección 2FA
+                      </SubmitButton>
+                    </form>
+                  </div>
+
+                </div>
+              </div>
+            )}
+          </Card>
+
+          {/* Tarjeta de Solicitudes Pendientes de Recuperación (OWNER y ADMIN) */}
+          {canManageTeam && (
+            <Card noPadding className="p-6 sm:p-8 space-y-6">
+              <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
+                    <Lock className="w-5 h-5 text-amber-400" /> Solicitudes Pendientes de Recuperación 2FA
+                  </h3>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Colaboradores de tu empresa que perdieron su dispositivo autenticador y solicitaron restablecimiento
+                  </p>
+                </div>
+
+                {pendingResetRequests.length > 0 && (
+                  <Badge variant="warning" className="bg-amber-500/20 text-amber-400 border-amber-500/30">
+                    {pendingResetRequests.length} Solicitud(es)
+                  </Badge>
+                )}
+              </div>
+
+              {pendingResetRequests.length === 0 ? (
+                <div className="py-8 text-center text-xs text-zinc-500 font-medium">
+                  No hay solicitudes pendientes de recuperación de 2FA para tu empresa.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {pendingResetRequests.map((req) => (
+                    <div key={req.id} className="p-4 bg-zinc-950 rounded-xl border border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-sm text-zinc-200">ID Usuario: {req.user_id.substring(0, 8)}...</span>
+                          <span className="text-[10px] font-mono text-zinc-500">({formatDate(req.requested_at)})</span>
+                        </div>
+                        <p className="text-xs text-zinc-400 font-medium">
+                          <strong>Motivo:</strong> {req.reason}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <form action={approveMfaReset}>
+                          <input type="hidden" name="request_id" value={req.id} />
+                          <SubmitButton variant="ghost" className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold py-2 px-3">
+                            <Check className="w-3.5 h-3.5 mr-1" /> Aprobar Restablecimiento
+                          </SubmitButton>
+                        </form>
+
+                        <form action={rejectMfaReset}>
+                          <input type="hidden" name="request_id" value={req.id} />
+                          <SubmitButton variant="ghost" className="bg-zinc-800 hover:bg-zinc-700 text-zinc-400 border border-zinc-700 text-xs font-bold py-2 px-3">
+                            <X className="w-3.5 h-3.5 mr-1" /> Rechazar
+                          </SubmitButton>
+                        </form>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          )}
+
+        </div>
+      )}
+
+      {/* TAB 4: GESTIÓN DE EQUIPO (Solo Owner y Admin) */}
       {activeTab === 'team' && canManageTeam && (
         <div className="space-y-6">
-          
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="text-xl font-bold text-zinc-100">Integrantes del Equipo</h2>
@@ -415,8 +611,6 @@ export default async function SettingsPage({
           </div>
 
           <Card noPadding className="p-6">
-            
-            {/* Tabla Desktop */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
@@ -471,7 +665,6 @@ export default async function SettingsPage({
               </table>
             </div>
 
-            {/* Tarjetas Mobile */}
             <div className="md:hidden space-y-3">
               {teamMembers.map((member) => (
                 <div key={member.id} className="p-4 bg-zinc-950/60 rounded-xl border border-zinc-800/80 space-y-3">
@@ -506,7 +699,6 @@ export default async function SettingsPage({
                 </div>
               ))}
             </div>
-
           </Card>
         </div>
       )}
@@ -515,7 +707,7 @@ export default async function SettingsPage({
       <div className="pt-6 border-t border-zinc-800/60 flex items-center justify-between text-xs text-zinc-500 font-mono">
         <span className="flex items-center gap-1.5"><Info className="w-3.5 h-3.5 text-zinc-600" /> TEKIRA Multi-Tenant Enterprise System</span>
         <span className="bg-zinc-900 px-3 py-1 rounded-lg border border-zinc-800 text-zinc-400">
-          TEKIRA Versión 0.11.1
+          TEKIRA Versión 0.11.2
         </span>
       </div>
 

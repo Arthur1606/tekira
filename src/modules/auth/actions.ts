@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { headers } from 'next/headers';
+import { headers, cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { logSecurityEvent } from '@/modules/security/services';
 
@@ -15,6 +15,7 @@ async function getAuthRedirectUrl() {
 
 export async function login(formData: FormData) {
   const supabase = await createClient();
+  const cookieStore = await cookies();
 
   const data = {
     email: (formData.get('email') as string || '').trim().toLowerCase(),
@@ -25,10 +26,29 @@ export async function login(formData: FormData) {
     redirect(`/login?error=${encodeURIComponent('Ingresa correo y contraseña.')}`);
   }
 
-  const { error } = await supabase.auth.signInWithPassword(data);
+  const { data: authResult, error } = await supabase.auth.signInWithPassword(data);
 
-  if (error) {
-    redirect(`/login?error=${encodeURIComponent(error.message)}`);
+  if (error || !authResult.user) {
+    redirect(`/login?error=${encodeURIComponent(error?.message || 'Error al iniciar sesión.')}`);
+  }
+
+  const userId = authResult.user.id;
+
+  // Consultar si el usuario posee 2FA TOTP activo
+  const { data: mfaSetting } = await supabase
+    .from('user_mfa_settings')
+    .select('is_enabled')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (mfaSetting && mfaSetting.is_enabled) {
+    cookieStore.set('mfa_pending_user', userId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 300, // 5 minutos para completar el desafío de 6 dígitos
+      path: '/'
+    });
+    redirect('/login/mfa-verify');
   }
 
   revalidatePath('/', 'layout');
@@ -51,7 +71,6 @@ export async function signupOwner(formData: FormData) {
 
   const emailRedirectTo = await getAuthRedirectUrl();
 
-  // 1. Registro de usuario en Auth con emailRedirectTo dinámico
   const { data: authData, error: authErr } = await supabase.auth.signUp({
     email,
     password,
@@ -72,14 +91,16 @@ export async function signupOwner(formData: FormData) {
 
   const userId = authData.user.id;
 
-  // 2. Crear Comercio (el trigger SQL generará company_code automáticamente)
   const { data: newStore, error: storeErr } = await supabase
     .from('stores')
     .insert({
       name: storeName,
       category,
       city,
-      owner_id: userId
+      owner_id: userId,
+      status: 'active',
+      currency: 'COP',
+      timezone: 'America/Bogota'
     })
     .select()
     .single();
@@ -89,7 +110,6 @@ export async function signupOwner(formData: FormData) {
     redirect(`/signup?mode=owner&error=${encodeURIComponent(storeErr?.message || 'Error al crear la empresa.')}`);
   }
 
-  // 3. Registrar al Propietario en team_members
   await supabase.from('team_members').insert({
     store_id: newStore.id,
     user_id: userId,
@@ -99,7 +119,6 @@ export async function signupOwner(formData: FormData) {
     status: 'active'
   });
 
-  // 4. Registro de auditoría
   await logSecurityEvent({
     storeId: newStore.id,
     userId,
@@ -129,10 +148,8 @@ export async function joinCompany(formData: FormData) {
     redirect(`/signup?mode=join&error=${encodeURIComponent('Todos los campos son obligatorios.')}`);
   }
 
-  // Normalización estricta: trim y mayúsculas
   const cleanCode = rawCode.toUpperCase();
 
-  // 1. Buscar comercio mediante RPC get_store_by_company_code (bypass RLS para usuarios no autenticados)
   const { data: rpcStores } = await supabase
     .rpc('get_store_by_company_code', { p_code: cleanCode });
 
@@ -141,7 +158,6 @@ export async function joinCompany(formData: FormData) {
   if (rpcStores && rpcStores.length > 0) {
     targetStore = rpcStores[0];
   } else {
-    // Fallback: consulta directa ilike por si la función aún se está propagando
     const { data: storeFallback } = await supabase
       .from('stores')
       .select('id, name, company_code')
@@ -157,7 +173,6 @@ export async function joinCompany(formData: FormData) {
 
   const emailRedirectTo = await getAuthRedirectUrl();
 
-  // 2. Intentar registrar el usuario en Supabase Auth con emailRedirectTo dinámico
   const { data: authData, error: authErr } = await supabase.auth.signUp({
     email,
     password,
@@ -183,8 +198,6 @@ export async function joinCompany(formData: FormData) {
 
   const userId = authData.user.id;
 
-  // 3. Registrar al colaborador en team_members mediante la función RPC 'register_team_member_by_code'
-  // Esta función SECURITY DEFINER evita que RLS bloquee la inserción de la membresía del nuevo usuario
   const { data: regResult, error: regErr } = await supabase.rpc('register_team_member_by_code', {
     p_company_code: cleanCode,
     p_user_id: userId,
@@ -194,7 +207,6 @@ export async function joinCompany(formData: FormData) {
 
   if (regErr) {
     console.error('[JOIN RPC MEMBER INSERT ERROR]:', regErr);
-    // Fallback: intento de inserción directa por si la RPC no estuviese desplegada
     await supabase.from('team_members').insert({
       store_id: targetStore.id,
       user_id: userId,
@@ -203,11 +215,8 @@ export async function joinCompany(formData: FormData) {
       role: 'employee',
       status: 'active'
     });
-  } else {
-    console.log('[JOIN SUCCESSFUL MEMBER RECORD]:', regResult);
   }
 
-  // 4. Auditoría de seguridad
   await logSecurityEvent({
     storeId: targetStore.id,
     userId,
