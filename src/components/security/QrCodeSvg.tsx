@@ -9,7 +9,7 @@ interface QrCodeDisplayProps {
   size?: number;
 }
 
-export function QrCodeDisplay({ qrDataUrl, secret, size = 180 }: QrCodeDisplayProps) {
+export function QrCodeDisplay({ qrDataUrl, secret, size = 220 }: QrCodeDisplayProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopySecret = () => {
@@ -21,33 +21,33 @@ export function QrCodeDisplay({ qrDataUrl, secret, size = 180 }: QrCodeDisplayPr
   };
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-4 w-full">
-      {/* Contenedor del QR con borde blanco y sombra */}
-      <div className="p-3 bg-white rounded-2xl border border-zinc-700 shadow-2xl inline-block">
+    <div className="flex flex-col items-center justify-center space-y-5 w-full">
+      {/* Contenedor del QR con borde blanco y sombra premium */}
+      <div className="p-3.5 bg-white rounded-2xl border border-zinc-300 shadow-2xl inline-block hover:scale-[1.02] transition-transform duration-300">
         {qrDataUrl ? (
           <img
             src={qrDataUrl}
             alt="Código QR 2FA TOTP TEKIRA"
             width={size}
             height={size}
-            className="rounded-lg object-contain"
+            className="rounded-lg object-contain w-[180px] h-[180px] sm:w-[220px] sm:h-[220px]"
           />
         ) : (
-          <div style={{ width: size, height: size }} className="flex items-center justify-center bg-zinc-100 text-zinc-500 text-xs font-mono">
+          <div style={{ width: size, height: size }} className="flex items-center justify-center bg-zinc-100 text-zinc-500 text-xs font-mono rounded-lg">
             Generando QR...
           </div>
         )}
       </div>
 
-      <p className="text-[11px] font-medium text-zinc-400 text-center max-w-xs">
+      <p className="text-xs font-medium text-zinc-400 text-center max-w-sm leading-relaxed">
         Abre tu aplicación autenticadora (Google Authenticator, Authy o Microsoft Authenticator) y escanea este código.
       </p>
 
       {/* Caja de Clave Manual con Botón Copiar 1-Click */}
-      <div className="w-full max-w-xs bg-zinc-950 p-3 rounded-xl border border-zinc-800 flex items-center justify-between gap-2 shadow-inner">
-        <div className="space-y-0.5 overflow-hidden">
-          <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block">Clave Secreta Manual</span>
-          <span className="font-mono text-xs font-bold text-indigo-300 select-all block tracking-wider truncate">
+      <div className="w-full max-w-sm bg-zinc-950 p-3.5 rounded-2xl border border-zinc-800 flex items-center justify-between gap-3 shadow-inner">
+        <div className="space-y-0.5 overflow-hidden flex-1 min-w-0">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block">Clave Secreta Manual</span>
+          <span className="font-mono text-xs sm:text-sm font-bold text-indigo-300 select-all block tracking-widest truncate">
             {secret}
           </span>
         </div>
@@ -55,22 +55,22 @@ export function QrCodeDisplay({ qrDataUrl, secret, size = 180 }: QrCodeDisplayPr
         <button
           type="button"
           onClick={handleCopySecret}
-          className={`p-2 rounded-lg text-xs font-bold transition-all shrink-0 flex items-center gap-1 ${
+          className={`px-3 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
             copied
               ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-              : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700'
+              : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 shadow-sm'
           }`}
           title="Copiar Clave Secreta"
         >
           {copied ? (
             <>
-              <Check className="w-3.5 h-3.5" />
-              <span className="text-[10px]">Copiado</span>
+              <Check className="w-4 h-4 text-emerald-400" />
+              <span>Copiado</span>
             </>
           ) : (
             <>
-              <Copy className="w-3.5 h-3.5" />
-              <span className="text-[10px]">Copiar</span>
+              <Copy className="w-4 h-4 text-zinc-400" />
+              <span>Copiar</span>
             </>
           )}
         </button>
@@ -80,6 +80,6 @@ export function QrCodeDisplay({ qrDataUrl, secret, size = 180 }: QrCodeDisplayPr
 }
 
 // Mantener exportación QrCodeSvg por compatibilidad
-export function QrCodeSvg({ value, size = 180 }: { value: string; size?: number }) {
+export function QrCodeSvg({ value, size = 220 }: { value: string; size?: number }) {
   return <QrCodeDisplay secret={value} size={size} />;
 }
