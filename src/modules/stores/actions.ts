@@ -76,9 +76,9 @@ export async function updateStoreSettings(formData: FormData) {
 
   let securityCtx;
   try {
-    securityCtx = await verifyPermission(activeStore.id, ['owner', 'admin'], 'UPDATE_STORE_SETTINGS');
+    securityCtx = await verifyPermission(activeStore.id, ['owner'], 'UPDATE_STORE_SETTINGS');
   } catch (err: any) {
-    redirect(`/settings?tab=company&error=${encodeURIComponent(err.message || 'Sin permisos para modificar la configuración de la empresa.')}`);
+    redirect(`/settings?tab=company&error=${encodeURIComponent(err.message || 'Permisos insuficientes. Únicamente el propietario (owner) puede modificar la configuración de la empresa.')}`);
   }
 
   const name = (formData.get('name') as string || '').trim();

@@ -30,10 +30,44 @@ export async function login(formData: FormData) {
   const { data: authResult, error } = await supabase.auth.signInWithPassword(data);
 
   if (error || !authResult.user) {
+    // Audit Log: LOGIN_FAILED
+    const { data: storeOwner } = await supabase
+      .from('team_members')
+      .select('store_id')
+      .eq('email', data.email)
+      .maybeSingle();
+
+    if (storeOwner?.store_id) {
+      await logSecurityEvent({
+        storeId: storeOwner.store_id,
+        userId: null,
+        action: 'LOGIN_FAILED',
+        entity: 'auth',
+        metadata: { attempted_email: data.email, reason: error?.message || 'Contraseña incorrecta' }
+      });
+    }
+
     redirect(`/login?error=${encodeURIComponent(error?.message || 'Error al iniciar sesión.')}`);
   }
 
   const userId = authResult.user.id;
+
+  // Consultar tienda del usuario para auditoría
+  const { data: member } = await supabase
+    .from('team_members')
+    .select('store_id')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (member?.store_id) {
+    await logSecurityEvent({
+      storeId: member.store_id,
+      userId,
+      action: 'LOGIN_SUCCESSFUL',
+      entity: 'auth',
+      metadata: { user_email: data.email }
+    });
+  }
 
   // Consultar si el usuario posee 2FA TOTP activo
   const { data: mfaSetting } = await supabase
@@ -254,6 +288,28 @@ export async function joinCompany(formData: FormData) {
 
 export async function logout() {
   const supabase = await createClient();
+  const cookieStore = await cookies();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (user) {
+    const { data: member } = await supabase
+      .from('team_members')
+      .select('store_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (member?.store_id) {
+      await logSecurityEvent({
+        storeId: member.store_id,
+        userId: user.id,
+        action: 'LOGOUT_SUCCESSFUL',
+        entity: 'auth',
+        metadata: { user_email: user.email }
+      });
+    }
+  }
+
+  cookieStore.delete('mfa_pending_user');
   await supabase.auth.signOut();
   
   revalidatePath('/', 'layout');
