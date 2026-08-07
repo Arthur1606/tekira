@@ -21,12 +21,14 @@ export interface InvitationData {
   id: string;
   store_id: string;
   store_name: string;
+  logo_url?: string;
   company_code: string;
   email: string;
   role: 'admin' | 'employee';
   status: 'pending' | 'accepted' | 'expired' | 'cancelled';
   expires_at: string;
   is_valid: boolean;
+  token: string;
 }
 
 /**
@@ -179,12 +181,14 @@ export async function validateInvitationToken(token: string): Promise<Invitation
     id: row.id,
     store_id: row.store_id,
     store_name: row.store_name,
+    logo_url: row.logo_url || undefined,
     company_code: row.company_code,
     email: row.email,
     role: row.role as 'admin' | 'employee',
     status: row.status,
     expires_at: row.expires_at,
-    is_valid: Boolean(row.is_valid)
+    is_valid: Boolean(row.is_valid),
+    token: row.token || token
   };
 
   if (row.status === 'cancelled') {
@@ -340,4 +344,84 @@ export async function registerWithInvitationAction(formData: FormData) {
 
   revalidatePath('/', 'layout');
   redirect('/setup-mfa');
+}
+
+/**
+ * Obtener listado de invitaciones para el panel de configuración de equipo
+ */
+export async function getStoreInvitationsAction(storeId: string): Promise<InvitationData[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.rpc('get_store_invitations_rpc', {
+    p_store_id: storeId
+  });
+
+  if (error || !data) {
+    console.error('[GET STORE INVITATIONS ERROR]:', error);
+    return [];
+  }
+
+  return data.map((row: any) => ({
+    id: row.id,
+    store_id: row.store_id,
+    store_name: '',
+    company_code: '',
+    email: row.email,
+    role: row.role as 'admin' | 'employee',
+    status: row.status as 'pending' | 'accepted' | 'expired' | 'cancelled',
+    expires_at: row.expires_at,
+    is_valid: row.status === 'pending' && new Date(row.expires_at) > new Date(),
+    token: row.token || ''
+  }));
+}
+
+/**
+ * Cancelar / revocar una invitación pendiente
+ */
+export async function cancelInvitationAction(formData: FormData) {
+  const supabase = await createClient();
+
+  const inviteId = (formData.get('invite_id') as string || '').trim();
+  if (!inviteId) {
+    redirect(`/settings?tab=team&error=${encodeURIComponent('ID de invitación no especificado.')}`);
+  }
+
+  const { error } = await supabase.rpc('cancel_invitation_rpc', {
+    p_invitation_id: inviteId
+  });
+
+  if (error) {
+    console.error('[CANCEL INVITATION ERROR]:', error);
+    redirect(`/settings?tab=team&error=${encodeURIComponent('Error al cancelar la invitación: ' + error.message)}`);
+  }
+
+  revalidatePath('/settings');
+  redirect(`/settings?tab=team&success=${encodeURIComponent('La invitación ha sido cancelada exitosamente.')}`);
+}
+
+/**
+ * Regenerar una invitación (Nuevo token criptográfico y 7 días de vigencia)
+ */
+export async function regenerateInvitationAction(formData: FormData) {
+  const supabase = await createClient();
+
+  const inviteId = (formData.get('invite_id') as string || '').trim();
+  if (!inviteId) {
+    redirect(`/settings?tab=team&error=${encodeURIComponent('ID de invitación no especificado.')}`);
+  }
+
+  const newToken = crypto.randomBytes(24).toString('hex');
+
+  const { data: invite, error } = await supabase.rpc('regenerate_invitation_rpc', {
+    p_invitation_id: inviteId,
+    p_new_token: newToken
+  });
+
+  if (error || !invite) {
+    console.error('[REGENERATE INVITATION ERROR]:', error);
+    redirect(`/settings?tab=team&error=${encodeURIComponent('Error al regenerar invitación: ' + (error?.message || 'No encontrada.'))}`);
+  }
+
+  revalidatePath('/settings');
+  redirect(`/settings?tab=team&inviteToken=${newToken}&inviteEmail=${encodeURIComponent(invite.email)}&inviteRole=${invite.role}&success=${encodeURIComponent(`Invitación regenerada exitosamente para ${invite.email}. Copia el nuevo enlace.`)}`);
 }

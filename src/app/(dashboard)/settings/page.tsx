@@ -33,6 +33,8 @@ const TIMEZONES = [
 ];
 
 import { InvitationModal } from '@/components/invitations/InvitationModal';
+import { StoreInvitationsTable } from '@/components/invitations/StoreInvitationsTable';
+import { getStoreInvitationsAction } from '@/modules/invitations/actions';
 
 export default async function SettingsPage({
   searchParams,
@@ -101,6 +103,7 @@ export default async function SettingsPage({
   const canManageStore = currentUserRole === 'owner' || currentUserRole === 'admin';
   const canManageTeam = currentUserRole === 'owner' || currentUserRole === 'admin';
   const teamMembers = canManageTeam ? await getTeamMembers(activeStore.id) : [];
+  const storeInvitations = (activeTab === 'team' && canManageTeam) ? await getStoreInvitationsAction(activeStore.id) : [];
 
   // Datos de Suscripción y Límites SaaS
   const planLimits = await checkStoreLimits(activeStore.id);
@@ -930,12 +933,14 @@ export default async function SettingsPage({
                         <Badge variant="danger" className="text-[10px] py-0.5">2FA Pendiente</Badge>
                       )}
                     </div>
-                    <span className="text-[10px] font-mono text-zinc-500">{member.email || 'Sin correo'}</span>
                   </div>
                 </div>
               ))}
             </div>
           </Card>
+
+          {/* Tabla de Invitaciones de Equipo Enviadas */}
+          <StoreInvitationsTable invitations={storeInvitations} />
         </div>
       )}
 

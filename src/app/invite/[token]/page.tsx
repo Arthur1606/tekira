@@ -93,12 +93,16 @@ export default async function InvitePage({
         
         {/* Header */}
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-[#556B2F]/20 rounded-2xl flex items-center justify-center mx-auto border border-[#7C9A42]/40 shadow-lg shadow-[#556B2F]/20">
-            <Building2 className="w-8 h-8 text-[#8EA653]" />
+          <div className="w-16 h-16 bg-[#556B2F]/20 rounded-2xl flex items-center justify-center mx-auto border border-[#7C9A42]/40 shadow-lg shadow-[#556B2F]/20 overflow-hidden">
+            {invite.logo_url ? (
+              <img src={invite.logo_url} alt={invite.store_name} className="w-full h-full object-cover" />
+            ) : (
+              <Building2 className="w-8 h-8 text-[#8EA653]" />
+            )}
           </div>
 
           <div>
-            <span className="text-[10px] font-mono text-[#8EA653] uppercase tracking-widest block font-bold">Invitación a Equipo Empresarial</span>
+            <span className="text-[10px] font-mono text-[#8EA653] uppercase tracking-widest block font-bold">Has sido invitado a unirte a</span>
             <h1 className="text-2xl sm:text-3xl font-black text-[#F5F5F0] tracking-tight mt-1">{invite.store_name}</h1>
             
             <div className="mt-3 flex flex-wrap items-center justify-center gap-2">

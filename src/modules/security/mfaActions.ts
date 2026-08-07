@@ -188,6 +188,8 @@ export async function enableMfaMandatoryAction(formData: FormData) {
   }
 
   const stores = await getUserStores();
+  const storeName = stores.length > 0 ? stores[0].name : '';
+
   if (stores.length > 0) {
     await logSecurityEvent({
       storeId: stores[0].id,
@@ -199,7 +201,7 @@ export async function enableMfaMandatoryAction(formData: FormData) {
   }
 
   revalidatePath('/', 'layout');
-  redirect('/dashboard');
+  redirect(`/dashboard?success=${encodeURIComponent(storeName ? `Bienvenido a ${storeName}` : 'Seguridad 2FA configurada exitosamente.')}`);
 }
 
 export async function disableMfa() {
