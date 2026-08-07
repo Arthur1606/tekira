@@ -8,9 +8,10 @@ interface SubmitButtonProps {
   className?: string;
   fullWidth?: boolean;
   variant?: 'primary' | 'secondary' | 'ghost';
+  disabled?: boolean;
 }
 
-export function SubmitButton({ children, className = '', fullWidth = false, variant = 'primary' }: SubmitButtonProps) {
+export function SubmitButton({ children, className = '', fullWidth = false, variant = 'primary', disabled = false }: SubmitButtonProps) {
   const { pending } = useFormStatus();
 
   return (
@@ -19,6 +20,7 @@ export function SubmitButton({ children, className = '', fullWidth = false, vari
       isLoading={pending} 
       fullWidth={fullWidth} 
       variant={variant}
+      disabled={disabled || pending}
       className={className}
     >
       {children}
