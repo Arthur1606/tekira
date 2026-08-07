@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { checkIsSuperAdmin, getSuperAdminMetricsAction, getSuperAdminStoresAction } from '@/modules/superadmin/actions';
 import { SuperAdminStoreActionsModal } from '@/components/superadmin/SuperAdminStoreActionsModal';
+import { CreateDemoStoreModal } from '@/components/superadmin/CreateDemoStoreModal';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { ShieldAlert, Building2, Users, Package, ShoppingCart, Power, CheckCircle2, AlertCircle, ArrowLeft, ShieldCheck, Lock } from 'lucide-react';
@@ -59,8 +60,12 @@ export default async function SuperAdminPage({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 p-3 bg-[#141A16] rounded-2xl border border-[#232C26] text-xs font-mono text-[#8EA653]">
-          <ShieldCheck className="w-4 h-4" /> Acceso Super Admin Concedido
+        <div className="flex items-center gap-3">
+          <CreateDemoStoreModal />
+
+          <div className="flex items-center gap-2 p-3 bg-[#141A16] rounded-2xl border border-[#232C26] text-xs font-mono text-[#8EA653]">
+            <ShieldCheck className="w-4 h-4" /> Acceso Super Admin Concedido
+          </div>
         </div>
       </div>
 

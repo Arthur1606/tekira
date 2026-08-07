@@ -125,3 +125,34 @@ export async function toggleStoreStatusAction(formData: FormData) {
   revalidatePath('/superadmin');
   redirect(`/superadmin?success=${encodeURIComponent(`Acción "${action}" ejecutada exitosamente sobre el comercio.`)}`);
 }
+
+/**
+ * Crear rápidamente un nuevo comercio demo para pruebas desde el panel Super Admin
+ */
+export async function createDemoStoreAction(formData: FormData) {
+  const supabase = await createClient();
+
+  const name = (formData.get('name') as string || '').trim();
+  const category = (formData.get('category') as string || 'Tienda de barrio').trim();
+  const city = (formData.get('city') as string || 'Bogotá').trim();
+  const ownerEmail = (formData.get('owner_email') as string || '').trim().toLowerCase();
+
+  if (!name) {
+    redirect(`/superadmin?error=${encodeURIComponent('El nombre del comercio demo es obligatorio.')}`);
+  }
+
+  const { data: store, error } = await supabase.rpc('create_demo_store_rpc', {
+    p_name: name,
+    p_category: category,
+    p_city: city,
+    p_owner_email: ownerEmail || null
+  });
+
+  if (error) {
+    console.error('[CREATE DEMO STORE ERROR]:', error);
+    redirect(`/superadmin?error=${encodeURIComponent('Error al crear el comercio demo: ' + error.message)}`);
+  }
+
+  revalidatePath('/superadmin');
+  redirect(`/superadmin?success=${encodeURIComponent(`Comercio demo "${name}" creado exitosamente con plan Enterprise de prueba (90 días).`)}`);
+}
