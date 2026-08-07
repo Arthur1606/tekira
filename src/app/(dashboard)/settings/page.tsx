@@ -32,10 +32,20 @@ const TIMEZONES = [
   { code: 'UTC', name: 'Tiempo Universal Coordinado (UTC)' },
 ];
 
+import { InvitationModal } from '@/components/invitations/InvitationModal';
+
 export default async function SettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; error?: string; success?: string }>;
+  searchParams: Promise<{ 
+    tab?: string; 
+    error?: string; 
+    success?: string;
+    inviteToken?: string;
+    inviteEmail?: string;
+    inviteRole?: string;
+    inviteStore?: string;
+  }>;
 }) {
   const resolvedSearchParams = await searchParams;
   const rawTab = resolvedSearchParams.tab;
@@ -808,6 +818,17 @@ export default async function SettingsPage({
       {/* TAB 5: GESTIÓN DE EQUIPO (Solo Owner y Admin) */}
       {activeTab === 'team' && canManageTeam && (
         <div className="space-y-6">
+
+          {/* Modal / Card de Invitación Recientemente Generada */}
+          {resolvedSearchParams.inviteToken && (
+            <InvitationModal
+              token={resolvedSearchParams.inviteToken}
+              email={resolvedSearchParams.inviteEmail || ''}
+              role={resolvedSearchParams.inviteRole || 'employee'}
+              storeName={resolvedSearchParams.inviteStore || activeStore.name}
+            />
+          )}
+
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="text-xl font-bold text-[#F5F5F0]">Integrantes del Equipo</h2>

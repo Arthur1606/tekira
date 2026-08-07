@@ -90,6 +90,14 @@ export async function createInvitationAction(formData: FormData) {
     redirect(`/settings?tab=team&error=${encodeURIComponent('Error al generar la invitación: ' + error.message)}`);
   }
 
+  // Preparar abstracción para envío de correo (Estructura lista para integración SMTP/API)
+  await sendInvitationEmail({
+    email,
+    storeName: activeStore.name,
+    role,
+    inviteUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/invite/${token}`
+  });
+
   await logSecurityEvent({
     storeId: activeStore.id,
     userId: securityCtx.user.id,
@@ -101,7 +109,26 @@ export async function createInvitationAction(formData: FormData) {
 
   revalidatePath('/settings');
   revalidatePath('/team');
-  redirect(`/settings?tab=team&inviteToken=${token}&success=${encodeURIComponent(`Invitación generada exitosamente para ${email}. Copia el enlace de invitación.`)}`);
+  redirect(`/settings?tab=team&inviteToken=${token}&inviteEmail=${encodeURIComponent(email)}&inviteRole=${role}&inviteStore=${encodeURIComponent(activeStore.name)}&success=${encodeURIComponent(`Invitación generada exitosamente para ${email}. Copia el enlace de invitación.`)}`);
+}
+
+/**
+ * Abstracción de servicio para envío de correo de invitación (Estructura lista para integración SMTP/Resend/SendGrid)
+ */
+export async function sendInvitationEmail({
+  email,
+  storeName,
+  role,
+  inviteUrl
+}: {
+  email: string;
+  storeName: string;
+  role: string;
+  inviteUrl: string;
+}): Promise<boolean> {
+  // NOTA: Preparado para integradores SMTP / API (Resend / SendGrid / Nodemailer)
+  console.log(`[SMTP/API PREPARATION] Invitación generada para ${email} (${storeName}): ${inviteUrl}`);
+  return true;
 }
 
 /**
