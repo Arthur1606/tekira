@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { getInvitationByToken, registerWithInvitationAction } from '@/modules/invitations/actions';
+import { validateInvitationToken, registerWithInvitationAction } from '@/modules/invitations/actions';
 import { Input } from '@/components/ui/Input';
 import { SubmitButton } from '@/components/ui/SubmitButton';
 import { Badge } from '@/components/ui/Badge';
-import { Building2, User, Mail, Lock, AlertCircle, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Building2, User, Mail, Lock, AlertCircle, ShieldCheck, CheckCircle2, Bug, Clock, XCircle, AlertTriangle, Database } from 'lucide-react';
 
 export default async function InvitePage({
   params,
@@ -15,21 +15,61 @@ export default async function InvitePage({
   const { token } = await params;
   const { error } = await searchParams;
 
-  const invite = await getInvitationByToken(token);
+  const validation = await validateInvitationToken(token);
+  const isDev = process.env.NODE_ENV !== 'production';
 
-  if (!invite || !invite.is_valid) {
+  if (validation.reason !== 'valid' || !validation.invite) {
+    const getDiagnosticTitle = () => {
+      switch (validation.reason) {
+        case 'not_found': return 'Token no encontrado';
+        case 'cancelled': return 'Invitación cancelada';
+        case 'accepted': return 'Invitación ya utilizada';
+        case 'expired': return 'Invitación expirada';
+        case 'connection_error': return 'Error de conexión a base de datos';
+        default: return 'Invitación no disponible';
+      }
+    };
+
+    const getDiagnosticIcon = () => {
+      switch (validation.reason) {
+        case 'not_found': return <Bug className="w-8 h-8 text-amber-400" />;
+        case 'cancelled': return <XCircle className="w-8 h-8 text-rose-400" />;
+        case 'accepted': return <CheckCircle2 className="w-8 h-8 text-blue-400" />;
+        case 'expired': return <Clock className="w-8 h-8 text-amber-400" />;
+        case 'connection_error': return <Database className="w-8 h-8 text-rose-400" />;
+        default: return <AlertCircle className="w-8 h-8 text-rose-400" />;
+      }
+    };
+
     return (
       <div className="min-h-screen w-full bg-[#0B0F0D] font-sans flex items-center justify-center p-4">
         <div className="w-full max-w-md bg-[#141A16] rounded-3xl border border-[#232C26] p-8 text-center space-y-6 shadow-2xl">
-          <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto border border-rose-500/20">
-            <AlertCircle className="w-8 h-8 text-rose-400" />
+          <div className="w-16 h-16 bg-zinc-800/50 rounded-2xl flex items-center justify-center mx-auto border border-[#232C26]">
+            {getDiagnosticIcon()}
           </div>
-          <div>
-            <h1 className="text-2xl font-black text-[#F5F5F0]">Invitación no disponible</h1>
-            <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
-              El enlace de invitación que intentas utilizar es inválido, ha sido cancelado o ya ha expirado. Por favor solicita una nueva invitación al administrador de tu empresa.
-            </p>
+
+          <div className="space-y-3">
+            <h1 className="text-2xl font-black text-[#F5F5F0]">
+              {isDev ? getDiagnosticTitle() : 'Invitación no disponible'}
+            </h1>
+
+            {isDev ? (
+              <div className="p-4 bg-[#0E1310] border border-amber-500/30 rounded-2xl text-left space-y-2 text-xs font-mono">
+                <div className="flex items-center gap-1.5 text-amber-400 font-bold uppercase tracking-wider text-[10px]">
+                  <AlertTriangle className="w-3.5 h-3.5" /> Diagnóstico de Desarrollo:
+                </div>
+                <p className="text-zinc-300 leading-relaxed font-sans">{validation.diagnosticMessage}</p>
+                <div className="pt-2 border-t border-[#232C26] text-[10px] text-zinc-500 truncate">
+                  Token: <span className="text-[#8EA653] font-bold select-all">{token}</span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                El enlace de invitación que intentas utilizar es inválido, ha sido cancelado o ya ha expirado. Por favor solicita una nueva invitación al administrador de tu empresa.
+              </p>
+            )}
           </div>
+
           <Link href="/login">
             <span className="inline-block w-full py-3 px-6 bg-[#1E2621] hover:bg-[#28332C] text-[#F5F5F0] text-sm font-bold rounded-xl transition-colors border border-[#232C26]">
               Ir a Iniciar Sesión
@@ -39,6 +79,8 @@ export default async function InvitePage({
       </div>
     );
   }
+
+  const invite = validation.invite;
 
   return (
     <div className="min-h-screen w-full bg-[#0B0F0D] font-sans flex items-center justify-center p-4 sm:p-6 lg:p-10 relative overflow-hidden">

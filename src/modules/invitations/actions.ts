@@ -140,22 +140,57 @@ export async function sendInvitationEmail({
   return true;
 }
 
+export type InvitationDiagnosticReason = 
+  | 'valid'
+  | 'not_found'
+  | 'cancelled'
+  | 'accepted'
+  | 'expired'
+  | 'connection_error';
+
+export interface InvitationValidationResult {
+  invite: InvitationData | null;
+  reason: InvitationDiagnosticReason;
+  diagnosticMessage: string;
+}
+
 /**
- * Obtener detalles de una invitación pública por su token
+ * Validar token de invitación con diagnóstico detallado por causas
  */
-export async function getInvitationByToken(token: string): Promise<InvitationData | null> {
+export async function validateInvitationToken(token: string): Promise<InvitationValidationResult> {
   const supabase = await createClient();
+
+  if (!token || token.trim() === '') {
+    return {
+      invite: null,
+      reason: 'not_found',
+      diagnosticMessage: 'Token no especificado o vacío.'
+    };
+  }
 
   const { data, error } = await supabase.rpc('get_invitation_by_token', {
     p_token: token.trim()
   });
 
-  if (error || !data || data.length === 0) {
-    return null;
+  if (error) {
+    console.error('[INVITATION DB CONNECTION ERROR]:', error);
+    return {
+      invite: null,
+      reason: 'connection_error',
+      diagnosticMessage: `Error de conexión al consultar la base de datos (${error.message})`
+    };
+  }
+
+  if (!data || data.length === 0) {
+    return {
+      invite: null,
+      reason: 'not_found',
+      diagnosticMessage: `Token no encontrado: La cadena de invitación no existe en team_invitations ni employee_invitations.`
+    };
   }
 
   const row = data[0];
-  return {
+  const invite: InvitationData = {
     id: row.id,
     store_id: row.store_id,
     store_name: row.store_name,
@@ -166,6 +201,45 @@ export async function getInvitationByToken(token: string): Promise<InvitationDat
     expires_at: row.expires_at,
     is_valid: Boolean(row.is_valid)
   };
+
+  if (row.status === 'cancelled') {
+    return {
+      invite,
+      reason: 'cancelled',
+      diagnosticMessage: `Invitación cancelada: El enlace para ${row.email} fue revocado por el administrador.`
+    };
+  }
+
+  if (row.status === 'accepted') {
+    return {
+      invite,
+      reason: 'accepted',
+      diagnosticMessage: `Invitación ya utilizada: Esta invitación para ${row.email} ya fue aceptada previamente.`
+    };
+  }
+
+  const isExpired = new Date(row.expires_at) <= new Date() || row.status === 'expired';
+  if (isExpired) {
+    return {
+      invite,
+      reason: 'expired',
+      diagnosticMessage: `Invitación expirada: La vigencia de 7 días finalizó el ${new Date(row.expires_at).toLocaleString('es-ES')}.`
+    };
+  }
+
+  return {
+    invite,
+    reason: 'valid',
+    diagnosticMessage: `Invitación válida para ${row.email} en ${row.store_name}.`
+  };
+}
+
+/**
+ * Obtener detalles de una invitación pública por su token (Wrapper de compatibilidad)
+ */
+export async function getInvitationByToken(token: string): Promise<InvitationData | null> {
+  const result = await validateInvitationToken(token);
+  return result.invite && result.reason === 'valid' ? result.invite : null;
 }
 
 /**
