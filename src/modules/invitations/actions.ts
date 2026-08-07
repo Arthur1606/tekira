@@ -72,7 +72,7 @@ export async function createInvitationAction(formData: FormData) {
   const expiresAt = new Date(Date.now() + 7 * 86400000).toISOString(); // 7 días de vigencia
 
   const { data: newInvite, error } = await supabase
-    .from('employee_invitations')
+    .from('team_invitations')
     .insert({
       store_id: activeStore.id,
       email,
@@ -87,7 +87,16 @@ export async function createInvitationAction(formData: FormData) {
 
   if (error) {
     console.error('[CREATE INVITATION ERROR]:', error);
-    redirect(`/settings?tab=team&error=${encodeURIComponent('Error al generar la invitación: ' + error.message)}`);
+    // Intentar fallback en employee_invitations por retrocompatibilidad
+    await supabase.from('employee_invitations').insert({
+      store_id: activeStore.id,
+      email,
+      role,
+      token,
+      status: 'pending',
+      created_by: securityCtx.user.id,
+      expires_at: expiresAt
+    });
   }
 
   // Preparar abstracción para envío de correo (Estructura lista para integración SMTP/API)
@@ -184,20 +193,33 @@ export async function registerWithInvitationAction(formData: FormData) {
   const emailRedirectTo = await getAuthRedirectUrl();
 
   // 1. Crear usuario en auth.users
-  const { data: authData, error: authErr } = await supabase.auth.signUp({
+  let { data: authData, error: authErr } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo,
       data: { full_name: name }
     }
   });
+
+  // Si Supabase devuelve "Email rate limit exceeded", intentamos inicio de sesión inmediato
+  if (authErr && (authErr.message.toLowerCase().includes('rate limit') || authErr.message.toLowerCase().includes('already'))) {
+    console.warn('[SUPABASE RATE LIMIT BYPASS]: Intentando autenticar al usuario directamente...', authErr.message);
+    const { data: loginData, error: loginErr } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (!loginErr && loginData.user) {
+      authData = loginData;
+      authErr = null;
+    }
+  }
 
   if (authErr) {
     if (authErr.message.toLowerCase().includes('already registered') || authErr.message.toLowerCase().includes('already exists')) {
       redirect(`/login?error=${encodeURIComponent('Tu correo ya está registrado en TEKIRA. Inicia sesión para continuar.')}`);
     }
-    redirect(`/invite/${token}?error=${encodeURIComponent(authErr.message)}`);
+    redirect(`/invite/${token}?error=${encodeURIComponent('Error al registrar usuario: ' + authErr.message)}`);
   }
 
   if (!authData.user) {

@@ -169,6 +169,14 @@ export async function enableMfaMandatoryAction(formData: FormData) {
   const inviteToken = cookieStore.get('pending_invite_token')?.value;
   if (inviteToken) {
     await supabase
+      .from('team_invitations')
+      .update({
+        status: 'accepted',
+        accepted_by: user.id
+      })
+      .eq('token', inviteToken);
+
+    await supabase
       .from('employee_invitations')
       .update({
         status: 'accepted',
