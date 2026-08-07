@@ -1,6 +1,11 @@
 -- Migración: Fase 5 PRE-RELEASE v2.5 - Aprovisionamiento Comercio Piloto Real "Tienda Familiar Demo"
 -- Archivo: 00000000000038_tienda_familiar_demo.sql
 
+-- 1. Asegurar columnas de compatibilidad en public.subscriptions
+ALTER TABLE public.subscriptions ADD COLUMN IF NOT EXISTS plan VARCHAR(20) DEFAULT 'enterprise';
+ALTER TABLE public.subscriptions ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ DEFAULT now();
+ALTER TABLE public.subscriptions ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ DEFAULT (now() + interval '90 days');
+
 DO $$
 DECLARE
     v_store_id UUID;
@@ -9,7 +14,7 @@ BEGIN
     SELECT id INTO v_owner_id FROM auth.users ORDER BY created_at ASC LIMIT 1;
 
     IF v_owner_id IS NOT NULL THEN
-        -- 1. Insertar o recuperar comercio "Tienda Familiar Demo"
+        -- 2. Insertar o recuperar comercio "Tienda Familiar Demo"
         INSERT INTO public.stores (
             name,
             category,
@@ -36,12 +41,32 @@ BEGIN
         SELECT id INTO v_store_id FROM public.stores WHERE name = 'Tienda Familiar Demo' LIMIT 1;
 
         IF v_store_id IS NOT NULL THEN
-            -- 2. Asegurar suscripción Enterprise Piloto (90 días)
-            INSERT INTO public.subscriptions (store_id, plan, status, started_at, expires_at)
-            VALUES (v_store_id, 'enterprise', 'active', now(), now() + interval '90 days')
-            ON CONFLICT DO NOTHING;
+            -- 3. Asegurar suscripción Enterprise Piloto (90 días)
+            INSERT INTO public.subscriptions (
+                store_id,
+                plan_tier,
+                plan,
+                status,
+                started_at,
+                expires_at,
+                current_period_end
+            ) VALUES (
+                v_store_id,
+                'enterprise',
+                'enterprise',
+                'active',
+                now(),
+                now() + interval '90 days',
+                now() + interval '90 days'
+            )
+            ON CONFLICT (store_id) DO UPDATE
+            SET plan_tier = 'enterprise',
+                plan = 'enterprise',
+                status = 'active',
+                expires_at = now() + interval '90 days',
+                current_period_end = now() + interval '90 days';
 
-            -- 3. Cargar productos piloto con existencias en Tienda y Bodega
+            -- 4. Cargar productos piloto con existencias en Tienda y Bodega
             INSERT INTO public.products (
                 store_id,
                 name,

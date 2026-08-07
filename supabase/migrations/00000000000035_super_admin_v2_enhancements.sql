@@ -188,21 +188,32 @@ BEGIN
     ON CONFLICT (store_id, user_id) DO NOTHING;
 
     -- Asignar plan piloto Enterprise 90 días por defecto
+    BEGIN
+        ALTER TABLE public.subscriptions ADD COLUMN IF NOT EXISTS plan VARCHAR(20) DEFAULT 'enterprise';
+        ALTER TABLE public.subscriptions ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ DEFAULT now();
+        ALTER TABLE public.subscriptions ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ DEFAULT (now() + interval '90 days');
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+
     INSERT INTO public.subscriptions (
         store_id,
+        plan_tier,
         plan,
         status,
         started_at,
-        expires_at
+        expires_at,
+        current_period_end
     ) VALUES (
         v_store.id,
         'enterprise',
+        'enterprise',
         'active',
         now(),
+        now() + interval '90 days',
         now() + interval '90 days'
     )
     ON CONFLICT (store_id) DO UPDATE
-    SET plan = 'enterprise', status = 'active', expires_at = now() + interval '90 days';
+    SET plan_tier = 'enterprise', plan = 'enterprise', status = 'active', expires_at = now() + interval '90 days';
 
     -- Registrar auditoría
     BEGIN
