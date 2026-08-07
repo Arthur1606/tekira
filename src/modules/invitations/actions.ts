@@ -69,34 +69,19 @@ export async function createInvitationAction(formData: FormData) {
 
   // Generar token criptográfico único (48 chars hex)
   const token = crypto.randomBytes(24).toString('hex');
-  const expiresAt = new Date(Date.now() + 7 * 86400000).toISOString(); // 7 días de vigencia
 
-  const { data: newInvite, error } = await supabase
-    .from('team_invitations')
-    .insert({
-      store_id: activeStore.id,
-      email,
-      role,
-      token,
-      status: 'pending',
-      created_by: securityCtx.user.id,
-      expires_at: expiresAt
-    })
-    .select()
-    .single();
+  // Invocar RPC SECURITY DEFINER para crear la invitación a prueba de RLS
+  const { data: newInvite, error } = await supabase.rpc('create_team_invitation_rpc', {
+    p_store_id: activeStore.id,
+    p_email: email,
+    p_role: role,
+    p_token: token,
+    p_created_by: securityCtx.user.id
+  });
 
   if (error) {
-    console.error('[CREATE INVITATION ERROR]:', error);
-    // Intentar fallback en employee_invitations por retrocompatibilidad
-    await supabase.from('employee_invitations').insert({
-      store_id: activeStore.id,
-      email,
-      role,
-      token,
-      status: 'pending',
-      created_by: securityCtx.user.id,
-      expires_at: expiresAt
-    });
+    console.error('[CREATE INVITATION RPC ERROR]:', error);
+    redirect(`/settings?tab=team&error=${encodeURIComponent('Error al generar la invitación: ' + error.message)}`);
   }
 
   // Preparar abstracción para envío de correo (Estructura lista para integración SMTP/API)
@@ -111,8 +96,8 @@ export async function createInvitationAction(formData: FormData) {
     storeId: activeStore.id,
     userId: securityCtx.user.id,
     action: 'INVITATION_CREATED',
-    entity: 'employee_invitations',
-    entityId: newInvite.id,
+    entity: 'team_invitations',
+    entityId: newInvite?.id || activeStore.id,
     metadata: { target_email: email, role, token }
   });
 
@@ -185,7 +170,7 @@ export async function validateInvitationToken(token: string): Promise<Invitation
     return {
       invite: null,
       reason: 'not_found',
-      diagnosticMessage: `Token no encontrado: La cadena de invitación no existe en team_invitations ni employee_invitations.`
+      diagnosticMessage: `Token no encontrado: La cadena de invitación no existe en la base de datos.`
     };
   }
 
@@ -253,9 +238,18 @@ export async function registerWithInvitationAction(formData: FormData) {
   const name = (formData.get('name') as string || '').trim();
   const email = (formData.get('email') as string || '').trim().toLowerCase();
   const password = (formData.get('password') as string || '').trim();
+  const confirmPassword = (formData.get('confirm_password') as string || '').trim();
 
   if (!token || !name || !email || !password) {
     redirect(`/invite/${token}?error=${encodeURIComponent('Todos los campos son obligatorios.')}`);
+  }
+
+  if (confirmPassword && password !== confirmPassword) {
+    redirect(`/invite/${token}?error=${encodeURIComponent('Las contraseñas no coinciden. Verifícalas e intenta nuevamente.')}`);
+  }
+
+  if (password.length < 6) {
+    redirect(`/invite/${token}?error=${encodeURIComponent('La contraseña debe tener al menos 6 caracteres.')}`);
   }
 
   // Validar invitación
@@ -263,8 +257,6 @@ export async function registerWithInvitationAction(formData: FormData) {
   if (!invite || !invite.is_valid) {
     redirect(`/invite/${token}?error=${encodeURIComponent('La invitación no existe, ha expirado o ya fue utilizada.')}`);
   }
-
-  const emailRedirectTo = await getAuthRedirectUrl();
 
   // 1. Crear usuario en auth.users
   let { data: authData, error: authErr } = await supabase.auth.signUp({
@@ -275,9 +267,9 @@ export async function registerWithInvitationAction(formData: FormData) {
     }
   });
 
-  // Si Supabase devuelve "Email rate limit exceeded", intentamos inicio de sesión inmediato
+  // Si Supabase devuelve error por limite de envio de emails o si ya existe la cuenta
   if (authErr && (authErr.message.toLowerCase().includes('rate limit') || authErr.message.toLowerCase().includes('already'))) {
-    console.warn('[SUPABASE RATE LIMIT BYPASS]: Intentando autenticar al usuario directamente...', authErr.message);
+    console.warn('[SUPABASE AUTH BYPASS]: Autenticando usuario invitado...', authErr.message);
     const { data: loginData, error: loginErr } = await supabase.auth.signInWithPassword({
       email,
       password
@@ -297,23 +289,20 @@ export async function registerWithInvitationAction(formData: FormData) {
   }
 
   if (!authData.user) {
-    redirect(`/invite/${token}?error=${encodeURIComponent('Error al registrar usuario.')}`);
+    redirect(`/invite/${token}?error=${encodeURIComponent('Error al registrar usuario en el servidor.')}`);
   }
 
   const userId = authData.user.id;
 
-  // 2. Insertar en team_members con el store_id y rol de la invitación (Trigger asigna TKR-EMP-000001)
-  const { error: teamErr } = await supabase.from('team_members').insert({
-    store_id: invite.store_id,
-    user_id: userId,
-    name,
-    email,
-    role: invite.role,
-    status: 'active'
+  // 2. Invocar RPC SECURITY DEFINER para asociar al comercio, team_members, employee_code y marcar la invitación como aceptada
+  const { data: acceptRpc, error: rpcErr } = await supabase.rpc('accept_team_invitation_rpc', {
+    p_token: token,
+    p_user_id: userId,
+    p_name: name
   });
 
-  if (teamErr) {
-    console.error('[INVITE TEAM MEMBER INSERT ERROR]:', teamErr);
+  if (rpcErr) {
+    console.error('[ACCEPT INVITATION RPC ERROR]:', rpcErr);
   }
 
   // Registrar consentimiento legal
@@ -322,7 +311,7 @@ export async function registerWithInvitationAction(formData: FormData) {
     terms_version: 'v0.12.0'
   });
 
-  // Guardar token en cookie temporal para marcar como 'accepted' tras 2FA
+  // Guardar token en cookie temporal para verificar en el onboarding y tras 2FA
   cookieStore.set('pending_invite_token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -330,13 +319,23 @@ export async function registerWithInvitationAction(formData: FormData) {
     path: '/'
   });
 
+  // Registrar Auditoría en security_logs
   await logSecurityEvent({
     storeId: invite.store_id,
     userId,
-    action: 'INVITATION_ACCEPTED_SIGNUP',
-    entity: 'employee_invitations',
+    action: 'INVITATION_ACCEPTED',
+    entity: 'team_invitations',
     entityId: invite.id,
     metadata: { email, role: invite.role, token }
+  });
+
+  await logSecurityEvent({
+    storeId: invite.store_id,
+    userId,
+    action: 'USER_JOINED_STORE',
+    entity: 'team_members',
+    entityId: userId,
+    metadata: { email, role: invite.role, employee_code: acceptRpc?.[0]?.out_employee_code || 'TKR-EMP-000001' }
   });
 
   revalidatePath('/', 'layout');

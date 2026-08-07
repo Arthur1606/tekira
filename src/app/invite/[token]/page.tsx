@@ -158,6 +158,17 @@ export default async function InvitePage({
             minLength={6}
           />
 
+          <Input
+            id="confirm_password"
+            name="confirm_password"
+            type="password"
+            label="Confirma tu Contraseña *"
+            placeholder="Repite tu contraseña"
+            icon={Lock}
+            required
+            minLength={6}
+          />
+
           {/* CHECKBOX DE ACEPTACIÓN LEGAL OBLIGATORIA */}
           <div className="p-3.5 bg-[#0E1310] border border-[#232C26] rounded-2xl space-y-2">
             <label className="flex items-start gap-2.5 cursor-pointer text-xs text-zinc-300">
@@ -183,7 +194,7 @@ export default async function InvitePage({
 
           <div className="pt-2">
             <SubmitButton fullWidth className="py-4 text-sm font-bold bg-[#556B2F] hover:bg-[#7C9A42] text-[#F5F5F0] shadow-xl shadow-[#556B2F]/20">
-              Aceptar Invitación y Configurar Seguridad 2FA
+              Crear cuenta y unirme
             </SubmitButton>
           </div>
         </form>
