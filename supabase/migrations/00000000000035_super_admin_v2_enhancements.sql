@@ -4,7 +4,12 @@
 -- 1. Asegurar la columna is_super_admin en profiles
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_super_admin BOOLEAN DEFAULT false;
 
--- 2. Asegurar función is_super_admin_rpc
+-- 2. Eliminar funciones previas para prevenir error 42P13 al cambiar tipo de retorno
+DROP FUNCTION IF EXISTS public.get_super_admin_stores_v2();
+DROP FUNCTION IF EXISTS public.get_super_admin_metrics_v2();
+DROP FUNCTION IF EXISTS public.create_demo_store_rpc(TEXT, TEXT, TEXT, TEXT);
+
+-- 3. Asegurar función is_super_admin_rpc
 CREATE OR REPLACE FUNCTION public.is_super_admin_rpc(p_user_id UUID)
 RETURNS BOOLEAN
 LANGUAGE plpgsql
@@ -23,7 +28,7 @@ BEGIN
 END;
 $$;
 
--- 3. RPC SECURITY DEFINER mejorado para métricas agregadas globales
+-- 4. RPC SECURITY DEFINER mejorado para métricas agregadas globales
 CREATE OR REPLACE FUNCTION public.get_super_admin_metrics_v2()
 RETURNS TABLE (
     total_stores BIGINT,
@@ -62,7 +67,7 @@ BEGIN
 END;
 $$;
 
--- 4. RPC SECURITY DEFINER a prueba de fallos para consultar TODOS los comercios
+-- 5. RPC SECURITY DEFINER a prueba de fallos para consultar TODOS los comercios
 CREATE OR REPLACE FUNCTION public.get_super_admin_stores_v2()
 RETURNS TABLE (
     id UUID,
@@ -104,7 +109,7 @@ BEGIN
 END;
 $$;
 
--- 5. RPC SECURITY DEFINER para crear rápidamente un comercio demo de prueba
+-- 6. RPC SECURITY DEFINER para crear rápidamente un comercio demo de prueba
 CREATE OR REPLACE FUNCTION public.create_demo_store_rpc(
     p_name TEXT,
     p_category TEXT,
