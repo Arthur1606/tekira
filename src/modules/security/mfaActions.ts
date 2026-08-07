@@ -130,6 +130,7 @@ export async function enableMfa(formData: FormData) {
 
 export async function enableMfaMandatoryAction(formData: FormData) {
   const supabase = await createClient();
+  const cookieStore = await cookies();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) redirect('/login');
@@ -162,6 +163,20 @@ export async function enableMfaMandatoryAction(formData: FormData) {
 
   if (updateErr) {
     redirect(`/setup-mfa?error=${encodeURIComponent('Error al activar 2FA.')}`);
+  }
+
+  // Marcar invitación pendiente como 'accepted' si provenía de un link de invitación
+  const inviteToken = cookieStore.get('pending_invite_token')?.value;
+  if (inviteToken) {
+    await supabase
+      .from('employee_invitations')
+      .update({
+        status: 'accepted',
+        accepted_by: user.id
+      })
+      .eq('token', inviteToken);
+    
+    cookieStore.delete('pending_invite_token');
   }
 
   const stores = await getUserStores();
