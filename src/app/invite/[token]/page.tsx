@@ -59,11 +59,16 @@ export default async function InvitePage({
             <span className="text-[10px] font-mono text-[#8EA653] uppercase tracking-widest block font-bold">Invitación a Equipo Empresarial</span>
             <h1 className="text-2xl sm:text-3xl font-black text-[#F5F5F0] tracking-tight mt-1">{invite.store_name}</h1>
             
-            <div className="mt-3 flex items-center justify-center gap-2">
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
               <span className="text-xs text-zinc-400">Rol asignado:</span>
               <Badge variant="primary" className="bg-[#556B2F]/20 text-[#8EA653] border-[#7C9A42]/40 font-bold uppercase text-xs">
                 <ShieldCheck className="w-3.5 h-3.5 mr-1" /> {invite.role === 'admin' ? 'Administrador' : 'Empleado'}
               </Badge>
+            </div>
+
+            <div className="mt-3 p-2.5 bg-[#0E1310] border border-[#232C26] rounded-xl flex items-center justify-between text-xs font-mono max-w-xs mx-auto">
+              <span className="text-zinc-400">Código Empleado:</span>
+              <span className="font-bold text-[#8EA653]">TKR-EMP-AUTO</span>
             </div>
           </div>
         </div>
