@@ -221,13 +221,13 @@ export function TransactionForm({ products }: TransactionFormProps) {
             ) : (
               <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                 {cart.map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-3 bg-[#141A16] border border-[#232C26] rounded-xl text-sm">
-                    <div className="flex-1 pr-3">
-                      <p className="font-bold text-[#F5F5F0]">{item.name}</p>
-                      <p className="text-xs text-[#8EA653]">{formatCOP(item.unitPrice)} c/u</p>
+                  <div key={idx} className="flex flex-wrap sm:flex-nowrap items-center justify-between p-3 bg-[#141A16] border border-[#232C26] rounded-xl text-sm gap-2">
+                    <div className="min-w-0 flex-1 pr-2">
+                      <p className="font-bold text-[#F5F5F0] truncate" title={item.name}>{item.name}</p>
+                      <p className="text-xs text-[#8EA653] font-mono mt-0.5">{formatCOP(item.unitPrice)} c/u</p>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 shrink-0">
                       <div className="flex items-center gap-1 bg-[#0E1310] border border-[#232C26] rounded-lg px-2 py-1">
                         <button
                           type="button"
@@ -236,7 +236,7 @@ export function TransactionForm({ products }: TransactionFormProps) {
                         >
                           -
                         </button>
-                        <span className="text-xs font-bold text-[#F5F5F0] min-w-[16px] text-center">{item.quantity}</span>
+                        <span className="text-xs font-bold text-[#F5F5F0] min-w-[20px] text-center">{item.quantity}</span>
                         <button
                           type="button"
                           onClick={() => updateCartQty(idx, item.quantity + 1)}
@@ -246,14 +246,14 @@ export function TransactionForm({ products }: TransactionFormProps) {
                         </button>
                       </div>
 
-                      <span className="font-extrabold text-[#F5F5F0] min-w-[70px] text-right">
+                      <span className="font-black text-[#8EA653] font-mono text-sm min-w-[80px] text-right">
                         {formatCOP(item.subtotal)}
                       </span>
 
                       <button
                         type="button"
                         onClick={() => removeFromCart(idx)}
-                        className="p-1.5 text-zinc-500 hover:text-rose-400 transition-colors"
+                        className="p-1.5 text-zinc-500 hover:text-rose-400 transition-colors shrink-0"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
