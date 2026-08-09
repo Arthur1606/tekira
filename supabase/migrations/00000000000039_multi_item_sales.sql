@@ -1,7 +1,27 @@
 -- Migración: Fase 6 PRE-RELEASE v2.6 - Sistema de Ventas Carrito Multiproducto
 -- Archivo: 00000000000039_multi_item_sales.sql
 
--- 1. Crear tabla de Ventas Principales (sales)
+-- 1. Crear tabla de Clientes (customers) si no existe
+CREATE TABLE IF NOT EXISTS public.customers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    store_id UUID NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    email TEXT,
+    phone TEXT,
+    document_id TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Habilitar RLS en customers
+ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can manage customers of their own store" ON public.customers;
+CREATE POLICY "Users can manage customers of their own store" ON public.customers
+    FOR ALL USING (
+        EXISTS (SELECT 1 FROM public.stores s WHERE s.id = customers.store_id AND s.owner_id = auth.uid())
+        OR EXISTS (SELECT 1 FROM public.team_members tm WHERE tm.store_id = customers.store_id AND tm.user_id = auth.uid())
+    );
+
+-- 2. Crear tabla de Ventas Principales (sales)
 CREATE TABLE IF NOT EXISTS public.sales (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     store_id UUID NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
@@ -16,7 +36,7 @@ CREATE TABLE IF NOT EXISTS public.sales (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 2. Crear tabla de Detalles de Venta (sale_items)
+-- 3. Crear tabla de Detalles de Venta (sale_items)
 CREATE TABLE IF NOT EXISTS public.sale_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     sale_id UUID NOT NULL REFERENCES public.sales(id) ON DELETE CASCADE,
@@ -28,11 +48,11 @@ CREATE TABLE IF NOT EXISTS public.sale_items (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 3. Habilitar RLS en ambas tablas
+-- 4. Habilitar RLS en sales y sale_items
 ALTER TABLE public.sales ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sale_items ENABLE ROW LEVEL SECURITY;
 
--- 4. Políticas de Seguridad (RLS) para sales
+-- 5. Políticas de Seguridad (RLS) para sales
 DROP POLICY IF EXISTS "Users can manage sales of their own store" ON public.sales;
 CREATE POLICY "Users can manage sales of their own store" ON public.sales
     FOR ALL USING (
@@ -40,7 +60,7 @@ CREATE POLICY "Users can manage sales of their own store" ON public.sales
         OR EXISTS (SELECT 1 FROM public.team_members tm WHERE tm.store_id = sales.store_id AND tm.user_id = auth.uid())
     );
 
--- 5. Políticas de Seguridad (RLS) para sale_items
+-- 6. Políticas de Seguridad (RLS) para sale_items
 DROP POLICY IF EXISTS "Users can manage sale_items of their own store" ON public.sale_items;
 CREATE POLICY "Users can manage sale_items of their own store" ON public.sale_items
     FOR ALL USING (
@@ -52,7 +72,8 @@ CREATE POLICY "Users can manage sale_items of their own store" ON public.sale_it
         )
     );
 
--- 6. Índices de Rendimiento
+-- 7. Índices de Rendimiento
+CREATE INDEX IF NOT EXISTS idx_customers_store_id ON public.customers(store_id);
 CREATE INDEX IF NOT EXISTS idx_sales_store_id ON public.sales(store_id);
 CREATE INDEX IF NOT EXISTS idx_sales_user_id ON public.sales(user_id);
 CREATE INDEX IF NOT EXISTS idx_sale_items_sale_id ON public.sale_items(sale_id);
