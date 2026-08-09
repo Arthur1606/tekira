@@ -78,19 +78,22 @@ export async function createProduct(formData: FormData) {
     }
   }
 
-  // 4. Insertar Producto (Inicialmente quantity 0)
+  const initialStock = Math.max(0, quantity || 0);
+  const initialStatus = initialStock === 0 ? 'out_of_stock' : (initialStock <= minStock ? 'low_stock' : 'available');
+
+  // 4. Insertar Producto con su cantidad inicial real
   const { data: newProduct, error } = await supabase.from('products').insert({
     store_id: activeStore.id,
     name,
     category,
     sku: finalSku,
-    quantity: 0,
-    current_stock: 0,
+    quantity: initialStock,
+    current_stock: initialStock,
     sale_price: salePrice,
     price: salePrice,
     unit,
     min_stock: minStock,
-    status: 'out_of_stock'
+    status: initialStatus
   }).select().single();
 
   if (error || !newProduct) {
@@ -102,7 +105,8 @@ export async function createProduct(formData: FormData) {
     product_id: newProduct.id,
     name: 'Variante Principal',
     sku: finalSku,
-    quantity: 0,
+    quantity: initialStock,
+    stock: initialStock,
     cost,
     sale_price: salePrice
   }).select().single();
@@ -112,12 +116,16 @@ export async function createProduct(formData: FormData) {
   }
 
   // 6. Si la cantidad inicial es > 0, registrar el primer movimiento de entrada con product_id y variant_id
-  if (quantity > 0) {
+  if (initialStock > 0) {
     await supabase.from('inventory_movements').insert({
+      store_id: activeStore.id,
       product_id: newProduct.id,
       variant_id: newVariant.id,
+      user_id: securityCtx.user.id,
       type: 'entry',
-      quantity: quantity,
+      quantity: initialStock,
+      previous_stock: 0,
+      new_stock: initialStock,
       reason: 'Inventario inicial'
     });
   }
