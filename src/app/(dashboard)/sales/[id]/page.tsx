@@ -4,7 +4,7 @@ import { ArrowLeft, ShoppingBag, User, Phone, FileText, Lock, Calendar, CreditCa
 import Link from 'next/link';
 import { getUserStores } from '@/modules/stores/services';
 import { createClient } from '@/lib/supabase/server';
-import { updateSaleMetadata, deleteSale } from '@/modules/sales/actions';
+import { updateSaleMetadata, updateSaleStatus, deleteSale } from '@/modules/sales/actions';
 import { redirect } from 'next/navigation';
 
 export default async function SaleDetailPage({
@@ -101,6 +101,42 @@ export default async function SaleDetailPage({
           {resolvedSearchParams.success}
         </div>
       )}
+
+      {/* Selector de Estado de la Operación Comercial (Pendiente vs Entregado) */}
+      <Card noPadding className="p-5 bg-[#141A16] border border-[#232C26]">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Estado de la Operación Comercial</span>
+            <div className="flex items-center gap-2 mt-1">
+              <span className={`text-base font-black px-3 py-1 rounded-full border ${
+                (sale.status || 'pendiente') === 'entregado'
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                  : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+              }`}>
+                {(sale.status || 'pendiente') === 'entregado' ? '🟢 Entregado' : '🟡 Pendiente'}
+              </span>
+              <p className="text-xs text-zinc-400">
+                {(sale.status || 'pendiente') === 'entregado' ? 'Pedido completado y entregado al cliente.' : 'Pedido pendiente por entregar / despacho.'}
+              </p>
+            </div>
+          </div>
+
+          <form action={updateSaleStatus} className="flex items-center gap-2 w-full sm:w-auto">
+            <input type="hidden" name="sale_id" value={sale.id} />
+            <select
+              name="status"
+              defaultValue={sale.status || 'pendiente'}
+              className="bg-[#0E1310] border border-[#232C26] rounded-xl px-4 py-2 text-sm text-[#F5F5F0] font-bold focus:outline-none"
+            >
+              <option value="pendiente">🟡 Pendiente</option>
+              <option value="entregado">🟢 Entregado</option>
+            </select>
+            <SubmitButton className="px-4 py-2 text-xs font-bold bg-[#556B2F] hover:bg-[#7C9A42] shrink-0">
+              Actualizar Estado
+            </SubmitButton>
+          </form>
+        </div>
+      </Card>
 
       {/* Resumen Inmutable Financiero */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">

@@ -424,6 +424,20 @@ export async function createMultiItemSale(formData: FormData) {
     return { ...item, quantity: qty, unitPrice: price, subtotal };
   });
 
+  // 6.1 Validar inventario disponible antes de confirmar la venta
+  for (const item of processedItems) {
+    const { data: prod } = await supabase
+      .from('products')
+      .select('id, name, current_stock, quantity')
+      .eq('id', item.productId)
+      .single();
+
+    const availableStock = prod ? (Number(prod.current_stock !== null && prod.current_stock !== undefined ? prod.current_stock : prod.quantity) || 0) : 0;
+    if (availableStock < item.quantity) {
+      redirect(`/transactions/new?error=${encodeURIComponent(`No hay suficiente inventario disponible para "${prod?.name || 'el producto'}". Disponible: ${availableStock}, Solicitado: ${item.quantity}.`)}`);
+    }
+  }
+
   // 7. Generar número de venta consecutivo (#000145)
   const { count } = await supabase
     .from('sales')
@@ -433,7 +447,7 @@ export async function createMultiItemSale(formData: FormData) {
   const saleSeq = ((count || 0) + 1).toString().padStart(6, '0');
   const saleNumber = `Venta #${saleSeq}`;
 
-  // 8. Insertar 1 Registro en sales
+  // 8. Insertar 1 Registro en sales con estado inicial 'pendiente'
   const { data: newSale, error: saleErr } = await supabase
     .from('sales')
     .insert({
@@ -445,7 +459,7 @@ export async function createMultiItemSale(formData: FormData) {
       total_amount: totalAmount,
       payment_method: paymentMethod,
       cash_session_id: activeSession.id,
-      status: 'completed'
+      status: 'pendiente'
     })
     .select()
     .single();
@@ -454,7 +468,7 @@ export async function createMultiItemSale(formData: FormData) {
     redirect(`/transactions/new?error=${encodeURIComponent(saleErr?.message || 'Error al guardar la venta.')}`);
   }
 
-  // 9. Insertar N Registros en sale_items y Actualizar Inventario en cada producto
+  // 9. Insertar N Registros en sale_items y Descontar Inventario de forma precisa
   for (const item of processedItems) {
     await supabase.from('sale_items').insert({
       sale_id: newSale.id,
@@ -465,19 +479,26 @@ export async function createMultiItemSale(formData: FormData) {
       subtotal: item.subtotal
     });
 
-    // Actualizar inventario
+    // Actualizar inventario exactamente descontando la cantidad vendida
     const { data: prod } = await supabase
       .from('products')
-      .select('quantity, current_stock')
+      .select('quantity, current_stock, min_stock')
       .eq('id', item.productId)
       .single();
 
     if (prod) {
-      const oldStock = Number(prod.current_stock ?? prod.quantity) || 0;
+      const oldStock = Number(prod.current_stock !== null && prod.current_stock !== undefined ? prod.current_stock : prod.quantity) || 0;
       const newStock = Math.max(0, oldStock - item.quantity);
+      const minStockVal = Number(prod.min_stock || 5);
+      const newStatus = newStock === 0 ? 'out_of_stock' : (newStock <= minStockVal ? 'low_stock' : 'available');
+
       await supabase
         .from('products')
-        .update({ current_stock: newStock, quantity: newStock })
+        .update({
+          current_stock: newStock,
+          quantity: newStock,
+          status: newStatus
+        })
         .eq('id', item.productId);
     }
   }

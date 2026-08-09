@@ -7,7 +7,14 @@ import { getTeamSalesPerformance } from '@/modules/analytics/salesPerformance';
 import { TrendingUp, Users, DollarSign, ShoppingBag, Hash, Calendar, Award, ShieldAlert, Shield, Eye, FileText } from 'lucide-react';
 import Link from 'next/link';
 
-export default async function SalesTeamPerformancePage() {
+export default async function SalesTeamPerformancePage({
+  searchParams
+}: {
+  searchParams: Promise<{ status?: string; error?: string; success?: string }>;
+}) {
+  const resolvedSearchParams = await searchParams;
+  const statusFilter = resolvedSearchParams.status || 'todas';
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
@@ -18,13 +25,21 @@ export default async function SalesTeamPerformancePage() {
 
   const teamPerformance = await getTeamSalesPerformance(activeStore.id);
 
-  // Cargar las últimas ventas con metadatos completos
-  const { data: recentSales } = await supabase
+  // Cargar las últimas ventas con metadatos completos y filtro de estado
+  let salesQuery = supabase
     .from('sales')
     .select('*')
     .eq('store_id', activeStore.id)
     .order('created_at', { ascending: false })
-    .limit(15);
+    .limit(20);
+
+  if (statusFilter === 'pendiente') {
+    salesQuery = salesQuery.eq('status', 'pendiente');
+  } else if (statusFilter === 'entregado') {
+    salesQuery = salesQuery.eq('status', 'entregado');
+  }
+
+  const { data: recentSales } = await salesQuery;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CO', {
@@ -111,13 +126,49 @@ export default async function SalesTeamPerformancePage() {
         </Card>
       </div>
 
-      {/* Listado de Últimas Ventas con Botón "Ver Detalle" */}
+      {/* Listado de Últimas Ventas con Filtros de Estado */}
       <Card noPadding className="p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-[#232C26] pb-4">
-          <h3 className="text-lg font-bold text-[#F5F5F0] flex items-center gap-2">
-            <FileText className="w-5 h-5 text-[#8EA653]" /> Historial de Ventas y Trazabilidad Comercial
-          </h3>
-          <span className="text-xs text-zinc-500 font-mono">Control Administrativo Protegido</span>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#232C26] pb-4">
+          <div>
+            <h3 className="text-lg font-bold text-[#F5F5F0] flex items-center gap-2">
+              <FileText className="w-5 h-5 text-[#8EA653]" /> Historial de Ventas y Estado de Entregas
+            </h3>
+            <p className="text-xs text-zinc-400 mt-0.5">Control de despacho y seguimiento comercial</p>
+          </div>
+
+          {/* Filtros por Estado */}
+          <div className="flex items-center gap-1.5 bg-[#0E1310] border border-[#232C26] p-1 rounded-xl">
+            <Link
+              href="/sales/team-performance?status=todas"
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                statusFilter === 'todas'
+                  ? 'bg-[#556B2F] text-white shadow'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              Todas
+            </Link>
+            <Link
+              href="/sales/team-performance?status=pendiente"
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1 ${
+                statusFilter === 'pendiente'
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              🟡 Pendientes
+            </Link>
+            <Link
+              href="/sales/team-performance?status=entregado"
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1 ${
+                statusFilter === 'entregado'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              🟢 Entregadas
+            </Link>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -125,6 +176,7 @@ export default async function SalesTeamPerformancePage() {
             <thead>
               <tr className="border-b border-[#232C26] text-zinc-400 font-bold uppercase tracking-wider">
                 <th className="py-3 px-3">Venta #</th>
+                <th className="py-3 px-3">Estado</th>
                 <th className="py-3 px-3">Fecha y Hora</th>
                 <th className="py-3 px-3">Empleado</th>
                 <th className="py-3 px-3">Cliente / Tipo</th>
@@ -139,6 +191,16 @@ export default async function SalesTeamPerformancePage() {
                   <tr key={sale.id} className="hover:bg-[#141A16] transition-colors">
                     <td className="py-3.5 px-3 font-bold font-mono text-[#8EA653]">
                       {sale.sale_number || `#${sale.id.slice(0, 8)}`}
+                    </td>
+
+                    <td className="py-3.5 px-3 whitespace-nowrap">
+                      <span className={`px-2.5 py-1 text-[11px] font-extrabold rounded-full border ${
+                        (sale.status || 'pendiente') === 'entregado'
+                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                          : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                      }`}>
+                        {(sale.status || 'pendiente') === 'entregado' ? '🟢 Entregado' : '🟡 Pendiente'}
+                      </span>
                     </td>
 
                     <td className="py-3.5 px-3 text-zinc-400">

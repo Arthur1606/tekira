@@ -208,3 +208,65 @@ export async function deleteSale(formData: FormData) {
 
   redirect(`/sales/team-performance?success=${encodeURIComponent(`Venta ${sale.sale_number || ''} eliminada y stock de inventario devuelto correctamente.`)}`);
 }
+
+export async function updateSaleStatus(formData: FormData) {
+  const supabase = await createClient();
+
+  const stores = await getUserStores();
+  if (stores.length === 0) redirect('/onboarding');
+  const activeStore = stores[0];
+
+  const saleId = (formData.get('sale_id') as string || '').trim();
+  const newStatus = (formData.get('status') as string || 'pendiente').trim();
+
+  if (!saleId) {
+    redirect(`/sales/team-performance?error=${encodeURIComponent('Identificador de venta no válido.')}`);
+  }
+
+  // Permitir a owner, admin y employee actualizar estado de entrega de venta
+  let securityCtx;
+  try {
+    securityCtx = await verifyPermission(activeStore.id, ['owner', 'admin', 'employee'], 'UPDATE_SALE_STATUS');
+  } catch (err: any) {
+    redirect(`/sales/${saleId}?error=${encodeURIComponent('Sin permisos para actualizar estado de la venta.')}`);
+  }
+
+  const { data: existingSale } = await supabase
+    .from('sales')
+    .select('id, sale_number, status')
+    .eq('id', saleId)
+    .eq('store_id', activeStore.id)
+    .single();
+
+  if (!existingSale) {
+    redirect(`/sales/team-performance?error=${encodeURIComponent('Venta no encontrada.')}`);
+  }
+
+  const oldStatus = existingSale.status || 'pendiente';
+  if (oldStatus === newStatus) {
+    redirect(`/sales/${saleId}?success=${encodeURIComponent('El estado de la venta no ha cambiado.')}`);
+  }
+
+  // Actualizar únicamente el estado de la venta (valores financieros e inventario inmutables)
+  await supabase
+    .from('sales')
+    .update({ status: newStatus })
+    .eq('id', saleId)
+    .eq('store_id', activeStore.id);
+
+  // Guardar log en auditoría
+  await supabase.from('sale_audit_logs').insert({
+    sale_id: saleId,
+    store_id: activeStore.id,
+    user_id: securityCtx.user.id,
+    user_email: securityCtx.user.email,
+    field_name: 'Estado de Operación',
+    old_value: oldStatus === 'entregado' ? 'Entregado 🟢' : 'Pendiente 🟡',
+    new_value: newStatus === 'entregado' ? 'Entregado 🟢' : 'Pendiente 🟡'
+  });
+
+  revalidatePath(`/sales/${saleId}`);
+  revalidatePath('/sales/team-performance');
+
+  redirect(`/sales/${saleId}?success=${encodeURIComponent(`Estado de ${existingSale.sale_number || 'la venta'} cambiado a "${newStatus === 'entregado' ? 'Entregado 🟢' : 'Pendiente 🟡'}".`)}`);
+}
