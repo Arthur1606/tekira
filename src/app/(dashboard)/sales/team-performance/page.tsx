@@ -88,7 +88,7 @@ export default async function SalesTeamPerformancePage() {
           <p className="text-[11px] text-zinc-500 mt-1">Ventas acumuladas del equipo comercial</p>
         </Card>
 
-        <Card noPadding className="p-[#6]">
+        <Card noPadding className="p-6">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Productos Vendidos</span>
             <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-400 border border-emerald-500/20">
