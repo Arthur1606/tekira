@@ -117,3 +117,94 @@ export async function updateSaleMetadata(formData: FormData) {
 
   redirect(`/sales/${saleId}?success=${encodeURIComponent('Información administrativa de la venta actualizada correctamente.')}`);
 }
+
+export async function deleteSale(formData: FormData) {
+  const supabase = await createClient();
+
+  const stores = await getUserStores();
+  if (stores.length === 0) redirect('/onboarding');
+  const activeStore = stores[0];
+
+  const saleId = (formData.get('sale_id') as string || '').trim();
+  if (!saleId) {
+    redirect(`/sales/team-performance?error=${encodeURIComponent('Identificador de venta no válido.')}`);
+  }
+
+  // Permiso Exclusivo para OWNER
+  let securityCtx;
+  try {
+    securityCtx = await verifyPermission(activeStore.id, ['owner'], 'DELETE_SALE');
+  } catch (err: any) {
+    redirect(`/sales/${saleId}?error=${encodeURIComponent('Permisos insuficientes. Únicamente el propietario (owner) del comercio puede eliminar operaciones comerciales.')}`);
+  }
+
+  // 1. Obtener detalles de la venta e ítems vendidos
+  const { data: sale } = await supabase
+    .from('sales')
+    .select('*, sale_items(*)')
+    .eq('id', saleId)
+    .eq('store_id', activeStore.id)
+    .single();
+
+  if (!sale) {
+    redirect(`/sales/team-performance?error=${encodeURIComponent('Venta no encontrada.')}`);
+  }
+
+  // 2. Devolver stock de cada producto vendido
+  if (sale.sale_items && Array.isArray(sale.sale_items)) {
+    for (const item of sale.sale_items) {
+      const { data: prod } = await supabase
+        .from('products')
+        .select('current_stock, quantity')
+        .eq('id', item.product_id)
+        .single();
+
+      if (prod) {
+        const restoredStock = (Number(prod.current_stock ?? prod.quantity) || 0) + Number(item.quantity);
+        await supabase
+          .from('products')
+          .update({ current_stock: restoredStock, quantity: restoredStock })
+          .eq('id', item.product_id);
+      }
+    }
+  }
+
+  // 3. Eliminar transacción de caja vinculada
+  if (sale.sale_number) {
+    await supabase
+      .from('transactions')
+      .delete()
+      .eq('store_id', activeStore.id)
+      .ilike('description', `%${sale.sale_number}%`);
+  }
+
+  // 4. Eliminar venta principal (sale_items se eliminan en cascada)
+  const { error: delErr } = await supabase
+    .from('sales')
+    .delete()
+    .eq('id', saleId)
+    .eq('store_id', activeStore.id);
+
+  if (delErr) {
+    redirect(`/sales/${saleId}?error=${encodeURIComponent(delErr.message)}`);
+  }
+
+  // 5. Auditoría
+  await logSecurityEvent({
+    storeId: activeStore.id,
+    userId: securityCtx.user.id,
+    action: 'SALE_DELETED_AND_STOCK_RESTORED',
+    entity: 'sales',
+    entityId: saleId,
+    metadata: {
+      sale_number: sale.sale_number,
+      total_amount: sale.total_amount
+    }
+  });
+
+  revalidatePath('/sales/team-performance');
+  revalidatePath('/inventory');
+  revalidatePath('/dashboard');
+
+  redirect(`/sales/team-performance?success=${encodeURIComponent(`Venta ${sale.sale_number || ''} eliminada y stock de inventario devuelto correctamente.`)}`);
+}

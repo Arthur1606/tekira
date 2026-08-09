@@ -431,7 +431,7 @@ export async function createMultiItemSale(formData: FormData) {
     .eq('store_id', activeStore.id);
 
   const saleSeq = ((count || 0) + 1).toString().padStart(6, '0');
-  const saleNumber = `#${saleSeq}`;
+  const saleNumber = `Venta #${saleSeq}`;
 
   // 8. Insertar 1 Registro en sales
   const { data: newSale, error: saleErr } = await supabase

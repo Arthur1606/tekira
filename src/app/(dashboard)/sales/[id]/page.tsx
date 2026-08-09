@@ -1,10 +1,10 @@
 import { Card } from '@/components/ui/Card';
 import { SubmitButton } from '@/components/ui/SubmitButton';
-import { ArrowLeft, ShoppingBag, User, Phone, FileText, Lock, Calendar, CreditCard, ShieldCheck, History, Edit2 } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, User, Phone, FileText, Lock, Calendar, CreditCard, ShieldCheck, History, Edit2, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { getUserStores } from '@/modules/stores/services';
 import { createClient } from '@/lib/supabase/server';
-import { updateSaleMetadata } from '@/modules/sales/actions';
+import { updateSaleMetadata, deleteSale } from '@/modules/sales/actions';
 import { redirect } from 'next/navigation';
 
 export default async function SaleDetailPage({
@@ -284,6 +284,29 @@ export default async function SaleDetailPage({
           <p className="text-xs text-zinc-500 italic">No se han realizado modificaciones administrativas en esta venta.</p>
         )}
       </Card>
+
+      {/* Zona de Control Exclusiva para OWNER: Eliminar Operación Comercial */}
+      {isOwner && (
+        <Card noPadding className="p-6 bg-rose-950/20 border border-rose-900/40">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-base font-bold text-rose-400 flex items-center gap-2">
+                <Trash2 className="w-5 h-5" /> Eliminar Operación Comercial (Exclusivo Propietario)
+              </h3>
+              <p className="text-xs text-zinc-400 mt-1">
+                Esta acción eliminará la venta <strong className="text-white">{sale.sale_number || `#${sale.id.slice(0, 8)}`}</strong>, cancelará los registros de caja y devolverá automáticamente las cantidades vendidas al stock de inventario.
+              </p>
+            </div>
+
+            <form action={deleteSale}>
+              <input type="hidden" name="sale_id" value={sale.id} />
+              <SubmitButton className="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl shadow-lg">
+                Eliminar Venta y Restaurar Inventario
+              </SubmitButton>
+            </form>
+          </div>
+        </Card>
+      )}
 
     </div>
   );
