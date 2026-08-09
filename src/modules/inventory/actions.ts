@@ -196,6 +196,7 @@ export async function addMovement(formData: FormData) {
   }
 
   const targetProductId = variant.product_id || (variant.product as any)?.id || productId;
+  const currentQty = Number(variant.quantity) || 0;
 
   let finalType = 'entry';
   let finalQuantity = 0;
@@ -227,17 +228,17 @@ export async function addMovement(formData: FormData) {
     if (diff === 0) {
       redirect(`/inventory/${targetProductId}/movement?success=${encodeURIComponent('El conteo físico coincide con el sistema. No se generaron cambios.')}`);
     } else if (diff > 0) {
-      finalType = 'entry';
+      finalType = 'ADJUSTMENT_POSITIVE';
       finalQuantity = diff;
       finalReason = `Ajuste de inventario físico (Sobrante +${diff})`;
     } else {
-      finalType = 'loss';
+      finalType = 'ADJUSTMENT_NEGATIVE';
       finalQuantity = Math.abs(diff);
       finalReason = `Ajuste de inventario físico (Faltante -${Math.abs(diff)})`;
     }
   } else {
     // MODO: Registro Manual (Entrada, Merma, Daño, Descontinuado)
-    const type = (formData.get('type') as string || '').trim();
+    const type = (formData.get('type') as string || '').trim().toLowerCase();
     const quantity = parseFloat(formData.get('quantity') as string);
     const reason = (formData.get('reason') as string || 'Movimiento manual').trim();
 
@@ -245,8 +246,15 @@ export async function addMovement(formData: FormData) {
       redirect(`/inventory/${targetProductId}/movement?error=${encodeURIComponent('Las ventas no están permitidas desde el módulo de inventario. Regístralas desde Caja/Transacciones.')}`);
     }
 
-    const validTypes = ['entry', 'exit', 'damage', 'loss', 'discontinued'];
-    if (!validTypes.includes(type)) {
+    const typeMapping: Record<string, string> = {
+      entry: 'ENTRY',
+      exit: 'EXIT',
+      damage: 'DAMAGE',
+      loss: 'LOSS',
+      discontinued: 'DISCONTINUED'
+    };
+
+    if (!typeMapping[type]) {
       redirect(`/inventory/${targetProductId}/movement?error=${encodeURIComponent('Tipo de movimiento no válido.')}`);
     }
 
@@ -254,19 +262,28 @@ export async function addMovement(formData: FormData) {
       redirect(`/inventory/${targetProductId}/movement?error=${encodeURIComponent('La cantidad debe ser un número positivo mayor a 0.')}`);
     }
 
-    finalType = type;
+    finalType = typeMapping[type];
     finalQuantity = quantity;
     finalReason = reason;
   }
 
-  // 5. Insertar movimiento pasando AMBOS: product_id y variant_id
+  const isAdding = ['ENTRY', 'ADJUSTMENT_POSITIVE'].includes(finalType);
+  const calculatedNewStock = mode === 'adjustment' 
+    ? (formData.get('physical_count') ? parseFloat(formData.get('physical_count') as string) : currentQty)
+    : (isAdding ? currentQty + finalQuantity : Math.max(0, currentQty - finalQuantity));
+
+  // 5. Insertar movimiento pasando AMBOS: product_id y variant_id y metadatos de trazabilidad
   const { data: newMov, error } = await supabase
     .from('inventory_movements')
     .insert({
+      store_id: activeStore.id,
       product_id: targetProductId,
       variant_id: variantId,
+      user_id: securityCtx.user.id,
       type: finalType,
       quantity: finalQuantity,
+      previous_stock: currentQty,
+      new_stock: calculatedNewStock,
       reason: finalReason
     })
     .select()
