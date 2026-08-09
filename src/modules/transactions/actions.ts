@@ -509,7 +509,7 @@ export async function createMultiItemSale(formData: FormData) {
         variant_id: item.variantId || null,
         user_id: securityCtx.user.id,
         type: 'SALE',
-        quantity: -item.quantity,
+        quantity: item.quantity,
         previous_stock: oldStock,
         new_stock: newStock,
         reason: `Venta ${saleNumber}`,
