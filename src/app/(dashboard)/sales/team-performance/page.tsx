@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { getUserStores } from '@/modules/stores/services';
 import { getTeamSalesPerformance } from '@/modules/analytics/salesPerformance';
-import { TrendingUp, Users, DollarSign, ShoppingBag, Hash, Calendar, Award, ShieldAlert, Shield } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, ShoppingBag, Hash, Calendar, Award, ShieldAlert, Shield, Eye, FileText } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function SalesTeamPerformancePage() {
@@ -18,12 +18,20 @@ export default async function SalesTeamPerformancePage() {
 
   const teamPerformance = await getTeamSalesPerformance(activeStore.id);
 
+  // Cargar las últimas ventas con metadatos completos
+  const { data: recentSales } = await supabase
+    .from('sales')
+    .select('*')
+    .eq('store_id', activeStore.id)
+    .order('created_at', { ascending: false })
+    .limit(15);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
       minimumFractionDigits: 0
-    }).format(amount);
+    }).format(amount || 0);
   };
 
   const formatDate = (dateStr: string | null) => {
@@ -53,7 +61,7 @@ export default async function SalesTeamPerformancePage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-[#F5F5F0] tracking-tight flex items-center gap-3">
-            <TrendingUp className="w-8 h-8 text-[#7C9A42]" /> Rendimiento de Ventas por Empleado
+            <TrendingUp className="w-8 h-8 text-[#7C9A42]" /> Rendimiento de Ventas y Control Comercial
           </h1>
           <p className="text-sm font-medium text-zinc-400 mt-1">
             Métricas de comercialización individual asociadas a código de empleado ({activeStore.name})
@@ -80,7 +88,7 @@ export default async function SalesTeamPerformancePage() {
           <p className="text-[11px] text-zinc-500 mt-1">Ventas acumuladas del equipo comercial</p>
         </Card>
 
-        <Card noPadding className="p-6">
+        <Card noPadding className="p-[#6]">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Productos Vendidos</span>
             <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-400 border border-emerald-500/20">
@@ -103,7 +111,79 @@ export default async function SalesTeamPerformancePage() {
         </Card>
       </div>
 
-      {/* Tabla de Rendimiento por Empleado */}
+      {/* Listado de Últimas Ventas con Botón "Ver Detalle" */}
+      <Card noPadding className="p-6 space-y-4">
+        <div className="flex items-center justify-between border-b border-[#232C26] pb-4">
+          <h3 className="text-lg font-bold text-[#F5F5F0] flex items-center gap-2">
+            <FileText className="w-5 h-5 text-[#8EA653]" /> Historial de Ventas y Trazabilidad Comercial
+          </h3>
+          <span className="text-xs text-zinc-500 font-mono">Control Administrativo Protegido</span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-[#232C26] text-zinc-400 font-bold uppercase tracking-wider">
+                <th className="py-3 px-3">Venta #</th>
+                <th className="py-3 px-3">Fecha y Hora</th>
+                <th className="py-3 px-3">Empleado</th>
+                <th className="py-3 px-3">Cliente / Tipo</th>
+                <th className="py-3 px-3">Pago</th>
+                <th className="py-3 px-3 text-right">Total</th>
+                <th className="py-3 px-3 text-right">Acción</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#232C26]">
+              {recentSales && recentSales.length > 0 ? (
+                recentSales.map((sale: any) => (
+                  <tr key={sale.id} className="hover:bg-[#141A16] transition-colors">
+                    <td className="py-3.5 px-3 font-bold font-mono text-[#8EA653]">
+                      {sale.sale_number || `#${sale.id.slice(0, 8)}`}
+                    </td>
+
+                    <td className="py-3.5 px-3 text-zinc-400">
+                      {formatDate(sale.created_at)}
+                    </td>
+
+                    <td className="py-3.5 px-3 font-mono font-semibold text-zinc-300">
+                      {sale.employee_code || 'TKR-EMP-000001'}
+                    </td>
+
+                    <td className="py-3.5 px-3">
+                      <span className="block font-bold text-[#F5F5F0]">{sale.customer_name || 'Mostrador'}</span>
+                      <span className="text-[10px] text-zinc-400 capitalize">{sale.sale_type || 'mostrador'}</span>
+                    </td>
+
+                    <td className="py-3.5 px-3 capitalize text-zinc-300">
+                      {sale.payment_method}
+                    </td>
+
+                    <td className="py-3.5 px-3 text-right font-extrabold text-[#8EA653] text-sm">
+                      {formatCurrency(sale.total_amount)}
+                    </td>
+
+                    <td className="py-3.5 px-3 text-right">
+                      <Link href={`/sales/${sale.id}`}>
+                        <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#556B2F]/30 hover:bg-[#556B2F] text-[#8EA653] hover:text-white border border-[#7C9A42]/40 rounded-lg text-xs font-bold transition-all">
+                          <Eye className="w-3.5 h-3.5" /> Ver detalle
+                        </span>
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-zinc-500">
+                    No se han registrado ventas recientemente.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {/* Escalafón Comercial */}
       <Card noPadding className="p-6 space-y-6">
         <div className="flex items-center justify-between border-b border-[#232C26] pb-4">
           <h3 className="text-lg font-bold text-[#F5F5F0] flex items-center gap-2">
@@ -164,39 +244,6 @@ export default async function SalesTeamPerformancePage() {
             </tbody>
           </table>
         </div>
-
-        {/* Adaptación Móvil */}
-        <div className="md:hidden space-y-3">
-          {teamPerformance.map((member, idx) => (
-            <div key={member.employeeCode + idx} className="p-4 bg-[#0E1310] rounded-2xl border border-[#232C26] space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-zinc-800 text-[#8EA653] font-bold flex items-center justify-center text-xs border border-zinc-700">
-                    #{idx + 1}
-                  </div>
-                  <div>
-                    <span className="font-bold text-sm text-[#F5F5F0] block">{member.name}</span>
-                    <span className="text-xs font-mono font-bold text-[#8EA653]">{member.employeeCode}</span>
-                  </div>
-                </div>
-                <div>
-                  {getRoleBadge(member.role)}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-2 border-t border-[#232C26] text-xs">
-                <span className="text-zinc-400">Total Vendido:</span>
-                <span className="font-mono font-black text-emerald-400 text-sm">{formatCurrency(member.totalSalesValue)}</span>
-              </div>
-
-              <div className="flex items-center justify-between text-[11px] text-zinc-500 font-mono">
-                <span>Ventas: {member.totalTransactions}</span>
-                <span>{formatDate(member.lastSaleDate)}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-
       </Card>
 
     </div>
