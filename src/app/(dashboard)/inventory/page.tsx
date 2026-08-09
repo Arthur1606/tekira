@@ -190,19 +190,25 @@ export default async function InventoryPage({
             </thead>
             <tbody className="divide-y divide-[#232C26]">
               {recentMovements && recentMovements.length > 0 ? (
-                recentMovements.map((mov: any) => (
-                  <tr key={mov.id} className="hover:bg-[#0E1310] transition-colors">
-                    <td className="py-3 px-3 text-zinc-400">{formatDate(mov.created_at)}</td>
-                    <td className="py-3 px-3">{getMovementBadge(mov.type)}</td>
-                    <td className="py-3 px-3 font-bold text-[#F5F5F0]">{mov.product?.name || 'Producto del Catálogo'}</td>
-                    <td className="py-3 px-3 text-center font-extrabold font-mono text-sm">
-                      <span className={mov.quantity < 0 ? 'text-rose-400' : 'text-emerald-400'}>
-                        {mov.quantity > 0 ? `+${mov.quantity}` : mov.quantity}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-zinc-300 font-mono text-[11px]">{mov.reason || 'Movimiento de inventario'}</td>
-                  </tr>
-                ))
+                recentMovements.map((mov: any) => {
+                  const typeUpper = (mov.type || '').toUpperCase();
+                  const isExit = ['SALE', 'DAMAGE', 'LOSS', 'WASTE', 'MERMA', 'ADJUSTMENT_NEGATIVE', 'TRANSFER_OUT', 'EXIT', 'OUTBOUND', 'DISCONTINUED'].includes(typeUpper);
+                  const signedQuantity = isExit ? -Math.abs(Number(mov.quantity) || 0) : Math.abs(Number(mov.quantity) || 0);
+
+                  return (
+                    <tr key={mov.id} className="hover:bg-[#0E1310] transition-colors">
+                      <td className="py-3 px-3 text-zinc-400">{formatDate(mov.created_at)}</td>
+                      <td className="py-3 px-3">{getMovementBadge(mov.type)}</td>
+                      <td className="py-3 px-3 font-bold text-[#F5F5F0]">{mov.product?.name || 'Producto del Catálogo'}</td>
+                      <td className="py-3 px-3 text-center font-extrabold font-mono text-sm">
+                        <span className={signedQuantity < 0 ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold'}>
+                          {signedQuantity > 0 ? `+${signedQuantity}` : signedQuantity}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-zinc-300 font-mono text-[11px]">{mov.reason || 'Movimiento de inventario'}</td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan={5} className="py-6 text-center text-zinc-500">
