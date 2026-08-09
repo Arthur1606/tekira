@@ -358,3 +358,162 @@ export async function closeCashRegister(formData: FormData) {
   revalidatePath('/dashboard');
   redirect(`/dashboard?success=${encodeURIComponent(`Caja cerrada correctamente. ${diffText}`)}`);
 }
+
+export async function createMultiItemSale(formData: FormData) {
+  const supabase = await createClient();
+
+  // 1. Obtener comercio activo
+  const stores = await getUserStores();
+  if (stores.length === 0) redirect('/onboarding');
+  const activeStore = stores[0];
+
+  // 2. Permisos
+  let securityCtx;
+  try {
+    securityCtx = await verifyPermission(activeStore.id, ['owner', 'admin', 'employee'], 'CREATE_TRANSACTION');
+  } catch (err: any) {
+    redirect(`/transactions/new?error=${encodeURIComponent(err.message || 'Sin permisos para registrar ventas.')}`);
+  }
+
+  // 3. Vendedor y código de empleado
+  const { data: teamMember } = await supabase
+    .from('team_members')
+    .select('id, employee_code')
+    .eq('store_id', activeStore.id)
+    .eq('user_id', securityCtx.user.id)
+    .maybeSingle();
+
+  const sellerId = teamMember?.id || null;
+  const employeeCode = teamMember?.employee_code || 'TKR-EMP-000001';
+
+  // 4. Validar sesión de caja abierta
+  const { data: activeSession } = await supabase
+    .from('cash_openings')
+    .select('id')
+    .eq('store_id', activeStore.id)
+    .eq('status', 'open')
+    .maybeSingle();
+
+  if (!activeSession) {
+    redirect(`/transactions/new?error=${encodeURIComponent('No existe una caja abierta actualmente. Solicita apertura al administrador.')}`);
+  }
+
+  // 5. Parsear Carrito Multiproducto (JSON string en campo `items_json`)
+  const itemsJson = formData.get('items_json') as string || '[]';
+  const paymentMethod = (formData.get('payment_method') as string || 'efectivo').trim();
+  const customerId = (formData.get('customer_id') as string || '').trim() || null;
+
+  let items: Array<{ productId: string; variantId?: string; quantity: number; unitPrice: number }> = [];
+  try {
+    items = JSON.parse(itemsJson);
+  } catch (e) {
+    redirect(`/transactions/new?error=${encodeURIComponent('El contenido del carrito no es válido.')}`);
+  }
+
+  if (!items || items.length === 0) {
+    redirect(`/transactions/new?error=${encodeURIComponent('Selecciona al menos un producto para registrar la venta.')}`);
+  }
+
+  // 6. Calcular Total
+  let totalAmount = 0;
+  const processedItems = items.map(item => {
+    const qty = Math.max(1, item.quantity || 1);
+    const price = Math.max(0, item.unitPrice || 0);
+    const subtotal = qty * price;
+    totalAmount += subtotal;
+    return { ...item, quantity: qty, unitPrice: price, subtotal };
+  });
+
+  // 7. Generar número de venta consecutivo (#000145)
+  const { count } = await supabase
+    .from('sales')
+    .select('*', { count: 'exact', head: true })
+    .eq('store_id', activeStore.id);
+
+  const saleSeq = ((count || 0) + 1).toString().padStart(6, '0');
+  const saleNumber = `#${saleSeq}`;
+
+  // 8. Insertar 1 Registro en sales
+  const { data: newSale, error: saleErr } = await supabase
+    .from('sales')
+    .insert({
+      store_id: activeStore.id,
+      user_id: securityCtx.user.id,
+      employee_code: employeeCode,
+      customer_id: customerId,
+      sale_number: saleNumber,
+      total_amount: totalAmount,
+      payment_method: paymentMethod,
+      cash_session_id: activeSession.id,
+      status: 'completed'
+    })
+    .select()
+    .single();
+
+  if (saleErr || !newSale) {
+    redirect(`/transactions/new?error=${encodeURIComponent(saleErr?.message || 'Error al guardar la venta.')}`);
+  }
+
+  // 9. Insertar N Registros en sale_items y Actualizar Inventario en cada producto
+  for (const item of processedItems) {
+    await supabase.from('sale_items').insert({
+      sale_id: newSale.id,
+      product_id: item.productId,
+      variant_id: item.variantId || null,
+      quantity: item.quantity,
+      unit_price: item.unitPrice,
+      subtotal: item.subtotal
+    });
+
+    // Actualizar inventario
+    const { data: prod } = await supabase
+      .from('products')
+      .select('quantity, current_stock')
+      .eq('id', item.productId)
+      .single();
+
+    if (prod) {
+      const oldStock = Number(prod.current_stock ?? prod.quantity) || 0;
+      const newStock = Math.max(0, oldStock - item.quantity);
+      await supabase
+        .from('products')
+        .update({ current_stock: newStock, quantity: newStock })
+        .eq('id', item.productId);
+    }
+  }
+
+  // 10. Registrar 1 Transacción comercial asociada a la venta
+  await supabase.from('transactions').insert({
+    store_id: activeStore.id,
+    type: 'income',
+    amount: totalAmount,
+    category: 'Ventas',
+    payment_method: paymentMethod,
+    description: `Venta ${saleNumber} (${processedItems.length} artículos)`,
+    cash_session_id: activeSession.id,
+    seller_id: sellerId,
+    user_id: securityCtx.user.id,
+    employee_code: employeeCode
+  });
+
+  // 11. Auditoría
+  await logSecurityEvent({
+    storeId: activeStore.id,
+    userId: securityCtx.user.id,
+    action: 'MULTI_ITEM_SALE_CREATED',
+    entity: 'sales',
+    entityId: newSale.id,
+    metadata: {
+      sale_number: saleNumber,
+      total_amount: totalAmount,
+      item_count: processedItems.length,
+      employee_code: employeeCode
+    }
+  });
+
+  revalidatePath('/inventory');
+  revalidatePath('/dashboard');
+  revalidatePath('/transactions/new');
+
+  redirect(`/transactions/new?success=${encodeURIComponent(`Venta ${saleNumber} realizada correctamente ($${totalAmount.toLocaleString('es-CO')}).`)}`);
+}
