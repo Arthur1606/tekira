@@ -56,6 +56,7 @@ export function TransactionForm({ products }: TransactionFormProps) {
   const [selectedProductIndex, setSelectedProductIndex] = useState<number>(0);
   const [itemQty, setItemQty] = useState<number>(1);
   const [paymentMethod, setPaymentMethod] = useState<string>('Efectivo');
+  const [initialStatus, setInitialStatus] = useState<string>('entregado');
 
   // Estado para venta simple o egreso
   const [simpleAmount, setSimpleAmount] = useState<number>(0);
@@ -145,6 +146,7 @@ export function TransactionForm({ products }: TransactionFormProps) {
         <form action={createMultiItemSale} className="space-y-6 w-full">
           <input type="hidden" name="items_json" value={JSON.stringify(cart)} />
           <input type="hidden" name="payment_method" value={paymentMethod} />
+          <input type="hidden" name="status" value={initialStatus} />
 
           {/* Selector de Producto para agregar al Carrito */}
           <div className="p-5 bg-[#141A16] border border-[#232C26] rounded-2xl space-y-4">
@@ -270,24 +272,40 @@ export function TransactionForm({ products }: TransactionFormProps) {
             </div>
           </div>
 
-          {/* Método de Pago */}
-          <div className="w-full">
-            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
-              Método de Pago
-            </label>
-            <div className="relative w-full">
-              <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="block w-full rounded-xl border border-[#232C26] bg-[#0E1310] px-4 py-3 pl-10 text-sm text-[#F5F5F0] focus:border-[#7C9A42] focus:outline-none"
-              >
-                {PAYMENT_METHODS.map(pm => (
-                  <option key={pm} value={pm}>{pm}</option>
-                ))}
-              </select>
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
-                <CreditCard className="w-4 h-4 text-[#8EA653]" />
+          {/* Método de Pago y Estado de Entrega */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+            <div className="w-full">
+              <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                Método de Pago
+              </label>
+              <div className="relative w-full">
+                <select
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className="block w-full rounded-xl border border-[#232C26] bg-[#0E1310] px-4 py-3 pl-10 text-sm text-[#F5F5F0] focus:border-[#7C9A42] focus:outline-none"
+                >
+                  {PAYMENT_METHODS.map(pm => (
+                    <option key={pm} value={pm}>{pm}</option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
+                  <CreditCard className="w-4 h-4 text-[#8EA653]" />
+                </div>
               </div>
+            </div>
+
+            <div className="w-full">
+              <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                Estado de la Operación
+              </label>
+              <select
+                value={initialStatus}
+                onChange={(e) => setInitialStatus(e.target.value)}
+                className="block w-full rounded-xl border border-[#232C26] bg-[#0E1310] px-4 py-3 text-sm text-[#F5F5F0] font-bold focus:border-[#7C9A42] focus:outline-none"
+              >
+                <option value="entregado">🟢 Entregado Inmediato (Venta)</option>
+                <option value="pendiente">🟡 Pendiente (Pedido / Encargo)</option>
+              </select>
             </div>
           </div>
 

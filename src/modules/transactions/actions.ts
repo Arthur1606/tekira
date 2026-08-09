@@ -402,6 +402,7 @@ export async function createMultiItemSale(formData: FormData) {
   const itemsJson = formData.get('items_json') as string || '[]';
   const paymentMethod = (formData.get('payment_method') as string || 'efectivo').trim();
   const customerId = (formData.get('customer_id') as string || '').trim() || null;
+  const initialStatus = (formData.get('status') as string || 'entregado').trim();
 
   let items: Array<{ productId: string; variantId?: string; quantity: number; unitPrice: number }> = [];
   try {
@@ -459,7 +460,7 @@ export async function createMultiItemSale(formData: FormData) {
       total_amount: totalAmount,
       payment_method: paymentMethod,
       cash_session_id: activeSession.id,
-      status: 'pendiente'
+      status: initialStatus
     })
     .select()
     .single();
