@@ -501,6 +501,20 @@ export async function createMultiItemSale(formData: FormData) {
           status: newStatus
         })
         .eq('id', item.productId);
+
+      // Registrar movimiento de inventario automático tipo SALE para trazabilidad auditada
+      await supabase.from('inventory_movements').insert({
+        store_id: activeStore.id,
+        product_id: item.productId,
+        variant_id: item.variantId || null,
+        user_id: securityCtx.user.id,
+        type: 'SALE',
+        quantity: -item.quantity,
+        previous_stock: oldStock,
+        new_stock: newStock,
+        reason: `Venta ${saleNumber}`,
+        reference_id: newSale.id
+      });
     }
   }
 

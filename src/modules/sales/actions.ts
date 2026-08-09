@@ -160,11 +160,26 @@ export async function deleteSale(formData: FormData) {
         .single();
 
       if (prod) {
-        const restoredStock = (Number(prod.current_stock ?? prod.quantity) || 0) + Number(item.quantity);
+        const oldStock = Number(prod.current_stock ?? prod.quantity) || 0;
+        const restoredStock = oldStock + Number(item.quantity);
         await supabase
           .from('products')
-          .update({ current_stock: restoredStock, quantity: restoredStock })
+          .update({ current_stock: restoredStock, quantity: restoredStock, status: 'available' })
           .eq('id', item.product_id);
+
+        // Registrar devolución en trazabilidad de inventario
+        await supabase.from('inventory_movements').insert({
+          store_id: activeStore.id,
+          product_id: item.product_id,
+          variant_id: item.variant_id || null,
+          user_id: securityCtx.user.id,
+          type: 'RETURN',
+          quantity: Number(item.quantity),
+          previous_stock: oldStock,
+          new_stock: restoredStock,
+          reason: `Devolución por eliminación de ${sale.sale_number || 'venta'}`,
+          reference_id: saleId
+        });
       }
     }
   }
@@ -269,4 +284,39 @@ export async function updateSaleStatus(formData: FormData) {
   revalidatePath('/sales/team-performance');
 
   redirect(`/sales/${saleId}?success=${encodeURIComponent(`Estado de ${existingSale.sale_number || 'la venta'} cambiado a "${newStatus === 'entregado' ? 'Entregado 🟢' : 'Pendiente 🟡'}".`)}`);
+}
+
+export async function recalculateStoreInventoryAction() {
+  const supabase = await createClient();
+
+  const stores = await getUserStores();
+  if (stores.length === 0) redirect('/onboarding');
+  const activeStore = stores[0];
+
+  let securityCtx;
+  try {
+    securityCtx = await verifyPermission(activeStore.id, ['owner', 'admin'], 'RECALCULATE_INVENTORY');
+  } catch (err: any) {
+    redirect(`/inventory?error=${encodeURIComponent('Permisos insuficientes para recalcular el inventario.')}`);
+  }
+
+  // Ejecutar función RPC en base de datos para recalcular inventario real
+  const { error: rpcErr } = await supabase.rpc('recalculate_store_inventory', { p_store_id: activeStore.id });
+
+  if (rpcErr) {
+    redirect(`/inventory?error=${encodeURIComponent(rpcErr.message)}`);
+  }
+
+  await logSecurityEvent({
+    storeId: activeStore.id,
+    userId: securityCtx.user.id,
+    action: 'STORE_INVENTORY_RECALCULATED',
+    entity: 'products',
+    entityId: activeStore.id
+  });
+
+  revalidatePath('/inventory');
+  revalidatePath('/dashboard');
+
+  redirect(`/inventory?success=${encodeURIComponent('Inventario recalculado e igualado correctamente con los movimientos de trazabilidad.')}`);
 }

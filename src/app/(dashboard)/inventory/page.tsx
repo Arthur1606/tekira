@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Plus, PackageSearch, AlertTriangle, PackageX, Box, ArrowRightLeft, Layers, Warehouse, Store, MapPin, Hash, Trash2, Filter } from 'lucide-react';
+import { SubmitButton } from '@/components/ui/SubmitButton';
+import { Plus, PackageSearch, AlertTriangle, PackageX, Box, ArrowRightLeft, Layers, Warehouse, Store, MapPin, Hash, Trash2, Filter, History, RefreshCw, ArrowDownRight, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { getUserStores } from '@/modules/stores/services';
 import { getProducts, getInventorySummary } from '@/modules/inventory/services';
@@ -12,6 +13,7 @@ import { CreateLocationModal } from '@/components/inventory/CreateLocationModal'
 import { TransferStockModal } from '@/components/inventory/TransferStockModal';
 import { DeleteProductModal } from '@/components/inventory/DeleteProductModal';
 import { InventoryList } from '@/components/inventory/InventoryList';
+import { recalculateStoreInventoryAction } from '@/modules/sales/actions';
 
 export default async function InventoryPage({
   searchParams,
@@ -45,11 +47,19 @@ export default async function InventoryPage({
     }
   }
 
-  const [products, summary, locations] = await Promise.all([
+  const [products, summary, locations, movementsResult] = await Promise.all([
     getProducts(activeStore.id, currentFilter, currentUserRole),
     getInventorySummary(activeStore.id),
-    getLocations(activeStore.id)
+    getLocations(activeStore.id),
+    supabase
+      .from('inventory_movements')
+      .select('*, product:products(name)')
+      .eq('store_id', activeStore.id)
+      .order('created_at', { ascending: false })
+      .limit(20)
   ]);
+
+  const recentMovements = movementsResult.data || [];
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CO', {
@@ -59,15 +69,8 @@ export default async function InventoryPage({
     }).format(amount);
   };
 
-  const getStatusBadge = (status: Product['status']) => {
-    switch (status) {
-      case 'available':
-        return <Badge variant="success">Disponible</Badge>;
-      case 'low_stock':
-        return <Badge variant="warning">Bajo Stock</Badge>;
-      case 'out_of_stock':
-        return <Badge variant="danger">Agotado</Badge>;
-    }
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' });
   };
 
   const getLocationTypeBadge = (type: string) => {
@@ -78,6 +81,19 @@ export default async function InventoryPage({
         return <Badge variant="neutral" className="bg-[#556B2F]/20 text-zinc-300 text-[10px]"><Warehouse className="w-3 h-3 mr-1" /> Bodega Principal</Badge>;
       default:
         return <Badge variant="neutral" className="text-[10px]"><MapPin className="w-3 h-3 mr-1" /> Depósito</Badge>;
+    }
+  };
+
+  const getMovementBadge = (type: string) => {
+    switch (type) {
+      case 'SALE':
+        return <span className="px-2 py-0.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] font-bold rounded-full">Venta 🛒</span>;
+      case 'RETURN':
+        return <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold rounded-full">Devolución 🔄</span>;
+      case 'INBOUND':
+        return <span className="px-2 py-0.5 bg-[#556B2F]/20 text-[#8EA653] border border-[#7C9A42]/30 text-[10px] font-bold rounded-full">Entrada 📦</span>;
+      default:
+        return <span className="px-2 py-0.5 bg-zinc-800 text-zinc-300 border border-zinc-700 text-[10px] font-bold rounded-full">{type}</span>;
     }
   };
 
@@ -103,10 +119,17 @@ export default async function InventoryPage({
             Inventario & Bodegas
           </h1>
           <p className="text-sm font-medium text-zinc-400 mt-1">
-            Gestión comercial de existencias por ubicación física y SKU ({activeStore.name})
+            Gestión comercial de existencias por ubicación física y trazabilidad auditada ({activeStore.name})
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
+          {(currentUserRole === 'owner' || currentUserRole === 'admin') && (
+            <form action={recalculateStoreInventoryAction}>
+              <SubmitButton className="px-3 py-2 text-xs font-bold bg-[#141A16] hover:bg-[#19201C] text-zinc-300 border border-[#232C26]">
+                <RefreshCw className="w-3.5 h-3.5 mr-1 text-[#8EA653]" /> Recalcular Inventario
+              </SubmitButton>
+            </form>
+          )}
           <CreateLocationModal />
           <TransferStockModal locations={locations} products={products} />
           <Link href="/inventory/new">
@@ -142,6 +165,53 @@ export default async function InventoryPage({
               </div>
             </div>
           ))}
+        </div>
+      </Card>
+
+      {/* HISTORIAL DE MOVIMIENTOS DE TRAZABILIDAD COMERCIAL */}
+      <Card noPadding className="p-6 bg-[#141A16] border border-[#232C26] space-y-4">
+        <div className="flex items-center justify-between border-b border-[#232C26] pb-3">
+          <h3 className="text-base font-bold text-[#F5F5F0] flex items-center gap-2">
+            <History className="w-5 h-5 text-[#8EA653]" /> Bitácora de Movimientos y Trazabilidad Comercial
+          </h3>
+          <span className="text-xs text-zinc-500 font-mono">Registro Automático de Ventas</span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-[#232C26] text-zinc-400 font-bold uppercase tracking-wider">
+                <th className="py-3 px-3">Fecha y Hora</th>
+                <th className="py-3 px-3">Tipo</th>
+                <th className="py-3 px-3">Producto</th>
+                <th className="py-3 px-3 text-center">Variación</th>
+                <th className="py-3 px-3">Detalle / Referencia</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#232C26]">
+              {recentMovements && recentMovements.length > 0 ? (
+                recentMovements.map((mov: any) => (
+                  <tr key={mov.id} className="hover:bg-[#0E1310] transition-colors">
+                    <td className="py-3 px-3 text-zinc-400">{formatDate(mov.created_at)}</td>
+                    <td className="py-3 px-3">{getMovementBadge(mov.type)}</td>
+                    <td className="py-3 px-3 font-bold text-[#F5F5F0]">{mov.product?.name || 'Producto del Catálogo'}</td>
+                    <td className="py-3 px-3 text-center font-extrabold font-mono text-sm">
+                      <span className={mov.quantity < 0 ? 'text-rose-400' : 'text-emerald-400'}>
+                        {mov.quantity > 0 ? `+${mov.quantity}` : mov.quantity}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-zinc-300 font-mono text-[11px]">{mov.reason || 'Movimiento de inventario'}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="py-6 text-center text-zinc-500">
+                    No se han registrado movimientos de inventario aún.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </Card>
 
@@ -227,6 +297,7 @@ export default async function InventoryPage({
           )}
         </div>
       </div>
+
       {/* Lista de Productos con Búsqueda Integrada */}
       <InventoryList 
         initialProducts={products} 
