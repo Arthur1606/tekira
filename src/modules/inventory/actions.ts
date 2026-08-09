@@ -21,13 +21,13 @@ export async function createProduct(formData: FormData) {
   try {
     securityCtx = await verifyPermission(activeStore.id, ['owner', 'admin'], 'CREATE_PRODUCT');
   } catch (err: any) {
-    redirect(`/dashboard/inventory/new?error=${encodeURIComponent(err.message || 'Sin permisos para crear productos.')}`);
+    redirect(`/inventory/new?error=${encodeURIComponent(err.message || 'Sin permisos para crear productos.')}`);
   }
 
   // 2.1 Validar Límite de Productos del Plan SaaS Activo
   const limits = await checkStoreLimits(activeStore.id);
   if (!limits.canAddProduct) {
-    redirect(`/dashboard/inventory/new?error=${encodeURIComponent(`Has alcanzado el límite de productos (${limits.usage.products.max}) de tu plan SaaS actual (${limits.subscription.plan_tier}). Contáctate con soporte para solicitar un upgrade de plan.`)}`);
+    redirect(`/inventory/new?error=${encodeURIComponent(`Has alcanzado el límite de productos (${limits.usage.products.max}) de tu plan SaaS actual (${limits.subscription.plan_tier}). Contáctate con soporte para solicitar un upgrade de plan.`)}`);
   }
 
   // 3. Extraer y sanitizar datos de entrada
@@ -46,7 +46,7 @@ export async function createProduct(formData: FormData) {
   const salePrice = Math.max(0, salePriceStr ? parseFloat(salePriceStr.replace(/[^0-9.-]+/g, '')) : 0);
 
   if (!name || isNaN(quantity) || isNaN(minStock) || isNaN(cost) || isNaN(salePrice)) {
-    redirect(`/dashboard/inventory/new?error=${encodeURIComponent('Por favor, revisa todos los campos obligatorios.')}`);
+    redirect(`/inventory/new?error=${encodeURIComponent('Por favor, revisa todos los campos obligatorios.')}`);
   }
 
   // Generación Inteligente de SKU (Formato XXXX-0000)
@@ -85,13 +85,16 @@ export async function createProduct(formData: FormData) {
     category,
     sku: finalSku,
     quantity: 0,
+    current_stock: 0,
+    sale_price: salePrice,
+    price: salePrice,
     unit,
     min_stock: minStock,
     status: 'out_of_stock'
   }).select().single();
 
   if (error || !newProduct) {
-    redirect(`/dashboard/inventory/new?error=${encodeURIComponent(error?.message || 'Error al crear el producto')}`);
+    redirect(`/inventory/new?error=${encodeURIComponent(error?.message || 'Error al crear el producto. Intenta nuevamente.')}`);
   }
 
   // 5. Insertar Variante Inicial por defecto
@@ -105,7 +108,7 @@ export async function createProduct(formData: FormData) {
   }).select().single();
 
   if (varError || !newVariant) {
-    redirect(`/dashboard/inventory/new?error=${encodeURIComponent(varError?.message || 'Error al crear la variante principal')}`);
+    redirect(`/inventory/new?error=${encodeURIComponent(varError?.message || 'Error al crear la variante principal')}`);
   }
 
   // 6. Si la cantidad inicial es > 0, registrar el primer movimiento de entrada con product_id y variant_id

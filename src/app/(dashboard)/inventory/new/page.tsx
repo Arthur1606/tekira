@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createProduct } from '@/modules/inventory/actions';
 import { Input } from '@/components/ui/Input';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
@@ -23,8 +23,16 @@ const UNITS = [
 
 export default function NewProductPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [selectedUnit, setSelectedUnit] = useState<string>('unidad');
+
+  useEffect(() => {
+    const errorParam = searchParams?.get('error');
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam));
+    }
+  }, [searchParams]);
 
   return (
     <div className="w-full space-y-8 animate-in fade-in duration-500 pb-16">

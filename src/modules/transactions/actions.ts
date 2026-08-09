@@ -21,7 +21,7 @@ export async function createTransaction(formData: FormData) {
   try {
     securityCtx = await verifyPermission(activeStore.id, ['owner', 'admin', 'employee'], 'CREATE_TRANSACTION');
   } catch (err: any) {
-    redirect(`/dashboard/transactions/new?error=${encodeURIComponent(err.message || 'Sin permisos para registrar transacciones.')}`);
+    redirect(`/transactions/new?error=${encodeURIComponent(err.message || 'Sin permisos para registrar transacciones.')}`);
   }
 
   // 3. Obtener id de vendedor y código de empleado de la tabla team_members si existe
@@ -43,13 +43,13 @@ export async function createTransaction(formData: FormData) {
   const description = (formData.get('description') as string || '').trim();
 
   if (!['income', 'expense'].includes(type)) {
-    redirect(`/dashboard/transactions/new?error=${encodeURIComponent('Tipo de movimiento inválido.')}`);
+    redirect(`/transactions/new?error=${encodeURIComponent('Tipo de movimiento inválido.')}`);
   }
 
   const amount = amountStr ? parseFloat(amountStr.replace(/[^0-9.-]+/g, '')) : 0;
 
   if (isNaN(amount) || amount <= 0) {
-    redirect(`/dashboard/transactions/new?error=${encodeURIComponent('El monto debe ser un valor positivo mayor a 0.')}`);
+    redirect(`/transactions/new?error=${encodeURIComponent('El monto debe ser un valor positivo mayor a 0.')}`);
   }
 
   // Regla estricta para Empleados: Sólo pueden crear Ingresos (Ventas)
@@ -61,7 +61,7 @@ export async function createTransaction(formData: FormData) {
       entity: 'transactions',
       metadata: { reason: 'Empleado intentó registrar un egreso' }
     });
-    redirect(`/dashboard/transactions/new?error=${encodeURIComponent('Los empleados únicamente pueden registrar ventas/ingresos.')}`);
+    redirect(`/transactions/new?error=${encodeURIComponent('Los empleados únicamente pueden registrar ventas/ingresos.')}`);
   }
 
   // 5. Validar sesión activa de caja (debe estar status = 'open')
@@ -73,7 +73,7 @@ export async function createTransaction(formData: FormData) {
     .maybeSingle();
 
   if (!activeSession) {
-    redirect(`/dashboard/transactions/new?error=${encodeURIComponent('No existe una caja abierta actualmente. Solicita apertura al administrador.')}`);
+    redirect(`/transactions/new?error=${encodeURIComponent('No existe una caja abierta actualmente. Solicita apertura al administrador.')}`);
   }
 
   // 6. Vinculación opcional a producto (variante)
@@ -99,7 +99,7 @@ export async function createTransaction(formData: FormData) {
         entity: 'product_variants',
         metadata: { reason: 'Variante no pertenece al comercio en transacción', variantId }
       });
-      redirect(`/dashboard/transactions/new?error=${encodeURIComponent('La variante seleccionada no pertenece a tu comercio.')}`);
+      redirect(`/transactions/new?error=${encodeURIComponent('La variante seleccionada no pertenece a tu comercio.')}`);
     }
 
     targetProductId = variantCheck.product_id || null;
@@ -122,7 +122,7 @@ export async function createTransaction(formData: FormData) {
   }).select().single();
 
   if (error) {
-    redirect(`/dashboard/transactions/new?error=${encodeURIComponent(error.message)}`);
+    redirect(`/transactions/new?error=${encodeURIComponent(error.message)}`);
   }
 
   // 8. Auto-sincronizar movimiento de inventario si se seleccionó variante
