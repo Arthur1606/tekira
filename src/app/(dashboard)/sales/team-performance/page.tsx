@@ -226,33 +226,11 @@ export default async function SalesTeamPerformancePage({
                     </td>
 
                     <td className="py-3.5 px-3 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <form action={updateSaleStatus} className="inline-block">
-                          <input type="hidden" name="sale_id" value={sale.id} />
-                          <input
-                            type="hidden"
-                            name="status"
-                            value={(sale.status || 'pendiente') === 'entregado' ? 'pendiente' : 'entregado'}
-                          />
-                          <button
-                            type="submit"
-                            className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all border ${
-                              (sale.status || 'pendiente') === 'entregado'
-                                ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30'
-                                : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                            }`}
-                            title={(sale.status || 'pendiente') === 'entregado' ? 'Marcar como Pendiente' : 'Marcar como Entregado'}
-                          >
-                            {(sale.status || 'pendiente') === 'entregado' ? '🟡 Pendiente' : '🟢 Entregado'}
-                          </button>
-                        </form>
-
-                        <Link href={`/sales/${sale.id}`}>
-                          <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#556B2F]/30 hover:bg-[#556B2F] text-[#8EA653] hover:text-white border border-[#7C9A42]/40 rounded-lg text-xs font-bold transition-all">
-                            <Eye className="w-3.5 h-3.5" /> Ver detalle
-                          </span>
-                        </Link>
-                      </div>
+                      <Link href={`/sales/${sale.id}`}>
+                        <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#556B2F]/30 hover:bg-[#556B2F] text-[#8EA653] hover:text-white border border-[#7C9A42]/40 rounded-lg text-xs font-bold transition-all">
+                          <Eye className="w-3.5 h-3.5" /> Ver detalle
+                        </span>
+                      </Link>
                     </td>
                   </tr>
                 ))
