@@ -1,44 +1,62 @@
--- Migración: Fase 10 PRE-RELEASE v2.10 - Trazabilidad Crítica de Inventario y Movimientos de Venta (SALE)
+-- Migración: Fase 10 PRE-RELEASE v2.10 - Adaptación de inventory_movements y Trazabilidad Comercial
 -- Archivo: 00000000000044_inventory_movements_traceability.sql
 
--- 1. Asegurar tabla public.inventory_movements con campos de referencia
-CREATE TABLE IF NOT EXISTS public.inventory_movements (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    store_id UUID NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
-    product_id UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
-    variant_id UUID REFERENCES public.product_variants(id) ON DELETE SET NULL,
-    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-    type VARCHAR(30) NOT NULL DEFAULT 'SALE',
-    quantity NUMERIC(15,4) NOT NULL DEFAULT 0,
-    previous_stock NUMERIC(15,4) DEFAULT 0,
-    new_stock NUMERIC(15,4) DEFAULT 0,
-    reason TEXT,
-    reference_id UUID,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+-- 1. Asegurar columnas opcionales en la tabla existente public.inventory_movements sin romper el esquema actual
+ALTER TABLE public.inventory_movements ADD COLUMN IF NOT EXISTS store_id UUID REFERENCES public.stores(id) ON DELETE CASCADE;
+ALTER TABLE public.inventory_movements ADD COLUMN IF NOT EXISTS variant_id UUID REFERENCES public.product_variants(id) ON DELETE SET NULL;
+ALTER TABLE public.inventory_movements ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL;
+ALTER TABLE public.inventory_movements ADD COLUMN IF NOT EXISTS previous_stock NUMERIC(15,4) DEFAULT 0;
+ALTER TABLE public.inventory_movements ADD COLUMN IF NOT EXISTS new_stock NUMERIC(15,4) DEFAULT 0;
+ALTER TABLE public.inventory_movements ADD COLUMN IF NOT EXISTS reference_id UUID;
 
--- Habilitar RLS
+-- 2. Eliminar restricción de tipo rígida si existe para permitir 'SALE', 'RETURN', 'entry', 'exit'
+ALTER TABLE public.inventory_movements DROP CONSTRAINT IF EXISTS inventory_movements_type_check;
+
+-- 3. Rellenar store_id para registros existentes mediante relación con public.products
+UPDATE public.inventory_movements im
+SET store_id = p.store_id
+FROM public.products p
+WHERE im.product_id = p.id AND im.store_id IS NULL;
+
+-- 4. Habilitar y actualizar RLS de forma ultra-segura (funciona con o sin store_id directo)
 ALTER TABLE public.inventory_movements ENABLE ROW LEVEL SECURITY;
+
 DROP POLICY IF EXISTS "Users can view inventory movements of their store" ON public.inventory_movements;
 CREATE POLICY "Users can view inventory movements of their store" ON public.inventory_movements
     FOR SELECT USING (
-        EXISTS (SELECT 1 FROM public.stores s WHERE s.id = inventory_movements.store_id AND s.owner_id = auth.uid())
-        OR EXISTS (SELECT 1 FROM public.team_members tm WHERE tm.store_id = inventory_movements.store_id AND tm.user_id = auth.uid())
+        (store_id IS NOT NULL AND (
+            EXISTS (SELECT 1 FROM public.stores s WHERE s.id = inventory_movements.store_id AND s.owner_id = auth.uid())
+            OR EXISTS (SELECT 1 FROM public.team_members tm WHERE tm.store_id = inventory_movements.store_id AND tm.user_id = auth.uid())
+        ))
+        OR
+        EXISTS (
+            SELECT 1 FROM public.products p
+            JOIN public.stores s ON s.id = p.store_id
+            WHERE p.id = inventory_movements.product_id AND (s.owner_id = auth.uid() OR EXISTS (SELECT 1 FROM public.team_members tm WHERE tm.store_id = s.id AND tm.user_id = auth.uid()))
+        )
     );
 
 DROP POLICY IF EXISTS "Users can insert inventory movements of their store" ON public.inventory_movements;
 CREATE POLICY "Users can insert inventory movements of their store" ON public.inventory_movements
     FOR INSERT WITH CHECK (
-        EXISTS (SELECT 1 FROM public.stores s WHERE s.id = inventory_movements.store_id AND s.owner_id = auth.uid())
-        OR EXISTS (SELECT 1 FROM public.team_members tm WHERE tm.store_id = inventory_movements.store_id AND tm.user_id = auth.uid())
+        (store_id IS NOT NULL AND (
+            EXISTS (SELECT 1 FROM public.stores s WHERE s.id = inventory_movements.store_id AND s.owner_id = auth.uid())
+            OR EXISTS (SELECT 1 FROM public.team_members tm WHERE tm.store_id = inventory_movements.store_id AND tm.user_id = auth.uid())
+        ))
+        OR
+        EXISTS (
+            SELECT 1 FROM public.products p
+            JOIN public.stores s ON s.id = p.store_id
+            WHERE p.id = inventory_movements.product_id AND (s.owner_id = auth.uid() OR EXISTS (SELECT 1 FROM public.team_members tm WHERE tm.store_id = s.id AND tm.user_id = auth.uid()))
+        )
     );
 
--- 2. Índices de rendimiento
+-- 5. Índices de rendimiento
 CREATE INDEX IF NOT EXISTS idx_inventory_movements_store_id ON public.inventory_movements(store_id);
 CREATE INDEX IF NOT EXISTS idx_inventory_movements_product_id ON public.inventory_movements(product_id);
 CREATE INDEX IF NOT EXISTS idx_inventory_movements_reference_id ON public.inventory_movements(reference_id);
 
--- 3. Función RPC para recalcular inventario real basado en movimientos registrados
+-- 6. Función RPC para recalcular inventario real basado en movimientos registrados
 CREATE OR REPLACE FUNCTION recalculate_store_inventory(p_store_id UUID)
 RETURNS VOID AS $$
 DECLARE
@@ -48,7 +66,7 @@ BEGIN
     FOR v_prod IN SELECT id FROM public.products WHERE store_id = p_store_id LOOP
         SELECT COALESCE(SUM(quantity), 0) INTO v_calc_stock
         FROM public.inventory_movements
-        WHERE product_id = v_prod.id AND store_id = p_store_id;
+        WHERE product_id = v_prod.id;
 
         UPDATE public.products
         SET current_stock = GREATEST(0, v_calc_stock),

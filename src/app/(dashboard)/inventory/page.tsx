@@ -53,8 +53,8 @@ export default async function InventoryPage({
     getLocations(activeStore.id),
     supabase
       .from('inventory_movements')
-      .select('*, product:products(name)')
-      .eq('store_id', activeStore.id)
+      .select('*, product:products!inner(name, store_id)')
+      .eq('product.store_id', activeStore.id)
       .order('created_at', { ascending: false })
       .limit(20)
   ]);
