@@ -1,7 +1,7 @@
 -- Migración: Fase 11 PRE-RELEASE v2.11 - Corrección Crítica de Trigger de Inventario y Recuento Basado en Movimientos
 -- Archivo: 00000000000045_rebuild_inventory_from_movements.sql
 
--- 1. Corregir función de Trigger update_product_inventory para calcular la SUMA REAL de movimientos sin importar el tipo ('entry', 'SALE', 'exit', 'RETURN', etc.)
+-- 1. Corregir función de Trigger update_product_inventory para calcular la SUMA REAL de movimientos
 CREATE OR REPLACE FUNCTION update_product_inventory()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -43,9 +43,7 @@ BEGIN
         WHERE variant_id = NEW.variant_id;
 
         UPDATE public.product_variants
-        SET 
-            quantity = GREATEST(0, v_calc_stock),
-            stock = GREATEST(0, v_calc_stock)
+        SET quantity = GREATEST(0, v_calc_stock)
         WHERE id = NEW.variant_id;
     END IF;
 
@@ -100,8 +98,7 @@ BEGIN
         WHERE variant_id = v_var.id;
 
         UPDATE public.product_variants
-        SET quantity = GREATEST(0, v_var_calc_stock),
-            stock = GREATEST(0, v_var_calc_stock)
+        SET quantity = GREATEST(0, v_var_calc_stock)
         WHERE id = v_var.id;
     END LOOP;
 END $$;
